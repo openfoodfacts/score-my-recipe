@@ -18,14 +18,16 @@ pip install uv
 From the project root, run:
 
 ```bash
+cd server
 uv sync
 ```
 
-This creates a virtual environment in `.venv` and installs all dependencies declared in `pyproject.toml`.
+This creates a virtual environment in `server/.venv` and installs all dependencies declared in `server/pyproject.toml`.
 
 ## Run the API
 
 ```bash
+cd server
 uv run uvicorn api.api:app --reload
 ```
 

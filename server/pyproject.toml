@@ -2,7 +2,7 @@
 name = "score-my-recipe"
 version = "0.1.0"
 description = "A tool to compute Green-Score of recipes"
-readme = "README.md"
+readme = "../README.md"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.136.1",

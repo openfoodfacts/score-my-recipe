@@ -6,7 +6,7 @@ Green-Score is an assesment of the environmental impact of food see https://docs
 
 ## Getting started
 
-See [docs/dev-quick-start.md](docs/dev-quick-start.md) for instructions on how to run the project locally.
+See [docs/dev-quick-start.md](docs/dev-quick-start.md) for instructions on how to run the backend from the `server/` folder.
 
 ## Sponsors
 
