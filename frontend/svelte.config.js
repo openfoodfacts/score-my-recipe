@@ -23,17 +23,13 @@ const config = {
 			directives: {
 				'object-src': ['none'],
 				'base-uri': ['self'],
-				'script-src': [
-					'self',
-					...vercelScripts,
-					'https://analytics.openfoodfacts.org/matomo.js'
-				],
+				'script-src': ['self', ...vercelScripts, 'https://analytics.openfoodfacts.org/matomo.js'],
 				'img-src': [
 					'self',
 					'data:',
 
 					'https://*.openfoodfacts.org/',
-					'https://*.openfoodfacts.net/',
+					'https://*.openfoodfacts.net/'
 				],
 				'style-src': ['self', 'unsafe-inline'],
 				'frame-ancestors': ['none']

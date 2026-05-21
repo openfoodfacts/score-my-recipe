@@ -6,8 +6,7 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-	server: {
-	},
+	server: {},
 	plugins: [
 		tailwindcss(),
 		sentrySvelteKit({
@@ -18,8 +17,7 @@ export default defineConfig({
 		}),
 		sveltekit(),
 		viteStaticCopy({
-			targets: [
-			]
+			targets: []
 		})
 	],
 	define: {
