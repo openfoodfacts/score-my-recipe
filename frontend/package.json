@@ -21,7 +21,6 @@
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
 		"format:changed": "pretty-quick --staged",
-		"prepare": "husky",
 		"pre-commit": "pnpm format",
 		"test": "vitest run --passWithNoTests"
 	},
