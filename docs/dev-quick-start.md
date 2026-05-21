@@ -2,7 +2,9 @@
 
 This guide explains how to set up and run the **Score My Recipe** API locally.
 
-## Prerequisites
+## Backend
+
+### Backend prerequisites
 
 - [uv](https://docs.astral.sh/uv/) — Python package manager and project runner
 
@@ -13,7 +15,7 @@ pip install uv
 # or follow the official instructions at https://docs.astral.sh/uv/getting-started/installation/
 ```
 
-## Install dependencies
+### Install backend dependencies
 
 From the project root, run:
 
@@ -24,7 +26,7 @@ uv sync
 
 This creates a virtual environment in `server/.venv` and installs all dependencies declared in `server/pyproject.toml`.
 
-## Run the API
+### Run the API
 
 ```bash
 cd server
@@ -35,9 +37,34 @@ The API will be available at <http://localhost:8000>.
 
 Interactive docs (Swagger UI) are at <http://localhost:8000/docs>.
 
-## Available endpoints
+## Frontend
 
-| Method | Path      | Description          |
-|--------|-----------|----------------------|
-| GET    | `/`       | Welcome message      |
-| GET    | `/health` | Health check         |
+### Frontend prerequisites
+
+Use preferentially Node lts (Node 24),
+you can install it using [nvm](https://github.com/nvm-sh/nvm#usage)
+
+Then use `nvm use` in `frontend` folder whenever needed.
+
+We also use `pnpm`.
+You can install it with  `npm install -g pnpm`.
+
+### Install frontend dependencies
+
+```bash
+pnpm install
+```
+
+Before running the project, set up the environment variables:
+
+```bash
+cp .env.example .env
+```
+Edit `.env` as needed (defaults might be fine)
+
+### Running the frontend
+
+Spawn using
+```bash
+pnpm run dev
+```
