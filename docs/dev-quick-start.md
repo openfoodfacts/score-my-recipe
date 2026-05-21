@@ -24,6 +24,13 @@ uv sync
 
 This creates a virtual environment in `server/.venv` and installs all dependencies declared in `server/pyproject.toml`.
 
+To run tests:
+
+```bash
+cd server
+uv run pytest tests/ -v
+```
+
 ## Run the API
 
 ```bash
@@ -40,4 +47,4 @@ Interactive docs (Swagger UI) are at <http://localhost:8000/docs>.
 | Method | Path      | Description          |
 |--------|-----------|----------------------|
 | GET    | `/`       | Welcome message      |
-| GET    | `/health` | Health check         |
+| GET    | `/v1/health` | Health check      |

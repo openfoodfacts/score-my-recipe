@@ -12,6 +12,6 @@ async def root() -> dict:
     return {"message": "Score My Recipe API"}
 
 
-@app.get("/health")
+@app.get("/v1/health")
 async def health() -> dict:
     return {"status": "ok"}
