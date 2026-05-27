@@ -1,6 +1,6 @@
 {
 	"name": "score-my-recipe-frontend",
-	"description": "The frontend fro score-my-recipe",
+	"description": "The frontend for score-my-recipe",
 	"version": "0.1.0",
 	"private": true,
 	"type": "module",

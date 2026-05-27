@@ -52,21 +52,24 @@ uv run pytest tests/ -v
 
 Use preferentially Node lts (Node 24),
 you can install it using [nvm](https://github.com/nvm-sh/nvm#usage)
+in the `frontend` folder.
 
-Then use `nvm use` in `frontend` folder whenever needed.
+Then type `nvm use` in `frontend` folder whenever needed.
 
 We also use `pnpm`.
-You can install it with  `npm install -g pnpm`.
+You can install it with  `npm install -g pnpm`, in `frontend` folder.
 
 ### Install frontend dependencies
 
 ```bash
+# in  frontend folder
 pnpm install
 ```
 
 Before running the project, set up the environment variables:
 
 ```bash
+# in  frontend folder
 cp .env.example .env
 ```
 Edit `.env` as needed (defaults might be fine)
@@ -75,5 +78,6 @@ Edit `.env` as needed (defaults might be fine)
 
 Spawn using
 ```bash
+# in  frontend folder
 pnpm run dev
 ```

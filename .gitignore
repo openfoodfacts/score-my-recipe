@@ -1,4 +1,6 @@
 .*.swp
 .*.swo
 *~
+.env
 .vscode/
+.DS_Store
