@@ -1,0 +1,51 @@
+import vercelAdapter from '@sveltejs/adapter-vercel';
+import nodejsAdapter from '@sveltejs/adapter-node';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+
+function runningOnVercel() {
+	return 'VERCEL' in process.env;
+}
+
+const adapter = runningOnVercel() ? vercelAdapter() : nodejsAdapter();
+
+const vercelScripts = runningOnVercel() ? ['https://va.vercel-scripts.com/'] : [];
+
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
+	// Consult https://kit.svelte.dev/docs/integrations#preprocessors
+	// for more information about preprocessors
+	preprocess: vitePreprocess(),
+
+	kit: {
+		adapter: adapter,
+
+		csp: {
+			directives: {
+				'object-src': ['none'],
+				'base-uri': ['self'],
+				'script-src': ['self', ...vercelScripts, 'https://analytics.openfoodfacts.org/matomo.js'],
+				'img-src': [
+					'self',
+					'data:',
+
+					'https://*.openfoodfacts.org/',
+					'https://*.openfoodfacts.net/'
+				],
+				'style-src': ['self', 'unsafe-inline'],
+				'frame-ancestors': ['none']
+			}
+		},
+
+		experimental: {
+			tracing: {
+				server: true
+			},
+
+			instrumentation: {
+				server: true
+			}
+		}
+	}
+};
+
+export default config;
