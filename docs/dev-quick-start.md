@@ -37,6 +37,15 @@ The API will be available at <http://localhost:8000>.
 
 Interactive docs (Swagger UI) are at <http://localhost:8000/docs>.
 
+### Run tests
+
+To run tests:
+
+```bash
+cd server
+uv run pytest tests/ -v
+```
+
 ## Frontend
 
 ### Frontend prerequisites

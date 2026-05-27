@@ -8,3 +8,9 @@ dependencies = [
     "fastapi>=0.136.1",
     "uvicorn>=0.47.0",
 ]
+
+[project.optional-dependencies]
+dev = [
+    "httpx>=0.28.0",
+    "pytest>=8.0.0",
+]
