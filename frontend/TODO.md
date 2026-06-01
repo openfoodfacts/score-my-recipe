@@ -1,5 +1,6 @@
-- use husky as in off-explorer
+- use husky as in off-explorer ? (not sure)
 - do we need openfoodfacts-webcomponents?
+- install testing lib: vitest + @testing-library/svelte + playwright 
 - evaluate the need for some libraries:
   - daisyui
   - dompurify
