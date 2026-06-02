@@ -1,5 +1,6 @@
 import httpx
 from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 
 app = FastAPI(
     title="Score My Recipe",
@@ -18,14 +19,20 @@ async def health() -> dict:
     return {"status": "ok"}
 
 
+class OriginsAutocompleteResponse(BaseModel):
+    matched_synonyms: dict[str, str]
+    status: str
+    suggestions: list[str]
+
+
 @app.get("/v1/autocomplete/origins")
-async def autocomplete_origins(term: str, lc: str, get_synonyms: bool = False) -> dict:
+async def autocomplete_origins(term: str, lc: str) -> OriginsAutocompleteResponse:
     params = {
         "tagtype": "origins",
         "term": term,
         "lc": lc,
         "limit": 300,
-        "get_synonyms": get_synonyms,
+        "get_synonyms": 1,
     }
 
     try:
@@ -38,4 +45,9 @@ async def autocomplete_origins(term: str, lc: str, get_synonyms: bool = False) -
     except httpx.HTTPError as exc:
         raise HTTPException(status_code=502, detail="Open Food Facts API unavailable") from exc
 
-    return response.json()
+    data = response.json()
+    return OriginsAutocompleteResponse(
+        matched_synonyms=data["matched_synonyms"],
+        status=data["status"],
+        suggestions=data["suggestions"],
+    )
