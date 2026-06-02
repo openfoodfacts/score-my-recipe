@@ -18,18 +18,27 @@ def test_autocomplete_origins_returns_openfoodfacts_response():
     mock_async_client.get.return_value = mock_response
 
     with patch("api.api.httpx.AsyncClient", return_value=mock_async_client):
-        response = client.get("/v1/autocomplete/origins", params={"term": "ital", "lc": "fr"})
+        response = client.get(
+            "/v1/autocomplete/origins",
+            params={"term": "ital", "lc": "fr", "get_synonyms": "true"},
+        )
 
     assert response.status_code == 200
     assert response.json() == {"tags": [{"id": "en:italy", "name": "Italie"}]}
     mock_async_client.get.assert_awaited_once_with(
-        "https://world.openfoodfacts.org/cgi/suggest.pl",
-        params={"tagtype": "origins", "term": "ital", "lc": "fr", "limit": 300},
+        "https://world.openfoodfacts.org/api/v3/taxonomy_suggestions",
+        params={
+            "tagtype": "origins",
+            "term": "ital",
+            "lc": "fr",
+            "limit": 300,
+            "get_synonyms": True,
+        },
     )
 
 
 def test_autocomplete_origins_returns_502_when_off_fails():
-    request = httpx.Request("GET", "https://world.openfoodfacts.org/cgi/suggest.pl")
+    request = httpx.Request("GET", "https://world.openfoodfacts.org/api/v3/taxonomy_suggestions")
     mock_async_client = AsyncMock()
     mock_async_client.__aenter__.return_value = mock_async_client
     mock_async_client.get.side_effect = httpx.RequestError("failure", request=request)
