@@ -29,11 +29,14 @@
 <!-- Header -->
 <div>
 	<div class="flex justify-center">
-		<div class="bg-base-100 navbar flex max-w-7xl px-10">
+		<div class="bg-base-100 navbar flex max-w-7xl w-full px-10">
 			<div class="navbar-start">
-				<a href="/"> <Logo /> </a>
+				<a href="/"> <Logo class="h-16" /> </a>
 			</div>
-			<Navbar />
+			<div class="flex-none navbar-center">
+				<Navbar />
+			</div>
+			<div class="navbar-end"></div>
 		</div>
 	</div>
 </div>

@@ -27,4 +27,5 @@
 		alt="OpenFoodFacts Explorer"
 		class="h-full w-full object-contain"
 	/>
+	<div class="text-center text-bg font-medium">For Recipes</div>
 </picture>

@@ -2,7 +2,8 @@
 	"navbar": {
 		"score_recipe": "Score a recipe",
 		"join_community": "Join the community",
-		"open_food_facts": "Open Food Facts"
+		"open_food_facts": "Open Food Facts",
+		"methodology": "About the Green-Score"
 	},
 	"footer": {
 		"stay_updated": "Stay Updated",
