@@ -13,12 +13,17 @@ export default defineConfig({
 				org: 'openfoodfacts',
 				project: 'score-my-recipe-frontend'
 			}
-		}),
+		})
 	],
 	define: {
 		'import.meta.env.PACKAGE_VERSION': JSON.stringify(packageVersion)
 	},
 	optimizeDeps: {
-		exclude: ['@iconify-svelte/simple-icons', '@iconify-svelte/material-symbols', '@iconify-svelte/mdi', ''],
+		exclude: [
+			'@iconify-svelte/simple-icons',
+			'@iconify-svelte/material-symbols',
+			'@iconify-svelte/mdi',
+			''
+		]
 	}
 });
