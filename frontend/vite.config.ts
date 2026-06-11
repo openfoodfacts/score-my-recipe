@@ -17,13 +17,5 @@ export default defineConfig({
 	],
 	define: {
 		'import.meta.env.PACKAGE_VERSION': JSON.stringify(packageVersion)
-	},
-	optimizeDeps: {
-		exclude: [
-			'@iconify-svelte/simple-icons',
-			'@iconify-svelte/material-symbols',
-			'@iconify-svelte/mdi',
-			''
-		]
 	}
 });
