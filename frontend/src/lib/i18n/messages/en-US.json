@@ -1,0 +1,47 @@
+{
+	"navbar": {
+		"score_recipe": "Score a recipe",
+		"join_community": "Join the community",
+		"open_food_facts": "Open Food Facts",
+		"methodology": "About the Green-Score"
+	},
+	"footer": {
+		"stay_updated": "Stay Updated",
+		"contribute": "Contribute",
+		"discover_title": "Discover our Project",
+		"tagline": "A collaborative, free and open database of food products",
+		"tagline_break": "from around the world.",
+		"decorative_alt": "A decorative graphic",
+		"social": {
+			"x": "X (formerly Twitter)",
+			"instagram": "Instagram",
+			"github": "GitHub",
+			"facebook": "Facebook",
+			"slack": "Slack"
+		},
+		"links": {
+			"newsletter": "Newsletter",
+			"forum": "Forum",
+			"producers": "Producers Platform",
+			"translate": "Translate",
+			"github": "GitHub",
+			"data_api_sdks": "Data, API, SDKs",
+			"wiki": "Wiki",
+			"legal": "Legal",
+			"privacy": "Privacy",
+			"terms_of_use": "Terms of use"
+		},
+		"discover": {
+			"who_we_are": "Who we are",
+			"blog": "Blog",
+			"code_of_conduct": "Code of Conduct",
+			"vision_mission_values_and_programs": "Vision, Mission, Values and Programs",
+			"partners": "Partners",
+			"faq": "FAQ",
+			"press": "Press"
+		}
+	},
+	"landing": {
+		"title": "Open Food Facts for recipes"
+	}
+}
