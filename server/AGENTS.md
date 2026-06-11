@@ -58,7 +58,7 @@ Always add a meaningful doc string to functions, modules, etc.
 
 Add comments for complex part or to justify non intuitive choices, or to summarize long code chunks (so that reader can quickly get an overview of the code). Still try not to be too verbose (find the right balance). If you use advance features (that not many programers might now), add a link to the documentation in the comment.
 
-Try to make the code as clear as possible, by normalizing cases before processing, using the single responsablity pattern.
+Try to make the code as clear as possible, by normalizing cases before processing, using the single responsibility pattern.
 
 We try to use the frameworks at their best to have easy to read, semantic code. Especially Pydantic / FastAPI / pytest.
 ---
