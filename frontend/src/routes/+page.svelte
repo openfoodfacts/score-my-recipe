@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { _ } from '$lib/i18n';
-  import { Leaf, Sparkles, ArrowRight, Zap, Target, BookOpen, Trash2, Activity, Database, Award, ChevronDown, ChevronUp } from 'lucide-svelte';
 
   // --- DONNÉES SIMULÉES ---
   const ingredientsDB = {
@@ -96,13 +95,10 @@
 </script>
 
 <svelte:head>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
-  </style>
 	<title>{$_('landing.title')}</title>
 </svelte:head>
 
-<div class="min-h-screen bg-[#faf9f8] text-gray-800 font-sans" style="font-family: 'Plus Jakarta Sans', sans-serif;">
+<div class="min-h-screen bg-base-100 text-base-content font-sans">
   
   <datalist id="ingredients-list">
     {#each ingredientsList as item}
@@ -121,14 +117,14 @@
     <option value="AOP/AOC"></option>
   </datalist>
 
-  <nav class="bg-[#f2e9e4] border-b border-[#e0d6d0] sticky top-0 z-50">
+  <nav class="bg-base-200 border-b border-base-300 sticky top-0 z-50">
     <div class="px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 max-w-7xl mx-auto w-full">
       <div class="flex items-center gap-4">
         <img src="https://static.openfoodfacts.org/images/logos/off-logo-horizontal-light.svg" alt="Open Food Facts" class="h-10" />
-        <span class="font-bold text-black text-xl border-l border-black/20 pl-4">pour les recettes</span>
+        <span class="font-bold text-xl border-l border-base-content/20 pl-4">pour les recettes</span>
       </div>
       <div class="hidden md:flex gap-4">
-        <button class="bg-[#341100] text-white font-bold px-6 py-2 rounded-lg hover:bg-black transition shadow-sm">
+        <button class="btn btn-primary font-bold">
           Rejoindre la communauté de pratique
         </button>
       </div>
@@ -136,21 +132,26 @@
   </nav>
 
   <section class="relative px-6 py-20 lg:py-32 overflow-hidden">
-    <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-[#f2e9e4] rounded-full blur-3xl opacity-60"></div>
-    <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-emerald-100 rounded-full blur-3xl opacity-50"></div>
+    <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-primary/10 rounded-full blur-3xl opacity-60"></div>
+    <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-secondary/20 rounded-full blur-3xl opacity-50"></div>
 
     <div class="max-w-4xl mx-auto text-center relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-      <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-white shadow-sm border border-gray-100 text-[#341100] rounded-full text-sm font-bold mb-8">
-        <Sparkles size={16} class="text-yellow-500" />
+      <div class="badge badge-outline badge-lg gap-2 px-4 py-4 text-sm font-bold mb-8 border-primary text-primary bg-base-100 shadow-sm">
+        <span aria-hidden="true">*</span>
         L'outil open-source de la restauration collective
       </div>
-      <h1 class="text-5xl md:text-6xl font-extrabold text-black mb-8 leading-[1.1]">
+      <h1 class="text-5xl md:text-6xl font-extrabold mb-8 leading-[1.1]">
         Calculez l'impact de vos recettes <br />
-        <span class="text-[#341100]">en temps réel.</span>
+        <span class="text-primary">en temps réel.</span>
       </h1>
-      <p class="text-xl text-gray-500 max-w-2xl mx-auto font-medium leading-relaxed mb-12">
+      <p class="text-xl text-base-content/70 max-w-2xl mx-auto font-medium leading-relaxed mb-12">
         Saisissez vos ingrédients naturellement. Notre outil structure vos fiches techniques, calcule instantanément le Green-Score et vous accompagne vers des menus plus durables.
       </p>
+      <div class="flex items-center justify-center">
+        <a href={resolve('/score')} class="btn btn-primary btn-lg">
+          Ouvrir le calculateur de recettes
+        </a>
+      </div>
     </div>
   </section>
 
@@ -287,36 +288,36 @@
   </section>
 -->
 
-  <section class="bg-white border-t border-gray-200 py-24 px-6">
+  <section class="bg-base-100 border-t border-base-300 py-24 px-6">
     <div class="max-w-6xl mx-auto">
       <div class="text-center mb-16">
-        <h2 class="text-3xl font-extrabold text-black mb-4">La boussole des professionnels</h2>
-        <p class="text-gray-500 font-medium text-lg">Améliorez facilement vos fiches techniques avec des données fiables.</p>
+        <h2 class="text-3xl font-extrabold mb-4">La boussole des professionnels</h2>
+        <p class="text-base-content/70 font-medium text-lg">Améliorez facilement vos fiches techniques avec des données fiables.</p>
       </div>
       
       <div class="grid md:grid-cols-3 gap-12">
         <div class="text-center">
-          <div class="w-16 h-16 mx-auto bg-[#f2e9e4] text-[#341100] rounded-2xl flex items-center justify-center mb-6">
-            <Activity size={32} />
+          <div class="w-16 h-16 mx-auto bg-base-200 text-primary rounded-2xl flex items-center justify-center mb-6 text-3xl font-bold">
+            1
           </div>
-          <h3 class="text-xl font-bold text-black mb-3">Calcul en temps réel</h3>
-          <p class="text-gray-500 font-medium leading-relaxed">Ajustez facilement l'impact d'une recette en "jammant" sur les quantités ou en testant des substitutions d'ingrédients à la volée.</p>
+          <h3 class="text-xl font-bold mb-3">Calcul en temps réel</h3>
+          <p class="text-base-content/70 font-medium leading-relaxed">Ajustez facilement l'impact d'une recette en "jammant" sur les quantités ou en testant des substitutions d'ingrédients à la volée.</p>
         </div>
         
         <div class="text-center">
-          <div class="w-16 h-16 mx-auto bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-6">
-            <Database size={32} />
+          <div class="w-16 h-16 mx-auto bg-success/15 text-success rounded-2xl flex items-center justify-center mb-6 text-3xl font-bold">
+            2
           </div>
-          <h3 class="text-xl font-bold text-black mb-3">Transparence & Agribalyse</h3>
-          <p class="text-gray-500 font-medium leading-relaxed">Une méthodologie de calcul transparente, qui s'appuie sur la rigueur de la base publique Agribalyse portée par l'ADEME.</p>
+          <h3 class="text-xl font-bold mb-3">Transparence & Agribalyse</h3>
+          <p class="text-base-content/70 font-medium leading-relaxed">Une méthodologie de calcul transparente, qui s'appuie sur la rigueur de la base publique Agribalyse portée par l'ADEME.</p>
         </div>
         
         <div class="text-center">
-          <div class="w-16 h-16 mx-auto bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-6">
-            <Award size={32} />
+          <div class="w-16 h-16 mx-auto bg-info/15 text-info rounded-2xl flex items-center justify-center mb-6 text-3xl font-bold">
+            3
           </div>
-          <h3 class="text-xl font-bold text-black mb-3">Score à forte notoriété</h3>
-          <p class="text-gray-500 font-medium leading-relaxed">Misez sur un indicateur validé et déjà identifié par des millions de consommateurs sur Open Food Facts et Yuka.</p>
+          <h3 class="text-xl font-bold mb-3">Score à forte notoriété</h3>
+          <p class="text-base-content/70 font-medium leading-relaxed">Misez sur un indicateur validé et déjà identifié par des millions de consommateurs sur Open Food Facts et Yuka.</p>
         </div>
       </div>
 <!--
@@ -367,15 +368,14 @@
     </div>
   </section>
 
-  <footer class="bg-[#341100] text-white py-12 px-6 text-center">
+  <footer class="bg-primary text-primary-content py-12 px-6 text-center">
     <div class="max-w-4xl mx-auto flex flex-col items-center">
       <img src="https://static.openfoodfacts.org/images/logos/off-logo-horizontal-light.svg" alt="Open Food Facts" class="h-10 opacity-50 mb-6 grayscale" />
-      <p class="text-[#f2e9e4]/70 font-medium mb-3">Un projet open-source porté par Open Food Facts, conçu pour transformer l'impact de la restauration.</p>
-      <div class="inline-flex items-center text-[#f2e9e4] text-sm font-semibold bg-white/10 px-4 py-2 rounded-full mb-6">
-        <Leaf size={14} class="mr-2 text-emerald-400" />
+      <p class="text-primary-content/80 font-medium mb-3">Un projet open-source porté par Open Food Facts, conçu pour transformer l'impact de la restauration.</p>
+      <div class="badge badge-outline border-primary-content/30 text-primary-content text-sm font-semibold px-4 py-4 mb-6">
         Projet réalisé de manière collaborative grâce au soutien de l'Appel à Communs de l'ADEME
       </div>
-      <a href="#" class="text-white font-bold hover:underline">Découvrir le projet sur GitHub</a>
+      <a href="#" class="text-primary-content font-bold hover:underline">Découvrir le projet sur GitHub</a>
     </div>
   </footer>
 
