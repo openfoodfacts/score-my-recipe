@@ -21,7 +21,9 @@
 	import IngredientLine from '$lib/ui/IngredientLine.svelte';
 	import {
 		createEmptyIngredient,
-		isIngredientNotEmpty
+		removeIngredientFromList,
+		addEmptyIngredientIfNeeded,
+		countNonEmptyIngredients
 	} from '$lib/types/ingredient';
 	import type { Ingredient } from '$lib/types/ingredient';
 
@@ -37,28 +39,14 @@
 	 * Handle delete of an ingredient
 	 */
 	function handleIngredientDelete(id: string) {
-		// Filter out the deleted ingredient
-		const newIngredients = ingredients.filter((ing) => ing.id !== id);
-
-		// Ensure there's always at least one empty line
-		if (newIngredients.length === 0) {
-			ingredients = [createEmptyIngredient()];
-		} else {
-			ingredients = newIngredients;
-		}
+		ingredients = removeIngredientFromList(ingredients, id);
 	}
 
 	/**
 	 * Handle name focus on the last empty line - triggers new line creation
 	 */
 	function handleNameFocus() {
-		// Get the last ingredient
-		const lastIngredient = ingredients[ingredients.length - 1];
-
-		// Only add a new line if the last line has content
-		if (lastIngredient && isIngredientNotEmpty(lastIngredient)) {
-			ingredients = [...ingredients, createEmptyIngredient()];
-		}
+		ingredients = addEmptyIngredientIfNeeded(ingredients);
 	}
 
 	// Load taxonomy data on mount
@@ -113,7 +101,7 @@
 		<div class="bg-base-200 mt-8 rounded-lg p-4">
 			<h2 class="text-lg font-semibold">{$_('recipe.summary', { default: 'Summary' })}</h2>
 			<p class="text-base-content/70 mt-1">
-				{ingredients.filter(isIngredientNotEmpty).length}
+				{countNonEmptyIngredients(ingredients)}
 				{$_('recipe.ingredients_count', { default: 'ingredient(s) added' })}
 			</p>
 		</div>
