@@ -2,6 +2,17 @@
 
 This guide explains how to set up and run the **Score My Recipe** API locally.
 
+## One-liner setup (Linux & macOS)
+
+If you prefer an automated setup, run the dev setup script from the repository root:
+
+```bash
+./scripts/dev-setup.sh
+```
+
+It will install all prerequisites and dependencies for both backend and frontend.
+If you prefer to do things manually, follow the steps below.
+
 ## Backend
 
 ### Backend prerequisites
