@@ -19,41 +19,11 @@
 		getCountriesTaxonomy
 	} from '$lib/api/taxonomy';
 	import IngredientLine from '$lib/ui/IngredientLine.svelte';
-
-	/**
-	 * Ingredient type definition
-	 */
-	type Ingredient = {
-		id: string;
-		name: string;
-		weight: number | null;
-		codifiedIngredient: string;
-		labels: string[];
-		seasonality: boolean;
-		origin: string[];
-	};
-
-	/**
-	 * Generate a unique ID for ingredients
-	 */
-	function generateId(): string {
-		return `ingredient-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-	}
-
-	/**
-	 * Create a new empty ingredient
-	 */
-	function createEmptyIngredient(): Ingredient {
-		return {
-			id: generateId(),
-			name: '',
-			weight: null,
-			codifiedIngredient: 'unknown',
-			labels: [],
-			seasonality: false,
-			origin: []
-		};
-	}
+	import {
+		createEmptyIngredient,
+		isIngredientNotEmpty
+	} from '$lib/types/ingredient';
+	import type { Ingredient } from '$lib/types/ingredient';
 
 	// Taxonomy data - loaded on mount
 	let ingredientsTaxonomy = $state<readonly string[]>([]);
@@ -86,7 +56,7 @@
 		const lastIngredient = ingredients[ingredients.length - 1];
 
 		// Only add a new line if the last line has content
-		if (lastIngredient && lastIngredient.name.trim() !== '') {
+		if (lastIngredient && isIngredientNotEmpty(lastIngredient)) {
 			ingredients = [...ingredients, createEmptyIngredient()];
 		}
 	}
@@ -143,7 +113,7 @@
 		<div class="bg-base-200 mt-8 rounded-lg p-4">
 			<h2 class="text-lg font-semibold">{$_('recipe.summary', { default: 'Summary' })}</h2>
 			<p class="text-base-content/70 mt-1">
-				{ingredients.filter((i) => i.name.trim() !== '').length}
+				{ingredients.filter(isIngredientNotEmpty).length}
 				{$_('recipe.ingredients_count', { default: 'ingredient(s) added' })}
 			</p>
 		</div>

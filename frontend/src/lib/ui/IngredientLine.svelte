@@ -17,16 +17,7 @@
 	import { _ } from '$lib/i18n';
 	import Tags from './Tags.svelte';
 	import IconMdiDelete from '@iconify-svelte/mdi/delete';
-
-	type Ingredient = {
-		id: string;
-		name: string;
-		weight: number | null;
-		codifiedIngredient: string;
-		labels: string[];
-		seasonality: boolean;
-		origin: string[];
-	};
+	import type { Ingredient } from '$lib/types/ingredient';
 
 	type Props = {
 		ingredient: Ingredient;
