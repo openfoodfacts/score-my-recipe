@@ -27,7 +27,7 @@
 {/if}
 
 <!-- Header -->
-<div>
+<!--<div>
 	<div class="flex justify-center">
 		<div class="bg-base-100 navbar flex w-full max-w-7xl px-10">
 			<div class="navbar-start">
@@ -39,7 +39,7 @@
 			<div class="navbar-end"></div>
 		</div>
 	</div>
-</div>
+</div>-->
 
 <div class="w-full">
 	{@render children?.()}

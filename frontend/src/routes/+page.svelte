@@ -1,9 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { _ } from '$lib/i18n';
-</script>
-
-<script>
   import { Leaf, Sparkles, ArrowRight, Zap, Target, BookOpen, Trash2, Activity, Database, Award, ChevronDown, ChevronUp } from 'lucide-svelte';
 
   // --- DONNÉES SIMULÉES ---
@@ -157,6 +154,7 @@
     </div>
   </section>
 
+<!--
   <section class="px-6 pb-24 relative z-20">
     <div class="max-w-6xl mx-auto bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col lg:flex-row animate-in fade-in zoom-in-95 duration-1000 delay-200">
       
@@ -287,6 +285,7 @@
 
     </div>
   </section>
+-->
 
   <section class="bg-white border-t border-gray-200 py-24 px-6">
     <div class="max-w-6xl mx-auto">
@@ -320,7 +319,7 @@
           <p class="text-gray-500 font-medium leading-relaxed">Misez sur un indicateur validé et déjà identifié par des millions de consommateurs sur Open Food Facts et Yuka.</p>
         </div>
       </div>
-
+<!--
       <div class="mt-20">
         <button 
           on:click={() => setIsFeaturesOpen(!isFeaturesOpen)}
@@ -364,7 +363,7 @@
             </div>
           </div>
         {/if}
-      </div>
+      </div>-->
     </div>
   </section>
 
