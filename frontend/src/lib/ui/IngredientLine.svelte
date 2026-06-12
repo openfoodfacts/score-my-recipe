@@ -11,22 +11,23 @@
   - countriesTaxonomy: List of countries for origin autocomplete
   - isLastItem: Whether this is the last item in the list (controls new line creation)
   - onDelete: Callback when delete button is clicked
-  - onNameFocus: Callback when user starts typing in an empty last line (for triggering new line)
 -->
 <script lang="ts">
 	import { _ } from '$lib/i18n';
 	import Tags from './Tags.svelte';
 	import IconMdiDelete from '@iconify-svelte/mdi/delete';
 	import type { Ingredient } from '$lib/types/ingredient';
+	import { isIngredientEmpty } from '$lib/types/ingredient';
 
 	type Props = {
+		// The ingredient data object (bindable): name, weight, etc.
 		ingredient: Ingredient;
 		ingredientsTaxonomy: readonly string[];
 		labelsTaxonomy: readonly string[];
 		countriesTaxonomy: readonly string[];
 		isLastItem?: boolean;
 		onDelete?: (id: string) => void;
-		onNameFocus?: () => void;
+		onNotEmpty?: () => void; // Optional callback for when line becomes non-empty
 	};
 
 	let {
@@ -36,30 +37,20 @@
 		countriesTaxonomy,
 		isLastItem = false,
 		onDelete,
-		onNameFocus
+		onNotEmpty,
 	}: Props = $props();
 
 	// Track if this ingredient was empty when the component was created
 	// This is used to detect when user starts typing in an empty last line
 	let wasEmptyOnMount = $state(ingredient.name === '');
+	let isNotEmpty = $derived(() => wasEmptyOnMount && ingredientIsNotEmpty(ingredient));
 
-	// Use effect to watch for changes and trigger new line when needed
+	// trigger onNotEmpty when isNoteEmpty becomes true
 	$effect(() => {
-		// Only trigger if this is the last item, was empty on mount, and now has content
-		if (isLastItem && wasEmptyOnMount && ingredient.name.trim() !== '') {
-			// Mark that we've already triggered (to avoid multiple calls)
-			wasEmptyOnMount = false;
-			onNameFocus?.();
+		if (isNotEmpty && onNotEmpty) {
+			onNotEmpty();
 		}
 	});
-
-	/**
-	 * Handle changes to ingredient fields
-	 * With bind:ingredient, changes are automatically propagated to parent
-	 */
-	function handleChange() {
-		// No-op: changes are automatically propagated via bind:ingredient
-	}
 
 	/**
 	 * Handle delete button click
@@ -70,21 +61,25 @@
 </script>
 
 <div class="bg-base-200 flex flex-col gap-2 rounded-lg p-3 sm:flex-row sm:items-start">
-	<!-- Ingredient Name -->
-	<div class="flex-1">
-		<label class="label py-1" for="ingredient-name-{ingredient.id}">
+
+	<!-- Codified Ingredient name -->
+	<div class="w-40">
+		<label class="label py-1" for="ingredient-codified-{ingredient.id}">
 			<span class="label-text text-xs"
-				>{$_('recipe.ingredient_name', { default: 'Ingredient Name' })}</span
+				>{$_('recipe.codified_ingredient', { default: 'Codified' })}</span
 			>
 		</label>
-		<input
-			id="ingredient-name-{ingredient.id}"
-			type="text"
-			class="input input-bordered w-full"
-			placeholder={$_('recipe.ingredient_name_placeholder', { default: 'e.g., Tomato' })}
-			bind:value={ingredient.name}
-			oninput={handleChange}
-		/>
+		<select
+			id="ingredient-codified-{ingredient.id}"
+			class="select select-bordered w-full"
+			bind:value={ingredient.codifiedIngredient}
+		>
+			{#each ingredientsTaxonomy as taxonomyItem (taxonomyItem)}
+				<option value={taxonomyItem}>
+					{taxonomyItem === 'unknown' ? $_('recipe.unknown', { default: 'Unknown' }) : taxonomyItem}
+				</option>
+			{/each}
+		</select>
 	</div>
 
 	<!-- Weight -->
@@ -98,30 +93,8 @@
 			class="input input-bordered w-full"
 			placeholder="0"
 			bind:value={ingredient.weight}
-			oninput={handleChange}
 			min="0"
 		/>
-	</div>
-
-	<!-- Codified Ingredient -->
-	<div class="w-40">
-		<label class="label py-1" for="ingredient-codified-{ingredient.id}">
-			<span class="label-text text-xs"
-				>{$_('recipe.codified_ingredient', { default: 'Codified' })}</span
-			>
-		</label>
-		<select
-			id="ingredient-codified-{ingredient.id}"
-			class="select select-bordered w-full"
-			bind:value={ingredient.codifiedIngredient}
-			onchange={handleChange}
-		>
-			{#each ingredientsTaxonomy as taxonomyItem (taxonomyItem)}
-				<option value={taxonomyItem}>
-					{taxonomyItem === 'unknown' ? $_('recipe.unknown', { default: 'Unknown' }) : taxonomyItem}
-				</option>
-			{/each}
-		</select>
 	</div>
 
 	<!-- Labels -->
@@ -133,11 +106,7 @@
 		</label>
 		<Tags
 			autocomplete={labelsTaxonomy}
-			tags={ingredient.labels}
-			onChange={(labels) => {
-				ingredient.labels = labels;
-				handleChange();
-			}}
+			bind:tags={ingredient.labels}
 		/>
 	</div>
 
@@ -154,7 +123,6 @@
 				type="checkbox"
 				class="checkbox checkbox-primary"
 				bind:checked={ingredient.seasonality}
-				onchange={handleChange}
 				aria-labelledby="ingredient-seasonality-label-{ingredient.id}"
 			/>
 		</div>
@@ -169,17 +137,13 @@
 		</label>
 		<Tags
 			autocomplete={countriesTaxonomy}
-			tags={ingredient.origin}
-			onChange={(origin) => {
-				ingredient.origin = origin;
-				handleChange();
-			}}
+			bind:tags={ingredient.origin}
 		/>
 	</div>
 
 	<!-- Delete Button -->
 	<div class="flex w-12 items-end justify-center pb-1">
-		{#if !(isLastItem && ingredient.name === '')}
+		{#if !(isLastItem && isIngredientEmpty(ingredient))}
 			<button
 				class="btn btn-circle btn-ghost btn-sm text-error"
 				onclick={handleDelete}

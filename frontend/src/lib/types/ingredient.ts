@@ -42,7 +42,7 @@ export function createEmptyIngredient(): Ingredient {
 		id: generateIngredientId(),
 		name: '',
 		weight: null,
-		codifiedIngredient: 'unknown',
+		codifiedIngredient: '',
 		labels: [],
 		seasonality: false,
 		origin: []
@@ -50,12 +50,19 @@ export function createEmptyIngredient(): Ingredient {
 }
 
 /**
- * Check if an ingredient is empty (has no name)
+ * Check if an ingredient is empty
  * @param ingredient - The ingredient to check
  * @returns True if the ingredient has no name
  */
 export function isIngredientEmpty(ingredient: Ingredient): boolean {
-	return ingredient.name.trim() === '';
+	// only seasonality cannot be checked
+	return (
+		ingredient.name.trim() === '' &&
+		ingredient.weight === null &&
+		ingredient.codifiedIngredient === '' &&
+		ingredient.labels.length === 0 &&
+		ingredient.origin.length === 0
+	);
 }
 
 /**
@@ -64,47 +71,5 @@ export function isIngredientEmpty(ingredient: Ingredient): boolean {
  * @returns True if the ingredient has a name
  */
 export function isIngredientNotEmpty(ingredient: Ingredient): boolean {
-	return ingredient.name.trim() !== '';
-}
-
-/**
- * Remove an ingredient from a list by ID
- * @param ingredients - The current list of ingredients
- * @param id - The ID of the ingredient to remove
- * @returns A new list with the ingredient removed, ensuring at least one empty ingredient remains
- */
-export function removeIngredientFromList(ingredients: Ingredient[], id: string): Ingredient[] {
-	const newIngredients = ingredients.filter((ing) => ing.id !== id);
-	
-	// Ensure there's always at least one empty line
-	if (newIngredients.length === 0) {
-		return [createEmptyIngredient()];
-	}
-	
-	return newIngredients;
-}
-
-/**
- * Add a new empty ingredient to the list if the last ingredient has content
- * @param ingredients - The current list of ingredients
- * @returns A new list with a new empty ingredient added if needed
- */
-export function addEmptyIngredientIfNeeded(ingredients: Ingredient[]): Ingredient[] {
-	const lastIngredient = ingredients[ingredients.length - 1];
-	
-	// Only add a new line if the last line has content
-	if (lastIngredient && isIngredientNotEmpty(lastIngredient)) {
-		return [...ingredients, createEmptyIngredient()];
-	}
-	
-	return ingredients;
-}
-
-/**
- * Count non-empty ingredients in a list
- * @param ingredients - The list of ingredients to count
- * @returns The number of ingredients that have content
- */
-export function countNonEmptyIngredients(ingredients: Ingredient[]): number {
-	return ingredients.filter(isIngredientNotEmpty).length;
+	return !isIngredientEmpty(ingredient);
 }

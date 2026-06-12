@@ -21,11 +21,13 @@
 	import IngredientLine from '$lib/ui/IngredientLine.svelte';
 	import {
 		createEmptyIngredient,
+	} from '$lib/types/ingredient';
+	import {
 		removeIngredientFromList,
 		addEmptyIngredientIfNeeded,
 		countNonEmptyIngredients
-	} from '$lib/types/ingredient';
-	import type { Ingredient } from '$lib/types/ingredient';
+	} from '$lib/types/ingredientsList';
+	import type { IngredientsList } from '$lib/types/ingredientsList';
 
 	// Taxonomy data - loaded on mount
 	let ingredientsTaxonomy = $state<readonly string[]>([]);
@@ -33,7 +35,7 @@
 	let countriesTaxonomy = $state<readonly string[]>([]);
 
 	// Recipe state - starts with one empty ingredient line
-	let ingredients = $state<Ingredient[]>([createEmptyIngredient()]);
+	let ingredients = $state<IngredientsLine>([createEmptyIngredient()]);
 
 	/**
 	 * Handle delete of an ingredient
@@ -43,9 +45,9 @@
 	}
 
 	/**
-	 * Handle name focus on the last empty line - triggers new line creation
+	 * Add an empty line - when last line is no more empty
 	 */
-	function handleNameFocus() {
+	function addIngredientLine() {
 		ingredients = addEmptyIngredientIfNeeded(ingredients);
 	}
 
@@ -92,7 +94,7 @@
 					{countriesTaxonomy}
 					isLastItem={index === ingredients.length - 1}
 					onDelete={handleIngredientDelete}
-					onNameFocus={handleNameFocus}
+					onNotEmpty={addIngredientLine}
 				/>
 			{/each}
 		</div>
