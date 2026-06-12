@@ -91,7 +91,7 @@ fi
 
 # Install frontend dependencies
 info "Installing frontend dependencies..."
-pnpm install
+pnpm install --frozen-lockfile
 ok "Frontend dependencies installed"
 
 # Copy .env.example → .env if needed
