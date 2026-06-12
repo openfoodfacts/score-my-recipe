@@ -17,6 +17,11 @@ cp .env.example .env
 pnpm install --frozen-lockfile
 ```
 
+## NVM and pnpm specific
+
+if you see a "local-nvm.sh" file in the `frontend` folder,
+source it: `cd frontend; source ./local-nvm.sh` before using `pnpm commands°
+
 ---
 
 ## Key Commands
