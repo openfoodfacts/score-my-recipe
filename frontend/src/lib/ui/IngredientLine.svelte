@@ -5,14 +5,13 @@
   Contains fields for: name, weight, codified ingredient, labels, seasonality, origin, and delete action.
   
   Props:
-  - ingredient: The ingredient data object
+  - ingredient: The ingredient data object (bindable - changes propagate to parent)
   - ingredientsTaxonomy: List of codified ingredient options
   - labelsTaxonomy: List of available labels for autocomplete
   - countriesTaxonomy: List of countries for origin autocomplete
-  - isLastEmpty: Whether this is the last empty line (controls delete button visibility)
-  - onUpdate: Callback when ingredient data changes
+  - isLastItem: Whether this is the last item in the list (controls new line creation)
   - onDelete: Callback when delete button is clicked
-  - onNameFocus: Callback when name input receives focus (for triggering new line)
+  - onNameFocus: Callback when user starts typing in an empty last line (for triggering new line)
 -->
 <script lang="ts">
 	import { _ } from '$lib/i18n';
@@ -34,28 +33,41 @@
 		ingredientsTaxonomy: readonly string[];
 		labelsTaxonomy: readonly string[];
 		countriesTaxonomy: readonly string[];
-		isLastEmpty?: boolean;
-		onUpdate?: (ingredient: Ingredient) => void;
+		isLastItem?: boolean;
 		onDelete?: (id: string) => void;
 		onNameFocus?: () => void;
 	};
 
 	let {
-		ingredient,
+		ingredient = $bindable(),
 		ingredientsTaxonomy,
 		labelsTaxonomy,
 		countriesTaxonomy,
-		isLastEmpty = false,
-		onUpdate,
+		isLastItem = false,
 		onDelete,
 		onNameFocus
 	}: Props = $props();
 
+	// Track if this ingredient was empty when the component was created
+	// This is used to detect when user starts typing in an empty last line
+	let wasEmptyOnMount = $state(ingredient.name === '');
+
+	// Use effect to watch for changes and trigger new line when needed
+	$effect(() => {
+		// Only trigger if this is the last item, was empty on mount, and now has content
+		if (isLastItem && wasEmptyOnMount && ingredient.name.trim() !== '') {
+			// Mark that we've already triggered (to avoid multiple calls)
+			wasEmptyOnMount = false;
+			onNameFocus?.();
+		}
+	});
+
 	/**
-	 * Handle changes to ingredient fields and propagate to parent
+	 * Handle changes to ingredient fields
+	 * With bind:ingredient, changes are automatically propagated to parent
 	 */
 	function handleChange() {
-		onUpdate?.(ingredient);
+		// No-op: changes are automatically propagated via bind:ingredient
 	}
 
 	/**
@@ -63,15 +75,6 @@
 	 */
 	function handleDelete() {
 		onDelete?.(ingredient.id);
-	}
-
-	/**
-	 * Handle name input focus to trigger new line creation in parent
-	 */
-	function handleNameFocus() {
-		if (isLastEmpty && ingredient.name.trim() !== '') {
-			onNameFocus?.();
-		}
 	}
 </script>
 
@@ -90,7 +93,6 @@
 			placeholder={$_('recipe.ingredient_name_placeholder', { default: 'e.g., Tomato' })}
 			bind:value={ingredient.name}
 			oninput={handleChange}
-			onfocus={handleNameFocus}
 		/>
 	</div>
 
@@ -186,7 +188,7 @@
 
 	<!-- Delete Button -->
 	<div class="flex w-12 items-end justify-center pb-1">
-		{#if !isLastEmpty}
+		{#if !(isLastItem && ingredient.name === '')}
 			<button
 				class="btn btn-circle btn-ghost btn-sm text-error"
 				onclick={handleDelete}

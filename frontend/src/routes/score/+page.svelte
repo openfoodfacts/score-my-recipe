@@ -64,15 +64,6 @@
 	let ingredients = $state<Ingredient[]>([createEmptyIngredient()]);
 
 	/**
-	 * Handle update of an ingredient
-	 */
-	function handleIngredientUpdate(updatedIngredient: Ingredient) {
-		// The ingredient is already updated in place via binding
-		// This callback can be used for additional logic if needed
-		console.log('Ingredient updated:', $state.snapshot(updatedIngredient));
-	}
-
-	/**
 	 * Handle delete of an ingredient
 	 */
 	function handleIngredientDelete(id: string) {
@@ -137,12 +128,11 @@
 		<div class="space-y-4">
 			{#each ingredients as ingredient, index (ingredient.id)}
 				<IngredientLine
-					{ingredient}
+					bind:ingredient={ingredients[index]}
 					{ingredientsTaxonomy}
 					{labelsTaxonomy}
 					{countriesTaxonomy}
-					isLastEmpty={index === ingredients.length - 1 && ingredient.name === ''}
-					onUpdate={handleIngredientUpdate}
+					isLastItem={index === ingredients.length - 1}
 					onDelete={handleIngredientDelete}
 					onNameFocus={handleNameFocus}
 				/>
