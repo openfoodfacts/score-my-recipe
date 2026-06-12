@@ -5,7 +5,7 @@
 	const navItems = $state([
 		{ name: 'navbar.score_recipe', href: '/score' },
 		{ name: 'navbar.join_community', href: offLinks.website },
-		{ name: 'navbar.open_food_facts', href: offLinks.world },
+		{ name: 'navbar.open_food_facts', href: offLinks.website },
 		{ name: 'navbar.methodology', href: `${offLinks.website}/green-score` }
 	]);
 </script>

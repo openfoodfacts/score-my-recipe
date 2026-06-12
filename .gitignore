@@ -4,3 +4,11 @@
 .env
 .vscode/
 .DS_Store
+
+# Root workspace files (should only use frontend/server workspaces)
+node_modules/
+/package.json
+/pnpm-lock.yaml
+
+# Kilo code assistant
+.kilo/

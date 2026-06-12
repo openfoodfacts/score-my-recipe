@@ -28,7 +28,10 @@ function parseArgs(): { ref: string; mode: 'sync' | 'check' } {
  * Also extracts placeholder information.
  * Example: { navbar: { title: "Hello {name}" } } -> { "navbar.title": { value: "Hello {name}", placeholders: ["{name}"] } }
  */
-function flattenObject(obj: Record<string, unknown>, prefix = ''): Record<string, { value: string; placeholders: string[] }> {
+function flattenObject(
+	obj: Record<string, unknown>,
+	prefix = ''
+): Record<string, { value: string; placeholders: string[] }> {
 	const result: Record<string, { value: string; placeholders: string[] }> = {};
 
 	for (const [key, value] of Object.entries(obj)) {
@@ -57,7 +60,9 @@ function extractPlaceholders(str: string): string[] {
 /**
  * Recursively expands a flat dot-notation object back into a nested structure.
  */
-function unflattenObject(flat: Record<string, { value: string; placeholders: string[] }>): Record<string, unknown> {
+function unflattenObject(
+	flat: Record<string, { value: string; placeholders: string[] }>
+): Record<string, unknown> {
 	const result: Record<string, unknown> = {};
 
 	for (const [key, { value }] of Object.entries(flat)) {
@@ -136,8 +141,10 @@ function checkTranslationFile(
 			const refPlaceholders = reference[key].placeholders;
 			const targetPlaceholders = target[key].placeholders;
 
-			if (refPlaceholders.length !== targetPlaceholders.length ||
-				!refPlaceholders.every(p => targetPlaceholders.includes(p))) {
+			if (
+				refPlaceholders.length !== targetPlaceholders.length ||
+				!refPlaceholders.every((p) => targetPlaceholders.includes(p))
+			) {
 				placeholderMismatches.push(
 					`${key}: expected ${JSON.stringify(refPlaceholders)}, got ${JSON.stringify(targetPlaceholders)}`
 				);
@@ -192,7 +199,9 @@ function sync(ref: string) {
 		const addedKeys = Object.keys(referenceFlat).filter((k) => !(k in targetFlat)).length;
 		const removedKeys = Object.keys(targetFlat).filter((k) => !(k in referenceFlat)).length;
 
-		console.log(`   ✅ Synced! Added: ${addedKeys}, Removed: ${removedKeys}, Total: ${Object.keys(syncedFlat).length}`);
+		console.log(
+			`   ✅ Synced! Added: ${addedKeys}, Removed: ${removedKeys}, Total: ${Object.keys(syncedFlat).length}`
+		);
 
 		syncedCount++;
 	}
@@ -236,11 +245,16 @@ function check(ref: string) {
 
 		const issues = checkTranslationFile(referenceFlat, targetFlat);
 
-		if (issues.missing.length === 0 && issues.extra.length === 0 && issues.placeholderMismatches.length === 0) {
+		if (
+			issues.missing.length === 0 &&
+			issues.extra.length === 0 &&
+			issues.placeholderMismatches.length === 0
+		) {
 			console.log(`   ✅ OK! (${Object.keys(targetFlat).length} keys)`);
 		} else {
 			checkedCount++;
-			totalIssues += issues.missing.length + issues.extra.length + issues.placeholderMismatches.length;
+			totalIssues +=
+				issues.missing.length + issues.extra.length + issues.placeholderMismatches.length;
 
 			if (issues.missing.length > 0) {
 				console.log(`   ❌ Missing keys (${issues.missing.length}):`);

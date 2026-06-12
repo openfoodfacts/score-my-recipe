@@ -1,4 +1,7 @@
 allowBuilds:
+  '@parcel/watcher': set this to true or false
   '@sentry/cli': true
+  aws-sdk: set this to true or false
   es5-ext: true
   esbuild: true
+  sharp: set this to true or false
