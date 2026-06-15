@@ -6,7 +6,7 @@
 ## Projects instructions
 
 Ensure you read the [global AGENTS.md](../AGENTS.md),
-those file add specific instruction for the backend part.
+this file adds specific instructions for the backend part.
 
 ## Bootstrap
 
