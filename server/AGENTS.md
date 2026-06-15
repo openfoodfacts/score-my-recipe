@@ -3,7 +3,7 @@
 ---
 
 
-## Projects instructions
+## Project instructions
 
 Ensure you read the [global AGENTS.md](../AGENTS.md),
 this file adds specific instructions for the backend part.
