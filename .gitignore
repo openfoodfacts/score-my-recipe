@@ -4,3 +4,14 @@
 .env
 .vscode/
 .DS_Store
+
+# local nvm env setup script
+frontend/local-nvm.sh
+
+# Root workspace files (should only use frontend/server workspaces)
+node_modules/
+/package.json
+/pnpm-lock.yaml
+
+# Kilo code assistant
+.kilo/

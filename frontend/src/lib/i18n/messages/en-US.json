@@ -41,19 +41,21 @@
 			"press": "Press"
 		}
 	},
-	"landing": {
-		"title": "Open Food Facts for recipes",
-		"badge": "Open Food Facts for recipes",
-		"hero_title": "Easily estimate the impact of your recipes",
-		"hero_description": "Start with a simple flow: add your ingredients, get your Green-Score, and improve your menus.",
-		"cta_demo": "See the demo",
-		"cta_methodology": "Discover the methodology",
-		"step_1_title": "1. Clear input",
-		"step_1_description": "Enter your ingredients and quantities in a readable recipe sheet.",
-		"step_2_title": "2. Instant score",
-		"step_2_description": "The Green-Score is computed instantly from Open Food Facts data.",
-		"step_3_title": "3. Quick action",
-		"step_3_description": "Identify better substitutions to reduce the carbon impact of your menus."
+	"recipe": {
+		"title": "Recipe Editor",
+		"description": "Add ingredients to your recipe",
+		"ingredient_name": "Ingredient Name",
+		"ingredient_name_placeholder": "e.g., Tomato",
+		"weight": "Weight (g)",
+		"codified_ingredient": "Codified",
+		"labels": "Labels",
+		"seasonality": "Seasonal",
+		"origin": "Origin",
+		"unknown": "Unknown",
+		"delete_ingredient": "Delete ingredient",
+		"action": "Action",
+		"summary": "Summary",
+		"ingredients_count": "ingredient(s) added"
 	},
 	"homepage": {
 		"title": "Score My Recipe - Open Food Facts",

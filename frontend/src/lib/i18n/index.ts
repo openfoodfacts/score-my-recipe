@@ -37,9 +37,9 @@ export function getLocale() {
 
 export function getBrowserLocale() {
 	if (!browser) throw new Error('getBrowserLocale should only be called in the browser');
-	const preferredLang = get(preferences).lang;
+	// const preferredLang = get(preferences).lang;
 	const navLang = getLocaleFromNavigator();
-	return preferredLang || navLang || FALLBACK_LOCALE;
+	return navLang || FALLBACK_LOCALE;
 }
 
 export { isLoading };
