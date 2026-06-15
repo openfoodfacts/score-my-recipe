@@ -278,7 +278,7 @@
 
 <!-- Tag widget -->
 <div
-	class="bg-base-100 border-base-200 focus-within:border-primary focus-within:outline-primary flex h-auto min-h-12 w-full flex-wrap items-center gap-x-1.5 gap-y-1 rounded-md p-2"
+	class="bg-base-100 border-base-200 focus-within:border-primary focus-within:outline-primary flex h-auto min-h-12 w-full flex-wrap gap-x-1.5 gap-y-1 rounded-md"
 >
 	<!-- each value of the tag (multi valued) -->
 	{#each tags as tag, index (tag)}

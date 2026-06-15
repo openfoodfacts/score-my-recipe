@@ -22,6 +22,7 @@
 	type Props = {
 		// The ingredient data object (bindable): name, weight, etc.
 		ingredient: Ingredient;
+		isFirstItem?: boolean;
 		isLastItem?: boolean;
 		onDelete?: (id: string) => void;
 		onNotEmpty?: () => void; // Optional callback for when line becomes non-empty
@@ -29,6 +30,7 @@
 
 	let {
 		ingredient = $bindable(),
+		isFirstItem = false,
 		isLastItem = false,
 		onDelete,
 		onNotEmpty,
@@ -54,10 +56,11 @@
 	}
 </script>
 
+
 <div class="flex flex-col gap-2 rounded-lg p-3 sm:flex-row sm:items-start">
 
 	<!-- Codified Ingredient name -->
-	<div class="">
+	<div class="flex grow-3 flex-col">
 		<label class="label py-1" for="ingredient-codified-{ingredient.id}">
 			<span class="label-text text-xs"
 				>{$_('recipe.codified_ingredient', { default: 'Codified' })}</span
@@ -72,7 +75,7 @@
 	</div>
 
 	<!-- Weight -->
-	<div class="w-24">
+	<div class="flex w-24 flex-col">
 		<label class="label py-1" for="ingredient-weight-{ingredient.id}">
 			<span class="label-text text-xs">{$_('recipe.weight', { default: 'Weight (g)' })}</span>
 		</label>
@@ -87,7 +90,7 @@
 	</div>
 
 	<!-- Labels -->
-	<div class="w-48">
+	<div class="flex grow-3 flex-col">
 		<label class="label py-1" for="ingredient-labels-{ingredient.id}">
 			<span class="label-text text-xs" id="ingredient-labels-label-{ingredient.id}"
 				>{$_('recipe.labels', { default: 'Labels' })}</span
@@ -118,7 +121,7 @@
 	</div>
 
 	<!-- Origin -->
-	<div class="">
+	<div class="flex grow-3 flex-col">
 		<label class="label py-1" for="ingredient-origin-{ingredient.id}">
 			<span class="label-text text-xs" id="ingredient-origin-label-{ingredient.id}"
 				>{$_('recipe.origin', { default: 'Origin' })}</span
@@ -132,10 +135,10 @@
 	</div>
 
 	<!-- Delete Button -->
-	<div class="flex w-12 items-end justify-center pb-1">
+	<div class="flex w-12 flex-col items-end justify-center pb-1">
 		{#if !(isLastItem && isIngredientEmpty(ingredient))}
 			<button
-				class="btn btn-circle btn-ghost btn-sm text-error"
+				class="mt-2 btn btn-circle btn-ghost btn-sm text-error"
 				onclick={handleDelete}
 				aria-label={$_('recipe.delete_ingredient', { default: 'Delete ingredient' })}
 			>

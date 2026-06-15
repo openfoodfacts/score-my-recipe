@@ -22,11 +22,6 @@
 	} from '$lib/types/ingredientsList';
 	import type { IngredientsList } from '$lib/types/ingredientsList';
 
-	// Taxonomy data - loaded on mount
-	let ingredientsTaxonomy = $state<readonly string[]>([]);
-	let labelsTaxonomy = $state<readonly string[]>([]);
-	let countriesTaxonomy = $state<readonly string[]>([]);
-
 	// Recipe state - starts with one empty ingredient line
 	let ingredients = $state<IngredientsList>([createEmptyIngredient()]);
 
@@ -65,6 +60,7 @@
 			<IngredientLine
 				bind:ingredient={ingredients[index]}
 				isLastItem={index === ingredients.length - 1}
+				isFirstItem={index === 0}
 				onDelete={handleIngredientDelete}
 				onNotEmpty={addIngredientLine}
 			/>
