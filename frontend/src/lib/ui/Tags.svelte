@@ -19,8 +19,9 @@
 	- Autocomplete suggestions appear when typing, with keyboard navigation support (ArrowUp/Down).
 -->
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
-	import {debounce} from 'lodash.debounce';
+	import debounce from 'lodash.debounce';
 	import { getMatchingTags } from '$lib/api/taxonomy';
 
 	import IconMdiClose from '@iconify-svelte/mdi/close';
@@ -28,11 +29,11 @@
 	type Props = {
 		tagtype: string;
 		tags?: string[];
-		autocomplete?: readonly string[];
+		single?: boolean; // optional prop to allow only a single tag
 		onChange?: (tags: string[]) => void;
 	};
 
-	let { tagtype, tags = $bindable([]), autocomplete = [], onChange }: Props = $props();
+	let { tagtype, tags = $bindable([]), single = false, onChange }: Props = $props();
 
 	let autoCompleteIndex = $state(-1);
 	// suggestions returned by API
@@ -53,20 +54,28 @@
 		}
 	});
 
-	// fetch suggestion as soon as inputValue changes
-	$effect(() => {
-		fetchSuggestions(activeSearchValue);
-	});
-
-	const fetchSuggestions = debounce(async (value: string) => {
+	async function rawFetchSuggestions(value: string) {
 		if (value.trim() === '') {
 			currentSuggestions = [];
 			return;
 		}
 		const resp = await getMatchingTags(tagtype, value);
 		// see later how to show synonyms in the UI
-		currentSuggestions = resp.suggestions;
-	}, 200);
+		currentSuggestions = resp.suggestions.map((s) => ({ item: s }));
+	}
+	// this will be the debounced version of _fetchSuggestions, to avoid too many API calls
+	let fetchSuggestions;
+
+	onMount(() => {
+		fetchSuggestions = debounce(rawFetchSuggestions, 500);
+	});
+
+	// fetch suggestion as soon as inputValue changes
+	$effect(() => {
+		if (fetchSuggestions) {
+			fetchSuggestions(activeSearchValue);
+		}
+	});
 
 	/**
 	 * Handle keyboard navigation (ArrowUp/Down) through autocomplete suggestions
@@ -321,13 +330,15 @@
 	{/each}
 
 	<!-- add a tag -->
-	<div class="dropdown grow">
-		<input
-			type="text"
-			class="input input-bordered w-full bg-transparent outline-hidden"
-			onkeydown={inputHandler}
-			bind:value={newValue}
-		/>
-		{@render autocompleteDropdown()}
-	</div>
+	{#if !single || tags.length === 0}
+		<div class="dropdown grow">
+			<input
+				type="text"
+				class="input input-bordered w-full bg-transparent outline-hidden"
+				onkeydown={inputHandler}
+				bind:value={newValue}
+			/>
+			{@render autocompleteDropdown()}
+		</div>
+	{/if}
 </div>

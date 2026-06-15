@@ -22,9 +22,6 @@
 	type Props = {
 		// The ingredient data object (bindable): name, weight, etc.
 		ingredient: Ingredient;
-		ingredientsTaxonomy: readonly string[];
-		labelsTaxonomy: readonly string[];
-		countriesTaxonomy: readonly string[];
 		isLastItem?: boolean;
 		onDelete?: (id: string) => void;
 		onNotEmpty?: () => void; // Optional callback for when line becomes non-empty
@@ -32,9 +29,6 @@
 
 	let {
 		ingredient = $bindable(),
-		ingredientsTaxonomy,
-		labelsTaxonomy,
-		countriesTaxonomy,
 		isLastItem = false,
 		onDelete,
 		onNotEmpty,
@@ -60,10 +54,10 @@
 	}
 </script>
 
-<div class="bg-base-200 flex flex-col gap-2 rounded-lg p-3 sm:flex-row sm:items-start">
+<div class="flex flex-col gap-2 rounded-lg p-3 sm:flex-row sm:items-start">
 
 	<!-- Codified Ingredient name -->
-	<div class="w-40">
+	<div class="">
 		<label class="label py-1" for="ingredient-codified-{ingredient.id}">
 			<span class="label-text text-xs"
 				>{$_('recipe.codified_ingredient', { default: 'Codified' })}</span
@@ -73,6 +67,7 @@
 			tagtype="ingredients"
 			id="ingredient-codified-{ingredient.id}"
 			bind:tags={ingredient.codifiedIngredient}
+			single={true}
 		/>
 	</div>
 
@@ -123,7 +118,7 @@
 	</div>
 
 	<!-- Origin -->
-	<div class="w-48">
+	<div class="">
 		<label class="label py-1" for="ingredient-origin-{ingredient.id}">
 			<span class="label-text text-xs" id="ingredient-origin-label-{ingredient.id}"
 				>{$_('recipe.origin', { default: 'Origin' })}</span
@@ -132,6 +127,7 @@
 		<Tags
 			tagtype="countries"
 			bind:tags={ingredient.origin}
+			single={true}
 		/>
 	</div>
 
