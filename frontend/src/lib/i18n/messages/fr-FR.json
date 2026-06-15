@@ -1,79 +1,79 @@
 {
-	"navbar": {
-		"score_recipe": "Score a recipe",
-		"join_community": "Join the community",
-		"open_food_facts": "Open Food Facts",
-		"methodology": "About the Green-Score"
-	},
-	"footer": {
-		"stay_updated": "Stay Updated",
-		"contribute": "Contribute",
-		"discover_title": "Discover our Project",
-		"tagline": "A collaborative, free and open database of food products",
-		"tagline_break": "from around the world.",
-		"decorative_alt": "A decorative graphic",
-		"social": {
-			"x": "X (formerly Twitter)",
-			"instagram": "Instagram",
-			"github": "GitHub",
-			"facebook": "Facebook",
-			"slack": "Slack"
-		},
-		"links": {
-			"newsletter": "Newsletter",
-			"forum": "Forum",
-			"producers": "Producers Platform",
-			"translate": "Translate",
-			"github": "GitHub",
-			"data_api_sdks": "Data, API, SDKs",
-			"wiki": "Wiki",
-			"legal": "Legal",
-			"privacy": "Privacy",
-			"terms_of_use": "Terms of use"
-		},
-		"discover": {
-			"who_we_are": "Who we are",
-			"blog": "Blog",
-			"code_of_conduct": "Code of Conduct",
-			"vision_mission_values_and_programs": "Vision, Mission, Values and Programs",
-			"partners": "Partners",
-			"faq": "FAQ",
-			"press": "Press"
-		}
-	},
-	"recipe": {
-		"title": "Recipe Editor",
-		"description": "Add ingredients to your recipe",
-		"ingredient_name": "Ingredient Name",
-		"ingredient_name_placeholder": "e.g., Tomato",
-		"weight": "Weight (g)",
-		"codified_ingredient": "Codified",
-		"labels": "Labels",
-		"seasonality": "Seasonal",
-		"origin": "Origin",
-		"unknown": "Unknown",
-		"delete_ingredient": "Delete ingredient",
-		"action": "Action",
-		"summary": "Summary",
-		"ingredients_count": "ingredient(s) added"
-	},
-	"homepage": {
-		"title": "Score My Recipe - Open Food Facts",
-		"badge": "L'outil open-source de la restauration collective",
-		"hero_title": "Calculez l'impact de vos recettes",
-		"hero_title_highlight": "en temps réel.",
-		"hero_description": "Saisissez vos ingrédients naturellement. Notre outil structure vos fiches techniques, calcule instantanément le Green-Score et vous accompagne vers des menus plus durables.",
-		"cta_recipe_calculator": "Ouvrir le calculateur de recettes",
-		"section2_title": "La boussole des professionnels",
-		"section2_description": "Améliorez facilement vos fiches techniques avec des données fiables.",
-		"feature1_title": "Calcul en temps réel",
-		"feature1_description": "Ajustez facilement l'impact d'une recette en \"jammant\" sur les quantités ou en testant des substitutions d'ingrédients à la volée.",
-		"feature2_title": "Transparence & Agribalyse",
-		"feature2_description": "Une méthodologie de calcul transparente, qui s'appuie sur la rigueur de la base publique Agribalyse portée par l'ADEME.",
-		"feature3_title": "Score à forte notoriété",
-		"feature3_description": "Misez sur un indicateur validé et déjà identifié par des millions de consommateurs sur Open Food Facts et Yuka.",
-		"footer_text": "Un projet open-source porté par Open Food Facts, conçu pour transformer l'impact de la restauration.",
-		"footer_badge": "Projet réalisé de manière collaborative grâce au soutien de l'Appel à Communs de l'ADEME",
-		"footer_github_link": "Découvrir le projet sur GitHub"
-	}
+  "navbar": {
+    "score_recipe": "Score a recipe",
+    "join_community": "Join the community",
+    "open_food_facts": "Open Food Facts",
+    "methodology": "About the Green-Score"
+  },
+  "footer": {
+    "stay_updated": "Stay Updated",
+    "contribute": "Contribute",
+    "discover_title": "Discover our Project",
+    "tagline": "A collaborative, free and open database of food products",
+    "tagline_break": "from around the world.",
+    "decorative_alt": "A decorative graphic",
+    "social": {
+      "x": "X (formerly Twitter)",
+      "instagram": "Instagram",
+      "github": "GitHub",
+      "facebook": "Facebook",
+      "slack": "Slack"
+    },
+    "links": {
+      "newsletter": "Newsletter",
+      "forum": "Forum",
+      "producers": "Producers Platform",
+      "translate": "Translate",
+      "github": "GitHub",
+      "data_api_sdks": "Data, API, SDKs",
+      "wiki": "Wiki",
+      "legal": "Legal",
+      "privacy": "Privacy",
+      "terms_of_use": "Terms of use"
+    },
+    "discover": {
+      "who_we_are": "Who we are",
+      "blog": "Blog",
+      "code_of_conduct": "Code of Conduct",
+      "vision_mission_values_and_programs": "Vision, Mission, Values and Programs",
+      "partners": "Partners",
+      "faq": "FAQ",
+      "press": "Press"
+    }
+  },
+  "recipe": {
+    "title": "Recipe Editor",
+    "description": "Add ingredients to your recipe",
+    "ingredient_name": "Ingredient Name",
+    "ingredient_name_placeholder": "e.g., Tomato",
+    "weight": "Weight (g)",
+    "codified_ingredient": "Codified",
+    "labels": "Labels",
+    "seasonality": "Seasonal",
+    "origin": "Origin",
+    "unknown": "Unknown",
+    "delete_ingredient": "Delete ingredient",
+    "action": "Action",
+    "summary": "Summary",
+    "ingredients_count": "ingredient(s) added"
+  },
+  "homepage": {
+    "title": "Score My Recipe - Open Food Facts",
+    "badge": "L'outil open-source de la restauration collective",
+    "hero_title": "Calculez l'impact de vos recettes",
+    "hero_title_highlight": "en temps réel.",
+    "hero_description": "Saisissez vos ingrédients naturellement. Notre outil structure vos fiches techniques, calcule instantanément le Green-Score et vous accompagne vers des menus plus durables.",
+    "cta_recipe_calculator": "Ouvrir le calculateur de recettes",
+    "section2_title": "La boussole des professionnels",
+    "section2_description": "Améliorez facilement vos fiches techniques avec des données fiables.",
+    "feature1_title": "Calcul en temps réel",
+    "feature1_description": "Ajustez facilement l'impact d'une recette en \"jammant\" sur les quantités ou en testant des substitutions d'ingrédients à la volée.",
+    "feature2_title": "Transparence & Agribalyse",
+    "feature2_description": "Une méthodologie de calcul transparente, qui s'appuie sur la rigueur de la base publique Agribalyse portée par l'ADEME.",
+    "feature3_title": "Score à forte notoriété",
+    "feature3_description": "Misez sur un indicateur validé et déjà identifié par des millions de consommateurs sur Open Food Facts et Yuka.",
+    "footer_text": "Un projet open-source porté par Open Food Facts, conçu pour transformer l'impact de la restauration.",
+    "footer_badge": "Projet réalisé de manière collaborative grâce au soutien de l'Appel à Communs de l'ADEME",
+    "footer_github_link": "Découvrir le projet sur GitHub"
+  }
 }
