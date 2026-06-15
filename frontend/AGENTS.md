@@ -1,7 +1,6 @@
-# Agent Guide —  Score my recipe frontend
+# Agent Guide — Score my recipe frontend
 
 ---
-
 
 ## Projects instructions
 
@@ -22,15 +21,15 @@ pnpm install --frozen-lockfile
 
 ## Key Commands
 
-| Command       | Purpose                                     | Approx. time       |
-| ------------- | ------------------------------------------- | ------------------ |
-| `pnpm dev`       | Start dev server at <http://localhost:5173>    | ~3s (runs forever) |
-| `pnpm build`     | Production build                            | ~20s               |
-| `pnpm check`     | TypeScript + Svelte type check              | ~10s               |
-| `pnpm lint`      | Prettier + ESLint                           | ~15s               |
-| `pnpm format`    | Auto-format all files                       | ~5s                |
-| `pnpm i18ncheck` | check translation files                       | ~5s                |
-| `pnpm i18nsync` | add missing translations in secondary languages                       | ~5s                |
+| Command          | Purpose                                         | Approx. time       |
+| ---------------- | ----------------------------------------------- | ------------------ |
+| `pnpm dev`       | Start dev server at <http://localhost:5173>     | ~3s (runs forever) |
+| `pnpm build`     | Production build                                | ~20s               |
+| `pnpm check`     | TypeScript + Svelte type check                  | ~10s               |
+| `pnpm lint`      | Prettier + ESLint                               | ~15s               |
+| `pnpm format`    | Auto-format all files                           | ~5s                |
+| `pnpm i18ncheck` | check translation files                         | ~5s                |
+| `pnpm i18nsync`  | add missing translations in secondary languages | ~5s                |
 
 > External API calls to OpenFoodFacts will fail in sandboxed environments — this is expected. Focus on UI and code correctness.
 
@@ -77,7 +76,6 @@ Try to make the code as clear as possible, by normalizing cases before processin
 We try to use the frameworks at their best to have easy to read, semantic code.
 
 ---
-
 
 ### UI & Design
 
