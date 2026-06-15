@@ -1,19 +1,19 @@
 {
   "navbar": {
-    "score_recipe": "Score a recipe",
-    "join_community": "Join the community",
+    "score_recipe": "Noter une recette",
+    "join_community": "Rejoindre la communauté",
     "open_food_facts": "Open Food Facts",
-    "methodology": "About the Green-Score"
+    "methodology": "À propos du Green-Score"
   },
   "footer": {
-    "stay_updated": "Stay Updated",
-    "contribute": "Contribute",
-    "discover_title": "Discover our Project",
-    "tagline": "A collaborative, free and open database of food products",
-    "tagline_break": "from around the world.",
-    "decorative_alt": "A decorative graphic",
+    "stay_updated": "Restez informé",
+    "contribute": "Contribuer",
+    "discover_title": "Découvrez notre projet",
+    "tagline": "Une base de données collaborative, gratuite et ouverte sur les produits alimentaires",
+    "tagline_break": "du monde entier.",
+    "decorative_alt": "Un graphique décoratif",
     "social": {
-      "x": "X (formerly Twitter)",
+      "x": "X (anciennement Twitter)",
       "instagram": "Instagram",
       "github": "GitHub",
       "facebook": "Facebook",
@@ -22,40 +22,40 @@
     "links": {
       "newsletter": "Newsletter",
       "forum": "Forum",
-      "producers": "Producers Platform",
-      "translate": "Translate",
+      "producers": "Plateforme des producteurs",
+      "translate": "Traduire",
       "github": "GitHub",
-      "data_api_sdks": "Data, API, SDKs",
+      "data_api_sdks": "Données, API, SDKs",
       "wiki": "Wiki",
-      "legal": "Legal",
-      "privacy": "Privacy",
-      "terms_of_use": "Terms of use"
+      "legal": "Mentions légales",
+      "privacy": "Confidentialité",
+      "terms_of_use": "Conditions d'utilisation"
     },
     "discover": {
-      "who_we_are": "Who we are",
+      "who_we_are": "Qui sommes-nous",
       "blog": "Blog",
-      "code_of_conduct": "Code of Conduct",
-      "vision_mission_values_and_programs": "Vision, Mission, Values and Programs",
-      "partners": "Partners",
+      "code_of_conduct": "Code de conduite",
+      "vision_mission_values_and_programs": "Vision, Mission, Valeurs et Programmes",
+      "partners": "Partenaires",
       "faq": "FAQ",
-      "press": "Press"
+      "press": "Presse"
     }
   },
   "recipe": {
-    "title": "Recipe Editor",
-    "description": "Add ingredients to your recipe",
-    "ingredient_name": "Ingredient Name",
-    "ingredient_name_placeholder": "e.g., Tomato",
-    "weight": "Weight (g)",
-    "codified_ingredient": "Codified",
-    "labels": "Labels",
-    "seasonality": "Seasonal",
-    "origin": "Origin",
-    "unknown": "Unknown",
-    "delete_ingredient": "Delete ingredient",
+    "title": "Éditeur de recettes",
+    "description": "Ajoutez des ingrédients à votre recette",
+    "ingredient_name": "Nom de l'ingrédient",
+    "ingredient_name_placeholder": "ex. Tomate",
+    "weight": "Poids (g)",
+    "codified_ingredient": "Codifié",
+    "labels": "Étiquettes",
+    "seasonality": "Saisonnalité",
+    "origin": "Origine",
+    "unknown": "Inconnu",
+    "delete_ingredient": "Supprimer l'ingrédient",
     "action": "Action",
-    "summary": "Summary",
-    "ingredients_count": "ingredient(s) added"
+    "summary": "Résumé",
+    "ingredients_count": "ingrédient(s) ajouté(s)"
   },
   "homepage": {
     "title": "Score My Recipe - Open Food Facts",
