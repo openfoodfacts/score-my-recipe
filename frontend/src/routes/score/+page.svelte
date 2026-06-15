@@ -51,18 +51,6 @@
 		ingredients = addEmptyIngredientIfNeeded(ingredients);
 	}
 
-	// Load taxonomy data on mount
-	onMount(async () => {
-		const [ingredients, labels, countries] = await Promise.all([
-			getIngredientsTaxonomy(),
-			getLabelsTaxonomy(),
-			getCountriesTaxonomy()
-		]);
-
-		ingredientsTaxonomy = ingredients;
-		labelsTaxonomy = labels;
-		countriesTaxonomy = countries;
-	});
 </script>
 
 <svelte:head>
@@ -78,34 +66,24 @@
 		</p>
 	</div>
 
-	<!-- Loading state -->
-	{#if ingredientsTaxonomy.length === 0 || labelsTaxonomy.length === 0 || countriesTaxonomy.length === 0}
-		<div class="flex justify-center py-12">
-			<span class="loading loading-spinner loading-lg"></span>
-		</div>
-	{:else}
-		<!-- Ingredients List -->
-		<div class="space-y-4">
-			{#each ingredients as ingredient, index (ingredient.id)}
-				<IngredientLine
-					bind:ingredient={ingredients[index]}
-					{ingredientsTaxonomy}
-					{labelsTaxonomy}
-					{countriesTaxonomy}
-					isLastItem={index === ingredients.length - 1}
-					onDelete={handleIngredientDelete}
-					onNotEmpty={addIngredientLine}
-				/>
-			{/each}
-		</div>
+	<!-- Ingredients List -->
+	<div class="space-y-4">
+		{#each ingredients as ingredient, index (ingredient.id)}
+			<IngredientLine
+				bind:ingredient={ingredients[index]}
+				isLastItem={index === ingredients.length - 1}
+				onDelete={handleIngredientDelete}
+				onNotEmpty={addIngredientLine}
+			/>
+		{/each}
+	</div>
 
-		<!-- Summary -->
-		<div class="bg-base-200 mt-8 rounded-lg p-4">
-			<h2 class="text-lg font-semibold">{$_('recipe.summary', { default: 'Summary' })}</h2>
-			<p class="text-base-content/70 mt-1">
-				{countNonEmptyIngredients(ingredients)}
-				{$_('recipe.ingredients_count', { default: 'ingredient(s) added' })}
-			</p>
-		</div>
-	{/if}
+	<!-- Summary -->
+	<div class="bg-base-200 mt-8 rounded-lg p-4">
+		<h2 class="text-lg font-semibold">{$_('recipe.summary', { default: 'Summary' })}</h2>
+		<p class="text-base-content/70 mt-1">
+			{countNonEmptyIngredients(ingredients)}
+			{$_('recipe.ingredients_count', { default: 'ingredient(s) added' })}
+		</p>
+	</div>
 </div>

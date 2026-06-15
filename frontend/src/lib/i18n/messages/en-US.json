@@ -57,6 +57,11 @@
 		"summary": "Summary",
 		"ingredients_count": "ingredient(s) added"
 	},
+	"tag": {
+		"add_tag_ingredients": "Add an ingredient",
+		"add_tag_labels": "Add labels",
+		"add_tag_countries": "Add Origins"
+	},
 	"homepage": {
 		"title": "Score My Recipe - Open Food Facts",
 		"badge": "The open-source tool for collective catering",

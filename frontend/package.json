@@ -77,9 +77,7 @@
 	},
 	"dependencies": {
 		"@sentry/sveltekit": "^10.29.0",
-		"@types/lodash": "^4.17.24",
-		"fuse.js": "^7.4.2",
-		"lodash.debounce": "^4.0.8"
+		"svelte-multiselect": "^11.7.2"
 	},
 	"packageManager": "pnpm@11.0.5+sha512.94fa09e72016402aefce788e46994e18eb1922998b16b6fd5aa6bafd8ae4dea05d0852f60247fdb7d5ab8199a7b0beda830398f3f80cb9f822398522a1535481"
 }

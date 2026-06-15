@@ -11,22 +11,22 @@ type TaxonomySuggestionResponse = {
 	matched_synonyms: Record<string, string[]>;
 };
 
-const offAPIv3 = new OpenFoodFacts(fetch, {host: offLinks.website});
+const offAPIv3 = new OpenFoodFacts(fetch, {host: offLinks.api});
 
 /**
  * wrapper for taxonomy API calls
  */
-export async function getMatchingTags(tagtype: string, query: string) : Promise<TaxonomySuggestionResponse> {
+export async function getMatchingTags(tagtype: string, query: string, limit: number) : Promise<TaxonomySuggestionResponse> {
 	const suggestionQuery : TaxonomySuggestionsQuery = {
 		tagtype: tagtype,
 		term: query,
 		lc: getLocale().split('-')[1] || 'en',
-		limit: "20",
+		limit: limit.toString(),
 		get_synonyms: "1",
 	};
 	const response = await offAPIv3.apiv3.getTaxonomySuggestions(suggestionQuery);
 	// we know the structure of the response from the API
-	return (response as unknown) as Promise<TaxonomySuggestionResponse>;
+	return (response.data as unknown) as Promise<TaxonomySuggestionResponse>;
 }
 
 /**
