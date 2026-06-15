@@ -1,5 +1,4 @@
 <script lang="ts">
-
 	import '../app.css';
 	import '@fontsource-variable/plus-jakarta-sans';
 	import type { LayoutProps } from './$types';
@@ -24,13 +23,11 @@
 	></progress>
 {/if}
 
-<div class="min-h-screen bg-base-100 text-base-content font-sans">
-
+<div class="bg-base-100 text-base-content min-h-screen font-sans">
 	<Navbar />
 	<div class="w-full">
 		{@render children?.()}
 	</div>
-
 </div>
 
 <Footer />
