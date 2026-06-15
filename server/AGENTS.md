@@ -3,10 +3,10 @@
 ---
 
 
-## Projects instructions
+## Project instructions
 
 Ensure you read the [global AGENTS.md](../AGENTS.md),
-those file add specific instruction for the backend part.
+this file adds specific instructions for the backend part.
 
 ## Bootstrap
 
@@ -56,7 +56,7 @@ tests/                # tests (using pytest)
 
 Always add a meaningful doc string to functions, modules, etc.
 
-Add comments for complex part or to justify non intuitive choices, or to summarize long code chunks (so that reader can quickly get an overview of the code). Still try not to be too verbose (find the right balance). If you use advance features (that not many programers might now), add a link to the documentation in the comment.
+Add comments for complex parts or to justify non-intuitive choices, or to summarize long code chunks (so that reader can quickly get an overview of the code). Still try not to be too verbose (find the right balance). If you use advanced features (that not many programmers might know), add a link to the documentation in the comment.
 
 Try to make the code as clear as possible, by normalizing cases before processing, using the single responsibility pattern.
 

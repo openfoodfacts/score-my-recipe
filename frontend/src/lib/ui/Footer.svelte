@@ -21,7 +21,7 @@
 
 	const contributeLinks = [
 		{
-			url: 'https://tranlate.openfoodfacts.org',
+			url: 'https://translate.openfoodfacts.org',
 			key: 'footer.links.translate'
 		},
 		{ url: 'https://github.com/openfoodfacts/score-my-recipe', key: 'footer.links.github' }

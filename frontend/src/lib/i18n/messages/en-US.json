@@ -41,9 +41,6 @@
 			"press": "Press"
 		}
 	},
-	"landing": {
-		"title": "Open Food Facts for recipes"
-	},
 	"recipe": {
 		"title": "Recipe Editor",
 		"description": "Add ingredients to your recipe",
@@ -59,5 +56,24 @@
 		"action": "Action",
 		"summary": "Summary",
 		"ingredients_count": "ingredient(s) added"
+	},
+	"homepage": {
+		"title": "Score My Recipe - Open Food Facts",
+		"badge": "The open-source tool for collective catering",
+		"hero_title": "Calculate the impact of your recipes",
+		"hero_title_highlight": "in real time.",
+		"hero_description": "Enter your ingredients naturally. Our tool structures your technical sheets, instantly calculates the Green-Score and helps you move towards more sustainable menus.",
+		"cta_recipe_calculator": "Open the recipe calculator",
+		"section2_title": "The professionals' compass",
+		"section2_description": "Easily improve your technical sheets with reliable data.",
+		"feature1_title": "Real-time calculation",
+		"feature1_description": "Easily adjust a recipe's impact by \"jamming\" on quantities or testing ingredient substitutions on the fly.",
+		"feature2_title": "Transparency & Agribalyse",
+		"feature2_description": "A transparent calculation methodology, based on the rigor of the public Agribalyse database carried by ADEME.",
+		"feature3_title": "High-recognition Score",
+		"feature3_description": "Bet on a validated indicator already identified by millions of consumers on Open Food Facts and Yuka.",
+		"footer_text": "An open-source project led by Open Food Facts, designed to transform the impact of catering.",
+		"footer_badge": "Project carried out collaboratively thanks to the support of ADEME's Call for Commons",
+		"footer_github_link": "Discover the project on GitHub"
 	}
 }

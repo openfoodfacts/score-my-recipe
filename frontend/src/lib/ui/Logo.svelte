@@ -13,7 +13,7 @@
 	} = $props();
 </script>
 
-<picture class={className}>
+<picture class="flex w-full items-center gap-4 {className}">
 	<source
 		srcset={mono
 			? `https://static.openfoodfacts.org/images/logos/off-logo-horizontal-mono-white.svg`
@@ -21,11 +21,9 @@
 		media="(prefers-color-scheme: dark)"
 	/>
 	<img
-		src={mono
-			? `https://static.openfoodfacts.org/images/logos/off-logo-horizontal-mono-black.svg`
-			: `https://static.openfoodfacts.org/images/logos/off-logo-horizontal-light.svg`}
-		alt="OpenFoodFacts Explorer"
-		class="h-full w-full object-contain"
+		src="https://static.openfoodfacts.org/images/logos/off-logo-horizontal-light.svg"
+		alt="Open Food Facts"
+		class="h-10"
 	/>
-	<div class="text-bg text-center font-medium">For Recipes</div>
+	<span class="border-base-content/20 border-l pl-4 text-xl font-bold">pour les recettes</span>
 </picture>
