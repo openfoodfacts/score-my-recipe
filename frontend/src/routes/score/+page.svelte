@@ -35,7 +35,7 @@
 	let countriesTaxonomy = $state<readonly string[]>([]);
 
 	// Recipe state - starts with one empty ingredient line
-	let ingredients = $state<IngredientsLine>([createEmptyIngredient()]);
+	let ingredients = $state<IngredientsList>([createEmptyIngredient()]);
 
 	/**
 	 * Handle delete of an ingredient

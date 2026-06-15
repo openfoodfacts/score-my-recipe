@@ -17,7 +17,7 @@
 	import Tags from './Tags.svelte';
 	import IconMdiDelete from '@iconify-svelte/mdi/delete';
 	import type { Ingredient } from '$lib/types/ingredient';
-	import { isIngredientEmpty } from '$lib/types/ingredient';
+	import { isIngredientEmpty, isIngredientNotEmpty } from '$lib/types/ingredient';
 
 	type Props = {
 		// The ingredient data object (bindable): name, weight, etc.
@@ -43,7 +43,7 @@
 	// Track if this ingredient was empty when the component was created
 	// This is used to detect when user starts typing in an empty last line
 	let wasEmptyOnMount = $state(ingredient.name === '');
-	let isNotEmpty = $derived(() => wasEmptyOnMount && ingredientIsNotEmpty(ingredient));
+	let isNotEmpty = $derived(wasEmptyOnMount && isIngredientNotEmpty(ingredient));
 
 	// trigger onNotEmpty when isNoteEmpty becomes true
 	$effect(() => {
