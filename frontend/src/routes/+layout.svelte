@@ -1,10 +1,8 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 
 	import '../app.css';
 	import '@fontsource-variable/plus-jakarta-sans';
 	import type { LayoutProps } from './$types';
-	import Logo from '$lib/ui/Logo.svelte';
 	import Navbar from '$lib/ui/Navbar.svelte';
 	import Footer from '$lib/ui/Footer.svelte';
 	import { navigating } from '$app/state';
@@ -26,23 +24,13 @@
 	></progress>
 {/if}
 
-<!-- Header -->
-<!--<div>
-	<div class="flex justify-center">
-		<div class="bg-base-100 navbar flex w-full max-w-7xl px-10">
-			<div class="navbar-start">
-				<a href="/"> <Logo class="h-16" /> </a>
-			</div>
-			<div class="navbar-center flex-none">
-				<Navbar />
-			</div>
-			<div class="navbar-end"></div>
-		</div>
-	</div>
-</div>-->
+<div class="min-h-screen bg-base-100 text-base-content font-sans">
 
-<div class="w-full">
-	{@render children?.()}
+	<Navbar />
+	<div class="w-full">
+		{@render children?.()}
+	</div>
+
 </div>
 
 <Footer />
