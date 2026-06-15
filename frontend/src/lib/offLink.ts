@@ -9,7 +9,7 @@ export async function getOffWebsiteLink() {
 	const locale = getLocale();
 	// off only use short code
 	const offLocale = locale.split('-')[0];
-	return `world-${offLocale}.openfoodfacts.org`;
+	return `https://world-${offLocale}.openfoodfacts.org`;
 }
 
 export const offLinks = { website: await getOffWebsiteLink() };
