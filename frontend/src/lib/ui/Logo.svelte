@@ -13,7 +13,7 @@
 	} = $props();
 </script>
 
-<picture class="flex items-center gap-4 {className}">
+<picture class="flex items-center gap-4 w-full {className}">
     <source
 		srcset={mono
 			? `https://static.openfoodfacts.org/images/logos/off-logo-horizontal-mono-white.svg`
