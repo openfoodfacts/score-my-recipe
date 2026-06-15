@@ -1,14 +1,33 @@
 /**
- * Taxonomy API simulation module
- *
- * This module provides static data simulating API calls to taxonomy endpoints.
- * In a production environment, these would fetch from actual API endpoints.
- *
- * Taxonomy data includes:
- * - Ingredients: codified ingredient names from a predefined list
- * - Labels: certification labels (organic, fair trade, etc.)
- * - Countries: country names for origin tracking
+ * Taxonomy related API functions
  */
+import type { TaxonomySuggestionsQuery } from '@openfoodfacts/openfoodfacts-nodejs';
+import { OpenFoodFacts } from '@openfoodfacts/openfoodfacts-nodejs';
+import { getLocale } from '$lib/i18n';
+import { offLinks } from '$lib/offLink';
+
+type TaxonomySuggestionResponse = {
+	suggestions: string[];
+	matched_synonyms: Record<string, string[]>;
+};
+
+const offAPIv3 = new OpenFoodFacts(fetch, {host: offLinks.website});
+
+/**
+ * wrapper for taxonomy API calls
+ */
+export async function getMatchingTags(tagtype: string, query: string) : Promise<TaxonomySuggestionResponse> {
+	const suggestionQuery : TaxonomySuggestionsQuery = {
+		tagtype: tagtype,
+		term: query,
+		lc: getLocale().split('-')[1] || 'en',
+		limit: "20",
+		get_synonyms: "1",
+	};
+	const response = await offAPIv3.apiv3.getTaxonomySuggestions(suggestionQuery);
+	// we know the structure of the response from the API
+	return (response as unknown) as Promise<TaxonomySuggestionResponse>;
+}
 
 /**
  * Ingredients taxonomy - list of known ingredients

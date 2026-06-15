@@ -6,6 +6,8 @@
   The component uses Fuse.js for fuzzy searching through the autocomplete options and provides keyboard navigation for accessibility.
 
   Props:
+    - tagtype: A string representing the type of tags (e.g., "labels", "origins")
+	  for fetching relevant autocomplete suggestions.
 	- tags: An array of strings representing the current tags.
 	- autocomplete: An array of strings for autocomplete suggestions.
 	- onChange: A callback function that is called whenever the tags change.
@@ -18,21 +20,23 @@
 -->
 <script lang="ts">
 	import { fade } from 'svelte/transition';
-	import Fuse from 'fuse.js';
+	import {debounce} from 'lodash.debounce';
+	import { getMatchingTags } from '$lib/api/taxonomy';
 
 	import IconMdiClose from '@iconify-svelte/mdi/close';
 
 	type Props = {
+		tagtype: string;
 		tags?: string[];
 		autocomplete?: readonly string[];
 		onChange?: (tags: string[]) => void;
 	};
 
-	let { tags = $bindable([]), autocomplete = [], onChange }: Props = $props();
+	let { tagtype, tags = $bindable([]), autocomplete = [], onChange }: Props = $props();
 
-	// fuse.js instance for autocomplete suggestions
-	let autoCompleteFuse = $derived(new Fuse(autocomplete, { threshold: 0.2 }));
 	let autoCompleteIndex = $state(-1);
+	// suggestions returned by API
+	let currentSuggestions = $state<string[]>([]);
 
 	// tracking input values for both adding new tags and editing existing ones
 	let newValue = $state('');
@@ -42,16 +46,27 @@
 	// Track active search value (newValue for additions, editingValue for inline edits)
 	let activeSearchValue = $derived(editingIndex === -1 ? newValue : editingValue);
 
-	let filteredAutocomplete = $derived(
-		activeSearchValue.length < 3 ? [] : autoCompleteFuse.search(activeSearchValue).slice(0, 10)
-	);
-
 	// Reactive bounds check: reset suggestion index to -1 if list shrinks under it
 	$effect(() => {
-		if (autoCompleteIndex >= filteredAutocomplete.length) {
+		if (autoCompleteIndex >= currentSuggestions.length) {
 			autoCompleteIndex = -1;
 		}
 	});
+
+	// fetch suggestion as soon as inputValue changes
+	$effect(() => {
+		fetchSuggestions(activeSearchValue);
+	});
+
+	const fetchSuggestions = debounce(async (value: string) => {
+		if (value.trim() === '') {
+			currentSuggestions = [];
+			return;
+		}
+		const resp = await getMatchingTags(tagtype, value);
+		// see later how to show synonyms in the UI
+		currentSuggestions = resp.suggestions;
+	}, 200);
 
 	/**
 	 * Handle keyboard navigation (ArrowUp/Down) through autocomplete suggestions
@@ -59,20 +74,20 @@
 	 * @returns true if the event was handled, false otherwise
 	 */
 	function handleNavigationKeys(event: KeyboardEvent): boolean {
-		if (filteredAutocomplete.length === 0) return false;
+		if (currentSuggestions.length === 0) return false;
 
 		if (event.key === 'ArrowDown') {
 			event.preventDefault();
 			if (autoCompleteIndex === -1) {
 				autoCompleteIndex = 0;
-			} else if (autoCompleteIndex < filteredAutocomplete.length - 1) {
+			} else if (autoCompleteIndex < currentSuggestions.length - 1) {
 				autoCompleteIndex += 1;
 			}
 			return true;
 		} else if (event.key === 'ArrowUp') {
 			event.preventDefault();
 			if (autoCompleteIndex === -1) {
-				autoCompleteIndex = filteredAutocomplete.length - 1;
+				autoCompleteIndex = currentSuggestions.length - 1;
 			} else if (autoCompleteIndex > 0) {
 				autoCompleteIndex -= 1;
 			}
@@ -87,8 +102,8 @@
 	 */
 	function inputHandler(event: KeyboardEvent) {
 		if (event.key === 'Enter' || event.key === ',') {
-			if (autoCompleteIndex !== -1 && filteredAutocomplete[autoCompleteIndex]) {
-				newValue = filteredAutocomplete[autoCompleteIndex].item;
+			if (autoCompleteIndex !== -1 && currentSuggestions[autoCompleteIndex]) {
+				newValue = currentSuggestions[autoCompleteIndex].item;
 			}
 
 			const tag = newValue.trim();
@@ -176,8 +191,8 @@
 	 */
 	function handleEditKeydown(event: KeyboardEvent, index: number) {
 		if (event.key === 'Enter') {
-			if (autoCompleteIndex !== -1 && filteredAutocomplete[autoCompleteIndex]) {
-				editingValue = filteredAutocomplete[autoCompleteIndex].item;
+			if (autoCompleteIndex !== -1 && currentSuggestions[autoCompleteIndex]) {
+				editingValue = currentSuggestions[autoCompleteIndex].item;
 				autoCompleteIndex = -1;
 				event.preventDefault();
 				return;
@@ -223,13 +238,13 @@
  Handles displaying autocomplete suggestions and keyboard navigation for both adding new tags and editing existing ones.
 -->
 {#snippet autocompleteDropdown()}
-	{#if filteredAutocomplete.length > 0}
+	{#if currentSuggestions.length > 0}
 		<div
 			class="dropdown-content bg-base-100 z-100 mt-1 w-full rounded-md shadow-lg focus:outline-none"
 		>
 			<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 			<ul tabindex="0" class="divide-base-200 divide-y">
-				{#each filteredAutocomplete as suggestion, index (suggestion.item)}
+				{#each currentSuggestions as suggestion, index (suggestion.item)}
 					{@const key = suggestion.item}
 					<li>
 						<button

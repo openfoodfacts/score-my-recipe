@@ -69,17 +69,11 @@
 				>{$_('recipe.codified_ingredient', { default: 'Codified' })}</span
 			>
 		</label>
-		<select
+		<Tags
+			tagtype="ingredients"
 			id="ingredient-codified-{ingredient.id}"
-			class="select select-bordered w-full"
-			bind:value={ingredient.codifiedIngredient}
-		>
-			{#each ingredientsTaxonomy as taxonomyItem (taxonomyItem)}
-				<option value={taxonomyItem}>
-					{taxonomyItem === 'unknown' ? $_('recipe.unknown', { default: 'Unknown' }) : taxonomyItem}
-				</option>
-			{/each}
-		</select>
+			bind:tags={ingredient.codifiedIngredient}
+		/>
 	</div>
 
 	<!-- Weight -->
@@ -105,7 +99,7 @@
 			>
 		</label>
 		<Tags
-			autocomplete={labelsTaxonomy}
+			tagtype="labels"
 			bind:tags={ingredient.labels}
 		/>
 	</div>
@@ -136,7 +130,7 @@
 			>
 		</label>
 		<Tags
-			autocomplete={countriesTaxonomy}
+			tagtype="countries"
 			bind:tags={ingredient.origin}
 		/>
 	</div>
