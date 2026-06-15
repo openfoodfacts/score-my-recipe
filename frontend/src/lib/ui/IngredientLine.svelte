@@ -6,6 +6,9 @@
   
   Props:
   - ingredient: The ingredient data object (bindable - changes propagate to parent)
+  - ingredientsTaxonomy: List of codified ingredient options
+  - labelsTaxonomy: List of available labels for autocomplete
+  - countriesTaxonomy: List of countries for origin autocomplete
   - isLastItem: Whether this is the last item in the list (controls new line creation)
   - onDelete: Callback when delete button is clicked
 -->
@@ -19,6 +22,9 @@
 	type Props = {
 		// The ingredient data object (bindable): name, weight, etc.
 		ingredient: Ingredient;
+		ingredientsTaxonomy: readonly string[];
+		labelsTaxonomy: readonly string[];
+		countriesTaxonomy: readonly string[];
 		isLastItem?: boolean;
 		onDelete?: (id: string) => void;
 		onNotEmpty?: () => void; // Optional callback for when line becomes non-empty
@@ -26,6 +32,9 @@
 
 	let {
 		ingredient = $bindable(),
+		ingredientsTaxonomy,
+		labelsTaxonomy,
+		countriesTaxonomy,
 		isLastItem = false,
 		onDelete,
 		onNotEmpty,
@@ -62,10 +71,8 @@
 		</label>
 		<Tags
 			tagtype="ingredients"
-			required={true}
-			allowUserOptions={false}
 			id="ingredient-codified-{ingredient.id}"
-			bind:tag={ingredient.codifiedIngredient}
+			bind:tags={ingredient.codifiedIngredient}
 		/>
 	</div>
 
@@ -92,7 +99,6 @@
 			>
 		</label>
 		<Tags
-			id="ingredient-labels-{ingredient.id}"
 			tagtype="labels"
 			bind:tags={ingredient.labels}
 		/>
@@ -124,7 +130,6 @@
 			>
 		</label>
 		<Tags
-			id="ingredient-origin-{ingredient.id}"
 			tagtype="countries"
 			bind:tags={ingredient.origin}
 		/>

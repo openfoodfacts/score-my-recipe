@@ -57,11 +57,6 @@
     "summary": "Résumé",
     "ingredients_count": "ingrédient(s) ajouté(s)"
   },
-	"tag": {
-		"add_tag_ingredients": "Ajouter un ingrédient",
-		"add_tag_labels": "Ajouter les labels",
-		"add_tag_countries": "Ajouter les origines"
-	},
   "homepage": {
     "title": "Score My Recipe - Open Food Facts",
     "badge": "L'outil open-source de la restauration collective",

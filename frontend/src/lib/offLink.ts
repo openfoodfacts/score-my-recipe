@@ -12,7 +12,4 @@ export async function getOffWebsiteLink() {
 	return `https://world-${offLocale}.openfoodfacts.org`;
 }
 
-
-export const offLinks = {
-	api: 'https://world.openfoodfacts.org/',
-	website: await getOffWebsiteLink() };
+export const offLinks = { website: await getOffWebsiteLink() };

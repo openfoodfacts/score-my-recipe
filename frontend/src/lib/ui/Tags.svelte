@@ -19,109 +19,315 @@
 	- Autocomplete suggestions appear when typing, with keyboard navigation support (ArrowUp/Down).
 -->
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import MultiSelect from 'svelte-multiselect';
-	import { _ } from '$lib/i18n';
+	import { fade } from 'svelte/transition';
+	import {debounce} from 'lodash.debounce';
 	import { getMatchingTags } from '$lib/api/taxonomy';
 
-	type Option = { label: string; value: string };
+	import IconMdiClose from '@iconify-svelte/mdi/close';
 
 	type Props = {
-		id: string;
 		tagtype: string;
-		tags?: string[] | null;
-		tag?: string | null; // use for single values selection
-		required?: boolean; // If true, at least one tag is required
-		allowUserOptions?: boolean; // If true, users can add custom tags not in the autocomplete list
+		tags?: string[];
+		autocomplete?: readonly string[];
 		onChange?: (tags: string[]) => void;
 	};
 
-	let { id, tagtype, tags = $bindable(null), tag = $bindable(null), required = false, allowUserOptions = true, onChange }: Props = $props();
+	let { tagtype, tags = $bindable([]), autocomplete = [], onChange }: Props = $props();
 
-	if (tags !== null && tag !== null) {
-		throw new Error("Tags component: 'tags' and 'tag' props are mutually exclusive. Please provide only one of them.");
-	} else if (tag === null && tags === null) {
-		throw new Error("Tags component: Either 'tags' or 'tag' prop must be provided.");
-	}
-	const single = tags === null; // whether we are in single tag mode or multiple tags mode
+	let autoCompleteIndex = $state(-1);
+	// suggestions returned by API
+	let currentSuggestions = $state<string[]>([]);
 
-	// Initialize selected from props on mount
-	let selected = $state<Option[]>([]);
-	let initialized = $state(false);
-	let isInternalUpdate = $state(false);
-	$inspect(id, selected, initialized, isInternalUpdate, tag, tags);
+	// tracking input values for both adding new tags and editing existing ones
+	let newValue = $state('');
+	let editingIndex = $state(-1);
+	let editingValue = $state('');
 
-	onMount(() => {
-		if (tags !== null) {
-			selected = tags.map(t => ({ label: t, value: t }));
-		} else if (tag !== null) {
-			selected = tag ? [{ label: tag, value: tag }] : [];
-		}
-		initialized = true;
-	});
+	// Track active search value (newValue for additions, editingValue for inline edits)
+	let activeSearchValue = $derived(editingIndex === -1 ? newValue : editingValue);
 
-	// Sync selected when tags/tag props change from parent (only if not internal update)
+	// Reactive bounds check: reset suggestion index to -1 if list shrinks under it
 	$effect(() => {
-		if (!initialized || isInternalUpdate) return;
-
-		if (tags !== null) {
-			const newSelected = tags.map(t => ({ label: t, value: t }));
-			if (JSON.stringify(selected) !== JSON.stringify(newSelected)) {
-				selected = newSelected;
-			}
-		} else if (tag !== null) {
-			const newSelected = tag ? [{ label: tag, value: tag }] : [];
-			if (JSON.stringify(selected) !== JSON.stringify(newSelected)) {
-				selected = newSelected;
-			}
+		if (autoCompleteIndex >= currentSuggestions.length) {
+			autoCompleteIndex = -1;
 		}
 	});
 
-	// Handle selection changes - propagate to parent
-	function onSelect(newSelected: Option[]) {
-		isInternalUpdate = true;
-		try {
-			if (single) {
-				// Single tag mode
-				const newTag = newSelected.length > 0 ? newSelected[0].value : "";
-				tag = newTag;
-				onChange?.([newTag]);
-			} else {
-				// Multiple tags mode
-				const newTags = newSelected.map(item => item.value);
-				tags = newTags;
-				onChange?.(newTags);
+	// fetch suggestion as soon as inputValue changes
+	$effect(() => {
+		fetchSuggestions(activeSearchValue);
+	});
+
+	const fetchSuggestions = debounce(async (value: string) => {
+		if (value.trim() === '') {
+			currentSuggestions = [];
+			return;
+		}
+		const resp = await getMatchingTags(tagtype, value);
+		// see later how to show synonyms in the UI
+		currentSuggestions = resp.suggestions;
+	}, 200);
+
+	/**
+	 * Handle keyboard navigation (ArrowUp/Down) through autocomplete suggestions
+	 * @param {KeyboardEvent} event
+	 * @returns true if the event was handled, false otherwise
+	 */
+	function handleNavigationKeys(event: KeyboardEvent): boolean {
+		if (currentSuggestions.length === 0) return false;
+
+		if (event.key === 'ArrowDown') {
+			event.preventDefault();
+			if (autoCompleteIndex === -1) {
+				autoCompleteIndex = 0;
+			} else if (autoCompleteIndex < currentSuggestions.length - 1) {
+				autoCompleteIndex += 1;
 			}
-		} finally {
-			isInternalUpdate = false;
+			return true;
+		} else if (event.key === 'ArrowUp') {
+			event.preventDefault();
+			if (autoCompleteIndex === -1) {
+				autoCompleteIndex = currentSuggestions.length - 1;
+			} else if (autoCompleteIndex > 0) {
+				autoCompleteIndex -= 1;
+			}
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Handle key events in the main input for adding tags. Enter or comma will add the tag, Backspace will remove the last tag if input is empty, and Arrow keys will navigate suggestions.
+	 * @param event
+	 */
+	function inputHandler(event: KeyboardEvent) {
+		if (event.key === 'Enter' || event.key === ',') {
+			if (autoCompleteIndex !== -1 && currentSuggestions[autoCompleteIndex]) {
+				newValue = currentSuggestions[autoCompleteIndex].item;
+			}
+
+			const tag = newValue.trim();
+
+			newValue = '';
+			autoCompleteIndex = -1;
+			event.preventDefault();
+
+			addTag(tag);
+		} else if (newValue.length === 0 && event.key === 'Backspace') {
+			tags = tags.slice(0, -1);
+			onChange?.(tags);
+		} else {
+			handleNavigationKeys(event);
 		}
 	}
 
-	async function loadOptions({search, limit}: {search: string, limit: number}) {
-		const response = await getMatchingTags(tagtype, search, limit);
-		return {
-			options: response.suggestions.map(
-				suggestion => (
-					{ label: suggestion, value: suggestion }
-				)
-		),
-			hasMore: false,
-		};
+	/**
+	 * Add a new tag if it doesn't already exist.
+	 *
+	 * Trims whitespace and ignores empty tags. Logs a warning if the tag already exists.
+	 * @param tag
+	 */
+	function addTag(tag: string) {
+		if (tags.includes(tag)) {
+			console.warn(`Tag "${tag}" already exists.`);
+			return;
+		}
+		tags = [...tags, tag];
+		onChange?.(tags);
 	}
 
+	/**
+	 * Remove a tag by filtering it out of the tags array.
+	 * @param tag
+	 */
+	function removeTag(tag: string) {
+		tags = tags.filter((t) => t !== tag);
+		onChange?.(tags);
+	}
+
+	/**
+	 * Start editing a tag by setting the editing index and value. Also resets the autocomplete index to prevent stale suggestions.
+	 * @param index
+	 * @param tag
+	 */
+	function startEditing(index: number, tag: string) {
+		editingIndex = index;
+		editingValue = tag;
+		autoCompleteIndex = -1;
+	}
+
+	/**
+	 * Save the edited tag by updating the tags array if the value has changed and is not empty. Resets editing state and autocomplete index afterward.
+	 * @param index
+	 */
+	function saveEdit(index: number) {
+		const trimmedValue = editingValue.trim();
+		if (trimmedValue !== '' && trimmedValue !== tags[index]) {
+			tags = tags.map((tag, i) => (i === index ? trimmedValue : tag));
+			onChange?.(tags);
+		}
+		editingIndex = -1;
+		editingValue = '';
+		autoCompleteIndex = -1;
+	}
+
+	/**
+	 * Cancel editing by resetting the editing index and value,
+	 * as well as the autocomplete index to prevent stale suggestions.
+	 */
+	function cancelEdit() {
+		editingIndex = -1;
+		editingValue = '';
+		autoCompleteIndex = -1;
+	}
+
+	/**
+	 * Handle key events in the edit input:
+	 * Enter will save the edit,
+	 * Escape will cancel it,
+	 * and Arrow keys will navigate suggestions.
+	 * @param event
+	 * @param index
+	 */
+	function handleEditKeydown(event: KeyboardEvent, index: number) {
+		if (event.key === 'Enter') {
+			if (autoCompleteIndex !== -1 && currentSuggestions[autoCompleteIndex]) {
+				editingValue = currentSuggestions[autoCompleteIndex].item;
+				autoCompleteIndex = -1;
+				event.preventDefault();
+				return;
+			}
+			event.preventDefault();
+			saveEdit(index);
+		} else if (event.key === 'Escape') {
+			event.preventDefault();
+			cancelEdit();
+		} else {
+			handleNavigationKeys(event);
+		}
+	}
+
+	/**
+	 * Handle selection of a suggestion from the autocomplete dropdown list.
+	 * Selecting it from known values, or adding the value as a new value.
+	 * @param key
+	 */
+	function selectSuggestion(key: string) {
+		if (editingIndex !== -1) {
+			editingValue = key;
+			const idx = editingIndex;
+			setTimeout(() => saveEdit(idx), 0);
+		} else {
+			newValue = '';
+			autoCompleteIndex = -1;
+			addTag(key);
+		}
+	}
+
+	/**
+	 * Focus and select the content of an input element.
+	 * @param element
+	 */
+	function focus(element: HTMLInputElement) {
+		element.focus();
+		element.select();
+	}
 </script>
 
-<MultiSelect
- 	--sms-border-radius="1rem"
-	--sms-open-z-index="1"
-    {id}
-	{selected}
-	placeholder={$_("tag.add_tag_" + tagtype)}
-	loadOptions={{ fetch: loadOptions, debounceMs: 300, batchSize: 20 }}
-	maxSelect={single ? 1 : null}
-	{required}
-	{allowUserOptions}
-	loading={true}
-	on:change={(e) => onSelect(e.detail as Option[])}
-	>
-</MultiSelect>
+<!-- Autocomplete Dropdown 
+ Handles displaying autocomplete suggestions and keyboard navigation for both adding new tags and editing existing ones.
+-->
+{#snippet autocompleteDropdown()}
+	{#if currentSuggestions.length > 0}
+		<div
+			class="dropdown-content bg-base-100 z-100 mt-1 w-full rounded-md shadow-lg focus:outline-none"
+		>
+			<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+			<ul tabindex="0" class="divide-base-200 divide-y">
+				{#each currentSuggestions as suggestion, index (suggestion.item)}
+					{@const key = suggestion.item}
+					<li>
+						<button
+							type="button"
+							class="bg-base-200 text-base-content hover:bg-primary hover:text-primary-content focus:bg-primary focus:text-primary-content w-full rounded-md px-4 py-2 text-left transition-colors duration-150"
+							class:bg-primary={autoCompleteIndex === index}
+							class:text-primary-content={autoCompleteIndex === index}
+							onmousedown={(e) => {
+								// Use mousedown instead of click to fire selectSuggestion before the input's blur event
+								e.preventDefault();
+								selectSuggestion(key);
+							}}
+						>
+							<span class="block truncate">{key}</span>
+						</button>
+					</li>
+				{/each}
+			</ul>
+		</div>
+	{/if}
+{/snippet}
+
+<!-- Tag widget -->
+<div
+	class="bg-base-100 border-base-200 focus-within:border-primary focus-within:outline-primary flex h-auto min-h-12 w-full flex-wrap items-center gap-x-1.5 gap-y-1 rounded-md p-2"
+>
+	<!-- each value of the tag (multi valued) -->
+	{#each tags as tag, index (tag)}
+		<div class="badge badge-ghost flex h-min items-center py-2" transition:fade={{ duration: 100 }}>
+			{#if editingIndex === index}
+				<!-- Existing tag editing input with autocomplete dropdown -->
+				<div class="dropdown">
+					<input
+						type="text"
+						class="input w-full min-w-0 border bg-transparent outline-none"
+						bind:value={editingValue}
+						onkeydown={(e) => handleEditKeydown(e, index)}
+						onblur={() => {
+							setTimeout(() => {
+								if (editingIndex === index) saveEdit(index);
+							}, 150);
+						}}
+						use:focus
+					/>
+					{@render autocompleteDropdown()}
+				</div>
+			{:else}
+				<!-- Tag already added, visible as a label -->
+				<span
+					class="cursor-pointer truncate"
+					ondblclick={() => startEditing(index, tag)}
+					title="Double-click to edit"
+					role="button"
+					tabindex="0"
+					onkeydown={(e) => {
+						if (e.key === 'Enter' || e.key === ' ') {
+							e.preventDefault();
+							startEditing(index, tag);
+						}
+					}}
+				>
+					{tag}
+				</span>
+			{/if}
+			<!-- Remove tag button -->
+			<button
+				class="hover:bg-base-300 ml-1 cursor-pointer p-1 leading-0"
+				onclick={() => removeTag(tag)}
+				aria-label={`Remove tag "${tag}"`}
+			>
+				<IconMdiClose class="h-4 w-4" />
+			</button>
+		</div>
+	{/each}
+
+	<!-- add a tag -->
+	<div class="dropdown grow">
+		<input
+			type="text"
+			class="input input-bordered w-full bg-transparent outline-hidden"
+			onkeydown={inputHandler}
+			bind:value={newValue}
+		/>
+		{@render autocompleteDropdown()}
+	</div>
+</div>
