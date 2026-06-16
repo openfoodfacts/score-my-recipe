@@ -1,24 +1,23 @@
 <script lang="ts">
 	import { _ } from '$lib/i18n';
-	import { parseRecipeText } from '$lib/api/recipe';
-	import type { RecipeParseResponse } from '$lib/api/recipe';
+	import { goto } from '$app/navigation';
+	import { parseRecipeText, apiIngredientsToIngredients } from '$lib/api/recipe';
 
 	let recipeText = $state('');
 	let isLoading = $state(false);
-	let result = $state<RecipeParseResponse | null>(null);
 	let error = $state<string | null>(null);
 
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
 		isLoading = true;
 		error = null;
-		result = null;
 
 		try {
-			result = await parseRecipeText(recipeText, 'fr');
+			const result = await parseRecipeText(recipeText, 'fr');
+			const ingredients = apiIngredientsToIngredients(result.ingredients);
+			await goto('/score', { state: { ingredients } });
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Une erreur est survenue';
-		} finally {
 			isLoading = false;
 		}
 	}
@@ -83,41 +82,6 @@
 				/>
 			</svg>
 			<span>{error}</span>
-		</div>
-	{/if}
-
-	<!-- Result Display -->
-	{#if result}
-		<div class="mt-8">
-			<h2 class="mb-4 text-xl font-bold">
-				{$_('add.result_title', { default: 'Ingrédients détectés' })}
-			</h2>
-			<div class="overflow-x-auto">
-				<table class="table-zebra table">
-					<thead>
-						<tr>
-							<th>{$_('add.table_ingredient', { default: 'Ingrédient' })}</th>
-							<th>{$_('add.table_taxonomy', { default: 'Dans la taxonomie' })}</th>
-							<th>{$_('add.table_quantity', { default: 'Quantité (g)' })}</th>
-						</tr>
-					</thead>
-					<tbody>
-						{#each result.ingredients as ingredient, index (index)}
-							<tr>
-								<td>{ingredient.codified_ingredient}</td>
-								<td>
-									{#if ingredient.is_in_taxonomy}
-										<span class="badge badge-success">{$_('add.yes', { default: 'Oui' })}</span>
-									{:else}
-										<span class="badge badge-warning">{$_('add.no', { default: 'Non' })}</span>
-									{/if}
-								</td>
-								<td>{ingredient.quantity_g ?? '-'}</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
 		</div>
 	{/if}
 </div>

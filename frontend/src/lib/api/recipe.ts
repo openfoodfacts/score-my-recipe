@@ -7,9 +7,14 @@
  */
 
 import type { components } from '../../api-schema';
+import type { Ingredient } from '$lib/types/ingredient';
+import { generateIngredientId } from '$lib/types/ingredient';
 
 /** Response schema for the `parse_text` endpoint, generated from the OpenAPI schema. */
 export type RecipeParseResponse = components['schemas']['RecipeParseResponse'];
+
+/** Single ingredient schema from the `parse_text` endpoint. */
+export type RecipeIngredient = components['schemas']['RecipeIngredient'];
 
 /** Base URL of the Score My Recipe backend. */
 const API_BASE_URL = 'http://localhost:8000';
@@ -32,4 +37,33 @@ export async function parseRecipeText(text: string, lang: string): Promise<Recip
 	}
 
 	return (await response.json()) as RecipeParseResponse;
+}
+
+/**
+ * Convert a single API `RecipeIngredient` into the frontend `Ingredient` shape
+ * used by the recipe editor.
+ *
+ * @param apiIngredient - The ingredient as returned by the backend.
+ * @returns An `Ingredient` ready to be displayed in an `IngredientLine`.
+ */
+export function apiIngredientToIngredient(apiIngredient: RecipeIngredient): Ingredient {
+	return {
+		id: generateIngredientId(),
+		name: apiIngredient.codified_ingredient,
+		weight: apiIngredient.quantity_g ?? null,
+		codifiedIngredient: apiIngredient.codified_ingredient,
+		labels: [],
+		seasonality: false,
+		origin: ''
+	};
+}
+
+/**
+ * Convert a list of API `RecipeIngredient` into frontend `Ingredient` objects.
+ *
+ * @param apiIngredients - The list of ingredients as returned by the backend.
+ * @returns A list of `Ingredient` ready to be displayed in the recipe editor.
+ */
+export function apiIngredientsToIngredients(apiIngredients: RecipeIngredient[]): Ingredient[] {
+	return apiIngredients.map(apiIngredientToIngredient);
 }
