@@ -1,4 +1,3 @@
-from typing import Optional
 import api.off as off
 from api.types import RecipeIngredient, OFFIngredient
 
