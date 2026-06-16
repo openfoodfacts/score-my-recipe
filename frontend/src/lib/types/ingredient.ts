@@ -22,7 +22,7 @@ export interface Ingredient {
 	/** Whether the ingredient is seasonal */
 	seasonality: boolean;
 	/** Origin countries/regions */
-	origin: string[];
+	origin: string;
 }
 
 /**
@@ -45,7 +45,7 @@ export function createEmptyIngredient(): Ingredient {
 		codifiedIngredient: '',
 		labels: [],
 		seasonality: false,
-		origin: []
+		origin: ''
 	};
 }
 
@@ -61,7 +61,7 @@ export function isIngredientEmpty(ingredient: Ingredient): boolean {
 		ingredient.weight === null &&
 		ingredient.codifiedIngredient === '' &&
 		ingredient.labels.length === 0 &&
-		ingredient.origin.length === 0
+		ingredient.origin.trim() === ''
 	);
 }
 
