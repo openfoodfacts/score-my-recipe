@@ -129,12 +129,12 @@
 		</label>
 		<Tags
 			tagtype="countries"
-		bind:tags={
-			() => (ingredient.origin.trim() === '' ? [] : [ingredient.origin]),
-			(newTags) => {
-				ingredient.origin = newTags?.[0] ?? '';
+			bind:tags={
+				() => (ingredient.origin.trim() === '' ? [] : [ingredient.origin]),
+				(newTags) => {
+					ingredient.origin = newTags?.[0] ?? '';
+				}
 			}
-		}
 			single={true}
 		/>
 	</div>

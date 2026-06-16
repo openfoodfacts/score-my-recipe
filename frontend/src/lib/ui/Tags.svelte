@@ -118,32 +118,53 @@
 	}
 
 	/**
-	 * Handle key events in the main input for adding tags. Enter or comma will add the tag, Backspace will remove the last tag if input is empty, and Arrow keys will navigate suggestions.
+	 * Add a tag from the input field, either from the current suggestions or the typed value.
+	 */
+	function addTagInput() {
+		if (autoCompleteIndex !== -1 && currentSuggestions[autoCompleteIndex]) {
+			newValue = currentSuggestions[autoCompleteIndex].item;
+		}
+		// don't validate empty tags
+		if (newValue.trim() === '') {
+			return;
+		}
+		const tag = newValue.trim();
+		newValue = '';
+		autoCompleteIndex = -1;
+		addTag(tag);
+	}
+
+	/**
+	 * Handle key events in the main input:
+	 * Enter or comma will add the tag,
+	 * Backspace will remove the last tag if input is empty,
+	 * and Arrow keys will navigate suggestions.
 	 * @param event
 	 */
 	function inputHandler(event: KeyboardEvent) {
 		if (event.key === 'Enter' || event.key === ',') {
-			if (autoCompleteIndex !== -1 && currentSuggestions[autoCompleteIndex]) {
-				newValue = currentSuggestions[autoCompleteIndex].item;
-			}
-			// don't validate empty tags
-			if (newValue.trim() === '') {
-				event.preventDefault();
-				return;
-			}
-			const tag = newValue.trim();
-
-			newValue = '';
-			autoCompleteIndex = -1;
+			addTagInput();
 			event.preventDefault();
-
-			addTag(tag);
 		} else if (newValue.length === 0 && event.key === 'Backspace') {
 			tags = tags.slice(0, -1);
 			onChange?.(tags);
 		} else {
 			handleNavigationKeys(event);
 		}
+	}
+
+	/**
+	 * Handle blur event on the input field to add the tag
+	 * if the user clicks outside.
+	 * @param event
+	 */
+	function inputBlurHandler(event: FocusEvent) {
+		// If the blur event is caused by clicking on a suggestion, we don't want to add the tag yet
+		const relatedTarget = event.relatedTarget as HTMLElement | null;
+		if (relatedTarget && relatedTarget.closest('.dropdown-content')) {
+			return;
+		}
+		addTagInput();
 	}
 
 	/**
@@ -353,6 +374,7 @@
 				type="text"
 				class="input input-bordered w-full bg-transparent outline-hidden"
 				onkeydown={inputHandler}
+				onblur={inputBlurHandler}
 				bind:value={newValue}
 			/>
 			{@render autocompleteDropdown()}
