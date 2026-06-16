@@ -88,11 +88,6 @@
 
 <footer class="bg-primary text-primary-content px-6 py-12 text-center">
 	<div class="mx-auto flex max-w-4xl flex-col items-center">
-		<img
-			src="https://static.openfoodfacts.org/images/logos/off-logo-horizontal-light.svg"
-			alt="Open Food Facts"
-			class="mb-6 h-10 opacity-50 grayscale"
-		/>
 		<p class="text-primary-content/80 mb-3 font-medium">{$_('homepage.footer_text')}</p>
 		<div
 			class="badge badge-outline border-primary-content/30 text-primary-content mb-6 px-4 py-4 text-sm font-semibold"

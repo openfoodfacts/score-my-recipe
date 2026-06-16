@@ -1,13 +1,13 @@
 {
   "navbar": {
-    "score_recipe": "Noter une recette",
-    "join_community": "Rejoindre la communauté",
+    "score_recipe": "Notez une recette",
+    "join_community": "Rejoignez la communauté",
     "open_food_facts": "Open Food Facts",
     "methodology": "À propos du Green-Score"
   },
   "footer": {
     "stay_updated": "Restez informé",
-    "contribute": "Contribuer",
+    "contribute": "Contribuez",
     "discover_title": "Découvrez notre projet",
     "tagline": "Une base de données collaborative, gratuite et ouverte sur les produits alimentaires",
     "tagline_break": "du monde entier.",
