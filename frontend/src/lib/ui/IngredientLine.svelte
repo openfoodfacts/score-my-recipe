@@ -68,9 +68,9 @@
 			tagtype="ingredients"
 			id="ingredient-codified-{ingredient.id}"
 			bind:tags={
-				() => [ingredient.codifiedIngredient],
+				() => (ingredient.codifiedIngredient.trim() === '' ? [] : [ingredient.codifiedIngredient]),
 				(newTags) => {
-					ingredient.codifiedIngredient = newTags ? newTags[0] || '' : '';
+					ingredient.codifiedIngredient = newTags?.[0] ?? '';
 				}
 			}
 			single={true}
@@ -129,12 +129,12 @@
 		</label>
 		<Tags
 			tagtype="countries"
-			bind:tags={
-				() => [ingredient.origin],
-				(newTags) => {
-					ingredient.origin = newTags ? newTags[0] || '' : '';
-				}
+		bind:tags={
+			() => (ingredient.origin.trim() === '' ? [] : [ingredient.origin]),
+			(newTags) => {
+				ingredient.origin = newTags?.[0] ?? '';
 			}
+		}
 			single={true}
 		/>
 	</div>

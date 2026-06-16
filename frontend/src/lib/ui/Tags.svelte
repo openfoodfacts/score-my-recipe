@@ -60,19 +60,26 @@
 	});
 
 	async function rawFetchSuggestions(value: string): Promise<void> {
-		if (value.trim() === '') {
+		const q = value.trim();
+		if (q.length < 3) {
 			currentSuggestions = [];
 			return;
 		}
-		const resp = await getMatchingTags(tagtype, value);
-		// see later how to show synonyms in the UI
-		currentSuggestions = resp.suggestions.map((s) => ({ item: s }));
+		try {
+			const resp = await getMatchingTags(tagtype, q);
+			// see later how to show synonyms in the UI
+			currentSuggestions = resp.suggestions.map((s) => ({ item: s }));
+		} catch (e) {
+			console.error('Failed to fetch tag suggestions', e);
+			currentSuggestions = [];
+		}
 	}
-	// this will be the debounced version of _fetchSuggestions, to avoid too many API calls
-	let fetchSuggestions: (value: string) => void;
+	// this will be the debounced version of rawFetchSuggestions, to avoid too many API calls
+	let fetchSuggestions: ReturnType<typeof debounce> | undefined;
 
 	onMount(() => {
 		fetchSuggestions = debounce(rawFetchSuggestions, 500);
+		return () => fetchSuggestions?.cancel?.();
 	});
 
 	// fetch suggestion as soon as inputValue changes

@@ -26,7 +26,7 @@ export async function getMatchingTags(
 		labels: getLabelsTaxonomy(),
 		countries: getCountriesTaxonomy()
 	};
-	if (tagtype in values) {
+	if (Object.hasOwn(values, tagtype)) {
 		const list = await values[tagtype as keyof typeof values];
 		const filtered = list.filter((item) => item.toLowerCase().includes(query.toLowerCase()));
 		return {
@@ -38,13 +38,13 @@ export async function getMatchingTags(
 	const suggestionQuery: TaxonomySuggestionsQuery = {
 		tagtype: tagtype,
 		term: query,
-		lc: getLocale().split('-')[1] || 'en',
+		lc: getLocaleKey(),
 		limit: '20',
 		get_synonyms: '1'
 	};
 	const response = await offAPIv3.apiv3.getTaxonomySuggestions(suggestionQuery);
 	// we know the structure of the response from the API
-	return response as unknown as Promise<TaxonomySuggestionResponse>;
+	return response as unknown as TaxonomySuggestionResponse;
 }
 
 /**
