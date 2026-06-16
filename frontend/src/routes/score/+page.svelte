@@ -12,9 +12,7 @@
 <script lang="ts">
 	import { _ } from '$lib/i18n';
 	import IngredientLine from '$lib/ui/IngredientLine.svelte';
-	import {
-		createEmptyIngredient,
-	} from '$lib/types/ingredient';
+	import { createEmptyIngredient } from '$lib/types/ingredient';
 	import {
 		removeIngredientFromList,
 		addEmptyIngredientIfNeeded,
@@ -38,7 +36,6 @@
 	function addIngredientLine() {
 		ingredients = addEmptyIngredientIfNeeded(ingredients);
 	}
-
 </script>
 
 <svelte:head>

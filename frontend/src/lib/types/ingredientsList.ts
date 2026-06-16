@@ -1,4 +1,4 @@
-import type { Ingredient} from './ingredient';
+import type { Ingredient } from './ingredient';
 import { createEmptyIngredient, isIngredientNotEmpty } from './ingredient';
 
 /**
@@ -12,7 +12,10 @@ export type IngredientsList = Ingredient[];
  * @param id - The ID of the ingredient to remove
  * @returns A new list with the ingredient removed, ensuring at least one empty ingredient remains
  */
-export function removeIngredientFromList(ingredients: IngredientsList, id: string): IngredientsList {
+export function removeIngredientFromList(
+	ingredients: IngredientsList,
+	id: string
+): IngredientsList {
 	const newIngredients = ingredients.filter((ing) => ing.id !== id);
 
 	// Ensure there's always at least one empty line

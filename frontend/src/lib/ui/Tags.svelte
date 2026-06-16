@@ -27,17 +27,22 @@
 	import IconMdiClose from '@iconify-svelte/mdi/close';
 
 	type Props = {
+		id?: string;
 		tagtype: string;
 		tags?: string[];
 		single?: boolean; // optional prop to allow only a single tag
 		onChange?: (tags: string[]) => void;
 	};
 
-	let { tagtype, tags = $bindable([]), single = false, onChange }: Props = $props();
+	type Suggestion = {
+		item: string;
+	};
+
+	let { id, tagtype, tags = $bindable([]), single = false, onChange }: Props = $props();
 
 	let autoCompleteIndex = $state(-1);
 	// suggestions returned by API
-	let currentSuggestions = $state<string[]>([]);
+	let currentSuggestions = $state<Suggestion[]>([]);
 
 	// tracking input values for both adding new tags and editing existing ones
 	let newValue = $state('');
@@ -54,7 +59,7 @@
 		}
 	});
 
-	async function rawFetchSuggestions(value: string) {
+	async function rawFetchSuggestions(value: string): Promise<void> {
 		if (value.trim() === '') {
 			currentSuggestions = [];
 			return;
@@ -64,7 +69,7 @@
 		currentSuggestions = resp.suggestions.map((s) => ({ item: s }));
 	}
 	// this will be the debounced version of _fetchSuggestions, to avoid too many API calls
-	let fetchSuggestions;
+	let fetchSuggestions: (value: string) => void;
 
 	onMount(() => {
 		fetchSuggestions = debounce(rawFetchSuggestions, 500);
@@ -278,6 +283,7 @@
 
 <!-- Tag widget -->
 <div
+	{id}
 	class="bg-base-100 border-base-200 focus-within:border-primary focus-within:outline-primary flex h-auto min-h-12 w-full flex-wrap gap-x-1.5 gap-y-1 rounded-md"
 >
 	<!-- each value of the tag (multi valued) -->

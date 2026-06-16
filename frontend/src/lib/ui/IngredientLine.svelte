@@ -33,7 +33,7 @@
 		isFirstItem = false,
 		isLastItem = false,
 		onDelete,
-		onNotEmpty,
+		onNotEmpty
 	}: Props = $props();
 
 	// Track if this ingredient was empty when the component was created
@@ -56,9 +56,7 @@
 	}
 </script>
 
-
 <div class="flex flex-col gap-2 rounded-lg p-3 sm:flex-row sm:items-start">
-
 	<!-- Codified Ingredient name -->
 	<div class="flex grow-3 flex-col">
 		<label class="label py-1" for="ingredient-codified-{ingredient.id}">
@@ -69,7 +67,12 @@
 		<Tags
 			tagtype="ingredients"
 			id="ingredient-codified-{ingredient.id}"
-			bind:tags={ingredient.codifiedIngredient}
+			bind:tags={
+				() => [ingredient.codifiedIngredient],
+				(newTags) => {
+					ingredient.codifiedIngredient = newTags ? newTags[0] || '' : '';
+				}
+			}
 			single={true}
 		/>
 	</div>
@@ -96,10 +99,7 @@
 				>{$_('recipe.labels', { default: 'Labels' })}</span
 			>
 		</label>
-		<Tags
-			tagtype="labels"
-			bind:tags={ingredient.labels}
-		/>
+		<Tags tagtype="labels" bind:tags={ingredient.labels} />
 	</div>
 
 	<!-- Seasonality -->
@@ -129,7 +129,12 @@
 		</label>
 		<Tags
 			tagtype="countries"
-			bind:tags={ingredient.origin}
+			bind:tags={
+				() => [ingredient.origin],
+				(newTags) => {
+					ingredient.origin = newTags ? newTags[0] || '' : '';
+				}
+			}
 			single={true}
 		/>
 	</div>
@@ -138,7 +143,7 @@
 	<div class="flex w-12 flex-col items-end justify-center pb-1">
 		{#if !(isLastItem && isIngredientEmpty(ingredient))}
 			<button
-				class="mt-2 btn btn-circle btn-ghost btn-sm text-error"
+				class="btn btn-circle btn-ghost btn-sm text-error mt-2"
 				onclick={handleDelete}
 				aria-label={$_('recipe.delete_ingredient', { default: 'Delete ingredient' })}
 			>

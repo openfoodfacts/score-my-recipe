@@ -11,17 +11,20 @@ type TaxonomySuggestionResponse = {
 	matched_synonyms: Record<string, string[]>;
 };
 
-const offAPIv3 = new OpenFoodFacts(fetch, {host: offLinks.website});
+const offAPIv3 = new OpenFoodFacts(fetch, { host: offLinks.website });
 
 /**
  * wrapper for taxonomy API calls
  */
-export async function getMatchingTags(tagtype: string, query: string) : Promise<TaxonomySuggestionResponse> {
+export async function getMatchingTags(
+	tagtype: string,
+	query: string
+): Promise<TaxonomySuggestionResponse> {
 	// temporary simulation
 	const values = {
-		"ingredients": getIngredientsTaxonomy(),
-		"labels": getLabelsTaxonomy(),
-		"countries": getCountriesTaxonomy(),
+		ingredients: getIngredientsTaxonomy(),
+		labels: getLabelsTaxonomy(),
+		countries: getCountriesTaxonomy()
 	};
 	if (tagtype in values) {
 		const list = await values[tagtype as keyof typeof values];
@@ -32,16 +35,16 @@ export async function getMatchingTags(tagtype: string, query: string) : Promise<
 		};
 	}
 
-	const suggestionQuery : TaxonomySuggestionsQuery = {
+	const suggestionQuery: TaxonomySuggestionsQuery = {
 		tagtype: tagtype,
 		term: query,
 		lc: getLocale().split('-')[1] || 'en',
-		limit: "20",
-		get_synonyms: "1",
+		limit: '20',
+		get_synonyms: '1'
 	};
 	const response = await offAPIv3.apiv3.getTaxonomySuggestions(suggestionQuery);
 	// we know the structure of the response from the API
-	return (response as unknown) as Promise<TaxonomySuggestionResponse>;
+	return response as unknown as Promise<TaxonomySuggestionResponse>;
 }
 
 /**
@@ -105,7 +108,7 @@ export const INGREDIENTS_TAXONOMY = {
 		'ail',
 		'carotte',
 		'pomme de terre',
-		'huile d\'olive',
+		"huile d'olive",
 		'beurre',
 		'farine',
 		'sucre',
@@ -197,7 +200,7 @@ export const LABELS_TAXONOMY = {
 export const COUNTRIES_TAXONOMY = {
 	en: [
 		'France',
-	'Italy',
+		'Italy',
 		'Spain',
 		'Germany',
 		'United Kingdom',
