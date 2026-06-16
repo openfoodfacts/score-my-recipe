@@ -45,12 +45,12 @@ export interface paths {
 			path?: never;
 			cookie?: never;
 		};
+		get?: never;
+		put?: never;
 		/**
 		 * Parse Text
 		 * @description Parse a text and return a list of ingredients with quantities and eventual modifiers
 		 */
-		get?: never;
-		put?: never;
 		post: operations['parse_text_v1_parse_text_post'];
 		delete?: never;
 		options?: never;
@@ -82,14 +82,6 @@ export interface components {
 			quantity_g?: number | null;
 		};
 		/**
-		 * RecipeParseResponse
-		 * @description Response model for parse_text endpoint
-		 */
-		RecipeParseResponse: {
-			/** Ingredients */
-			ingredients: components['schemas']['RecipeIngredient'][];
-		};
-		/**
 		 * RecipeParseRequest
 		 * @description Request model for parse_text endpoint
 		 */
@@ -98,6 +90,14 @@ export interface components {
 			text: string;
 			/** Lang */
 			lang: string;
+		};
+		/**
+		 * RecipeParseResponse
+		 * @description Response model for parse_text endpoint
+		 */
+		RecipeParseResponse: {
+			/** Ingredients */
+			ingredients: components['schemas']['RecipeIngredient'][];
 		};
 		/** ValidationError */
 		ValidationError: {
