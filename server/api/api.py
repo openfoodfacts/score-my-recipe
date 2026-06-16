@@ -22,7 +22,7 @@ app.add_middleware(
     # => Workarround: use allow_origin_regex
     # Source: https://github.com/tiangolo/fastapi/issues/133#issuecomment-646985050
     allow_origin_regex="https?://.*",
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
     expose_headers=["*"],

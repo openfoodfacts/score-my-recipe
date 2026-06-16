@@ -11,12 +11,12 @@ class OFFIngredient(BaseModel):
     quantity_g: Optional[float] = None
     ecobalyse_code: Optional[str] = None
     ciqual_food_code: Optional[str] = None
-    is_in_taxonomy: int = None
+    is_in_taxonomy: Optional[int] = None
 
 
 class RecipeIngredient(BaseModel):
     """Ingredient model for Score My Recipe API"""
-    taxonomy_id: Optional[str]  = None
+    taxonomy_id: Optional[str] = None
     is_in_taxonomy: bool
     codified_ingredient: str
     quantity_g: Optional[float] = None

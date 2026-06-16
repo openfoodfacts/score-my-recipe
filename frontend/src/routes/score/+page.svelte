@@ -27,7 +27,7 @@
 	 * Falls back to a single empty line when no state is provided.
 	 */
 	function getInitialIngredients(): IngredientsList {
-		const state = page.state as { ingredients?: Ingredient[] };
+		const state = (page.state ?? {}) as { ingredients?: Ingredient[] };
 		const stateIngredients = state.ingredients;
 		if (stateIngredients && stateIngredients.length > 0) {
 			return stateIngredients;
