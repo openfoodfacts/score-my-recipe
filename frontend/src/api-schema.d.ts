@@ -45,13 +45,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
         /**
          * Parse Text
          * @description Parse a text and return a list of ingredients with quantities and eventual modifiers
          */
-        post: operations["parse_text_v1_parse_text_post"];
+        get: operations["parse_text_v1_parse_text_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -155,7 +155,7 @@ export interface operations {
             };
         };
     };
-    parse_text_v1_parse_text_post: {
+    parse_text_v1_parse_text_get: {
         parameters: {
             query: {
                 text: string;

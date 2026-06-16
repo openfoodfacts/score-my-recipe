@@ -37,7 +37,7 @@
 		countriesTaxonomy,
 		isLastItem = false,
 		onDelete,
-		onNotEmpty,
+		onNotEmpty
 	}: Props = $props();
 
 	// Track if this ingredient was empty when the component was created
@@ -61,7 +61,6 @@
 </script>
 
 <div class="bg-base-200 flex flex-col gap-2 rounded-lg p-3 sm:flex-row sm:items-start">
-
 	<!-- Codified Ingredient name -->
 	<div class="w-40">
 		<label class="label py-1" for="ingredient-codified-{ingredient.id}">
@@ -104,10 +103,7 @@
 				>{$_('recipe.labels', { default: 'Labels' })}</span
 			>
 		</label>
-		<Tags
-			autocomplete={labelsTaxonomy}
-			bind:tags={ingredient.labels}
-		/>
+		<Tags autocomplete={labelsTaxonomy} bind:tags={ingredient.labels} />
 	</div>
 
 	<!-- Seasonality -->
@@ -135,10 +131,7 @@
 				>{$_('recipe.origin', { default: 'Origin' })}</span
 			>
 		</label>
-		<Tags
-			autocomplete={countriesTaxonomy}
-			bind:tags={ingredient.origin}
-		/>
+		<Tags autocomplete={countriesTaxonomy} bind:tags={ingredient.origin} />
 	</div>
 
 	<!-- Delete Button -->

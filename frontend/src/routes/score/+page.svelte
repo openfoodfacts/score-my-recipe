@@ -19,9 +19,7 @@
 		getCountriesTaxonomy
 	} from '$lib/api/taxonomy';
 	import IngredientLine from '$lib/ui/IngredientLine.svelte';
-	import {
-		createEmptyIngredient,
-	} from '$lib/types/ingredient';
+	import { createEmptyIngredient } from '$lib/types/ingredient';
 	import {
 		removeIngredientFromList,
 		addEmptyIngredientIfNeeded,
