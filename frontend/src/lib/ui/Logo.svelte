@@ -20,10 +20,12 @@
 			: `https://static.openfoodfacts.org/images/logos/off-logo-horizontal-dark.svg`}
 		media="(prefers-color-scheme: dark)"
 	/>
-	<img
-		src="https://static.openfoodfacts.org/images/logos/off-logo-horizontal-light.svg"
-		alt="Open Food Facts"
-		class="h-10"
-	/>
-	<span class="border-base-content/20 border-l pl-4 text-xl font-bold">pour les recettes</span>
+	<a href="/">
+		<img
+			src="https://static.openfoodfacts.org/images/logos/off-logo-horizontal-light.svg"
+			alt="Open Food Facts"
+			class="h-10"
+		/>
+	</a>
+	<a href="/" class="border-base-content/20 border-l pl-4 text-xl font-bold">pour les recettes</a>
 </picture>

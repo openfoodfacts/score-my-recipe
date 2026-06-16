@@ -59,21 +59,21 @@
 	},
 	"homepage": {
 		"title": "Score My Recipe - Open Food Facts",
-		"badge": "The open-source tool for collective catering",
-		"hero_title": "Calculate the impact of your recipes",
+		"badge": "The open-source tool for environmental assessment of recipes",
+		"hero_title": "Calculate the environmental impact of your recipes",
 		"hero_title_highlight": "in real time.",
-		"hero_description": "Enter your ingredients naturally. Our tool structures your technical sheets, instantly calculates the Green-Score and helps you move towards more sustainable menus.",
+		"hero_description": "Come with your existing recipes. Our tool adapts to what you have and instantly calculates the Green-Score and helps you move towards more sustainable menus.",
 		"cta_recipe_calculator": "Open the recipe calculator",
-		"section2_title": "The professionals' compass",
-		"section2_description": "Easily improve your technical sheets with reliable data.",
+		"section2_title": "Works for home and professional kitchens",
+		"section2_description": "Beyond single recipes, easily score many recipes with reliable data.",
 		"feature1_title": "Real-time calculation",
 		"feature1_description": "Easily adjust a recipe's impact by \"jamming\" on quantities or testing ingredient substitutions on the fly.",
-		"feature2_title": "Transparency & Agribalyse",
-		"feature2_description": "A transparent calculation methodology, based on the rigor of the public Agribalyse database carried by ADEME.",
-		"feature3_title": "High-recognition Score",
-		"feature3_description": "Bet on a validated indicator already identified by millions of consumers on Open Food Facts and Yuka.",
-		"footer_text": "An open-source project led by Open Food Facts, designed to transform the impact of catering.",
+		"feature2_title": "A transparent methodology grounded in PEF/Agribalyse",
+		"feature2_description": "A transparent calculation methodology, based on the rigor of the public PEF/Agribalyse database carried by ADEME.",
+		"feature3_title": "Highly-recognized score",
+		"feature3_description": "Rely on a validated indicator already identified by millions of consumers on Open Food Facts and Yuka.",
+		"footer_text": "An open-source project led by Open Food Facts, designed to help us reduce the impact of at-home cooking, out of home dining and catering.",
 		"footer_badge": "Project carried out collaboratively thanks to the support of ADEME's Call for Commons",
-		"footer_github_link": "Discover the project on GitHub"
+		"footer_github_link": "Contribute to the project on GitHub"
 	}
 }
