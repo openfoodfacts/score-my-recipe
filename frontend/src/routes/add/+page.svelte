@@ -33,6 +33,10 @@
 		<h1 class="text-3xl font-bold">{$_('add.title', { default: 'Ajouter une recette' })}</h1>
 		<p class="text-base-content/70 mt-2">
 			{$_('add.description', { default: 'Entrez votre recette ci-dessous' })}
+			{$_('add.or', { default: 'ou utilisez la' })}
+			<a href="/score" class="link link-primary"
+				>{$_('add.guided_entry', { default: 'saisie guidée' })}</a
+			>.
 		</p>
 	</div>
 
