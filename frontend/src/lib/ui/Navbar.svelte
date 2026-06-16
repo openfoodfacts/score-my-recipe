@@ -4,7 +4,7 @@
 	import { offLinks } from '$lib/offLink';
 
 	const navItems = $state([
-		{ name: 'navbar.score_recipe', href: '/score' },
+		{ name: 'navbar.score_recipe', href: '/add' },
 		{ name: 'navbar.methodology', href: `${offLinks.website}/green-score` }
 	]);
 </script>

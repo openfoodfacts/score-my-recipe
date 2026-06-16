@@ -74,6 +74,20 @@
 		"feature3_description": "Rely on a validated indicator already identified by millions of consumers on Open Food Facts and Yuka.",
 		"footer_text": "An open-source project led by Open Food Facts, designed to help us reduce the impact of at-home cooking, out of home dining and catering.",
 		"footer_badge": "Project carried out collaboratively thanks to the support of ADEME's Call for Commons",
-		"footer_github_link": "Contribute to the project on GitHub"
+		"footer_github_link": "Discover the project on GitHub"
+	},
+	"add": {
+		"title": "Add a recipe",
+		"description": "Enter your recipe below",
+		"recipe_label": "Your recipe",
+		"recipe_placeholder": "Enter your recipe here...\n\nExample:\n200g flour\n3 eggs\n100g sugar",
+		"score_button": "Score recipe",
+		"loading": "Calculating...",
+		"result_title": "Detected ingredients",
+		"table_ingredient": "Ingredient",
+		"table_taxonomy": "In taxonomy",
+		"table_quantity": "Quantity (g)",
+		"yes": "Yes",
+		"no": "No"
 	}
 }

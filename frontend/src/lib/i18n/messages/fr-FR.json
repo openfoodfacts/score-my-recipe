@@ -75,5 +75,19 @@
 		"footer_text": "Un projet open-source porté par Open Food Facts, conçu pour nous aider à réduire l'impact de la cuisine à la maison, de la restauration hors domicile et de la restauration collective.",
 		"footer_badge": "Projet réalisé de manière collaborative grâce au soutien de l'Appel à Communs de l'ADEME",
 		"footer_github_link": "Contribuer au projet sur GitHub"
+	},
+	"add": {
+		"title": "Ajouter une recette",
+		"description": "Entrez votre recette ci-dessous",
+		"recipe_label": "Votre recette",
+		"recipe_placeholder": "Entrez votre recette ici...\n\nExemple:\n200g de farine,\n3 œufs,\n100g de sucre,",
+		"score_button": "Noter la recette",
+		"loading": "Calcul en cours...",
+		"result_title": "Ingrédients détectés",
+		"table_ingredient": "Ingrédient",
+		"table_taxonomy": "Dans la taxonomie",
+		"table_quantity": "Quantité (g)",
+		"yes": "Oui",
+		"no": "Non"
 	}
 }

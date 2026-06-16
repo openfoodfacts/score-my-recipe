@@ -11,6 +11,7 @@
 -->
 <script lang="ts">
 	import { _ } from '$lib/i18n';
+	import { page } from '$app/state';
 	import IngredientLine from '$lib/ui/IngredientLine.svelte';
 	import { createEmptyIngredient } from '$lib/types/ingredient';
 	import {
@@ -19,9 +20,23 @@
 		countNonEmptyIngredients
 	} from '$lib/types/ingredientsList';
 	import type { IngredientsList } from '$lib/types/ingredientsList';
+	import type { Ingredient } from '$lib/types/ingredient';
 
-	// Recipe state - starts with one empty ingredient line
-	let ingredients = $state<IngredientsList>([createEmptyIngredient()]);
+	/**
+	 * Initial ingredients coming from the `/add` page (passed via `goto` state).
+	 * Falls back to a single empty line when no state is provided.
+	 */
+	function getInitialIngredients(): IngredientsList {
+		const state = (page.state ?? {}) as { ingredients?: Ingredient[] };
+		const stateIngredients = state.ingredients;
+		if (stateIngredients && stateIngredients.length > 0) {
+			return stateIngredients;
+		}
+		return [createEmptyIngredient()];
+	}
+
+	// Recipe state - starts with one empty ingredient line, or with parsed ingredients from /add
+	let ingredients = $state<IngredientsList>(getInitialIngredients());
 
 	/**
 	 * Handle delete of an ingredient
