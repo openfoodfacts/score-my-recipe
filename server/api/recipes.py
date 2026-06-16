@@ -11,7 +11,7 @@ def off_ingredient_to_recipe_ingredient(off_ingredient: OFFIngredient) -> Recipe
         quantity_g=off_ingredient.quantity_g,
     )
 
-async def parse_text(text: str, lang: str) -> list:
+async def parse_text(text: str, lang: str) -> list[RecipeIngredient]:
     """Parse a text and return a list of ingredients with quantities and eventual modifiers
     """
     off_ingredients = await off.parse_text(text, lang)

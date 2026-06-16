@@ -25,3 +25,9 @@ class RecipeIngredient(BaseModel):
 class RecipeParseResponse(BaseModel):
     """Response model for parse_text endpoint"""
     ingredients: list[RecipeIngredient]
+
+
+class RecipeParseRequest(BaseModel):
+    """Request model for parse_text endpoint"""
+    text: str
+    lang: str

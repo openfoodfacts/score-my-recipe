@@ -37,11 +37,10 @@ async def root() -> dict:
 async def health() -> dict:
     return {"status": "ok"}
 
-# TODO: use a class for parameters to constraint values of lang
-@app.get("/v1/parse_text")
-async def parse_text(text: str, lang: str) -> types.RecipeParseResponse:
+@app.post("/v1/parse_text")
+async def parse_text(request: types.RecipeParseRequest) -> types.RecipeParseResponse:
     """Parse a text and return a list of ingredients with quantities and eventual modifiers
     """
-    ingredients = await recipes.parse_text(text, lang)
+    ingredients = await recipes.parse_text(request.text, request.lang)
     return types.RecipeParseResponse(ingredients=ingredients)
 

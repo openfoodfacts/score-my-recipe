@@ -30,8 +30,11 @@ const API_BASE_URL = env.PUBLIC_RECIPE_API_URL;
  * @throws {Error} If the backend responds with a non-2xx status code.
  */
 export async function parseRecipeText(text: string, lang: string): Promise<RecipeParseResponse> {
-	const params = new URLSearchParams({ text, lang });
-	const response = await fetch(`${API_BASE_URL}/v1/parse_text?${params.toString()}`);
+	const response = await fetch(`${API_BASE_URL}/v1/parse_text`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ text, lang })
+	});
 
 	if (!response.ok) {
 		throw new Error(`Erreur ${response.status}: ${response.statusText}`);

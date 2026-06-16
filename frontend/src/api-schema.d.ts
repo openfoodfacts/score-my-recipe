@@ -49,9 +49,9 @@ export interface paths {
 		 * Parse Text
 		 * @description Parse a text and return a list of ingredients with quantities and eventual modifiers
 		 */
-		get: operations['parse_text_v1_parse_text_get'];
+		get?: never;
 		put?: never;
-		post?: never;
+		post: operations['parse_text_v1_parse_text_post'];
 		delete?: never;
 		options?: never;
 		head?: never;
@@ -88,6 +88,16 @@ export interface components {
 		RecipeParseResponse: {
 			/** Ingredients */
 			ingredients: components['schemas']['RecipeIngredient'][];
+		};
+		/**
+		 * RecipeParseRequest
+		 * @description Request model for parse_text endpoint
+		 */
+		RecipeParseRequest: {
+			/** Text */
+			text: string;
+			/** Lang */
+			lang: string;
 		};
 		/** ValidationError */
 		ValidationError: {
@@ -155,17 +165,18 @@ export interface operations {
 			};
 		};
 	};
-	parse_text_v1_parse_text_get: {
+	parse_text_v1_parse_text_post: {
 		parameters: {
-			query: {
-				text: string;
-				lang: string;
-			};
+			query?: never;
 			header?: never;
 			path?: never;
 			cookie?: never;
 		};
-		requestBody?: never;
+		requestBody: {
+			content: {
+				'application/json': components['schemas']['RecipeParseRequest'];
+			};
+		};
 		responses: {
 			/** @description Successful Response */
 			200: {
