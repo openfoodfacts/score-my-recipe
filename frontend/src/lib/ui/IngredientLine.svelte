@@ -22,9 +22,7 @@
 	type Props = {
 		// The ingredient data object (bindable): name, weight, etc.
 		ingredient: Ingredient;
-		ingredientsTaxonomy: readonly string[];
-		labelsTaxonomy: readonly string[];
-		countriesTaxonomy: readonly string[];
+		isFirstItem?: boolean;
 		isLastItem?: boolean;
 		onDelete?: (id: string) => void;
 		onNotEmpty?: () => void; // Optional callback for when line becomes non-empty
@@ -32,9 +30,7 @@
 
 	let {
 		ingredient = $bindable(),
-		ingredientsTaxonomy,
-		labelsTaxonomy,
-		countriesTaxonomy,
+		isFirstItem = false,
 		isLastItem = false,
 		onDelete,
 		onNotEmpty
@@ -60,29 +56,29 @@
 	}
 </script>
 
-<div class="bg-base-200 flex flex-col gap-2 rounded-lg p-3 sm:flex-row sm:items-start">
+<div class="flex flex-col gap-2 rounded-lg p-3 sm:flex-row sm:items-start">
 	<!-- Codified Ingredient name -->
-	<div class="w-40">
+	<div class="flex grow-3 flex-col">
 		<label class="label py-1" for="ingredient-codified-{ingredient.id}">
 			<span class="label-text text-xs"
 				>{$_('recipe.codified_ingredient', { default: 'Codified' })}</span
 			>
 		</label>
-		<select
+		<Tags
+			tagtype="ingredients"
 			id="ingredient-codified-{ingredient.id}"
-			class="select select-bordered w-full"
-			bind:value={ingredient.codifiedIngredient}
-		>
-			{#each ingredientsTaxonomy as taxonomyItem (taxonomyItem)}
-				<option value={taxonomyItem}>
-					{taxonomyItem === 'unknown' ? $_('recipe.unknown', { default: 'Unknown' }) : taxonomyItem}
-				</option>
-			{/each}
-		</select>
+			bind:tags={
+				() => (ingredient.codifiedIngredient.trim() === '' ? [] : [ingredient.codifiedIngredient]),
+				(newTags) => {
+					ingredient.codifiedIngredient = newTags?.[0] ?? '';
+				}
+			}
+			single={true}
+		/>
 	</div>
 
 	<!-- Weight -->
-	<div class="w-24">
+	<div class="flex w-24 flex-col">
 		<label class="label py-1" for="ingredient-weight-{ingredient.id}">
 			<span class="label-text text-xs">{$_('recipe.weight', { default: 'Weight (g)' })}</span>
 		</label>
@@ -97,13 +93,13 @@
 	</div>
 
 	<!-- Labels -->
-	<div class="w-48">
+	<div class="flex grow-3 flex-col">
 		<label class="label py-1" for="ingredient-labels-{ingredient.id}">
 			<span class="label-text text-xs" id="ingredient-labels-label-{ingredient.id}"
 				>{$_('recipe.labels', { default: 'Labels' })}</span
 			>
 		</label>
-		<Tags autocomplete={labelsTaxonomy} bind:tags={ingredient.labels} />
+		<Tags tagtype="labels" bind:tags={ingredient.labels} />
 	</div>
 
 	<!-- Seasonality -->
@@ -125,20 +121,29 @@
 	</div>
 
 	<!-- Origin -->
-	<div class="w-48">
+	<div class="flex grow-3 flex-col">
 		<label class="label py-1" for="ingredient-origin-{ingredient.id}">
 			<span class="label-text text-xs" id="ingredient-origin-label-{ingredient.id}"
 				>{$_('recipe.origin', { default: 'Origin' })}</span
 			>
 		</label>
-		<Tags autocomplete={countriesTaxonomy} bind:tags={ingredient.origin} />
+		<Tags
+			tagtype="countries"
+			bind:tags={
+				() => (ingredient.origin.trim() === '' ? [] : [ingredient.origin]),
+				(newTags) => {
+					ingredient.origin = newTags?.[0] ?? '';
+				}
+			}
+			single={true}
+		/>
 	</div>
 
 	<!-- Delete Button -->
-	<div class="flex w-12 items-end justify-center pb-1">
+	<div class="flex w-12 flex-col items-end justify-center pb-1">
 		{#if !(isLastItem && isIngredientEmpty(ingredient))}
 			<button
-				class="btn btn-circle btn-ghost btn-sm text-error"
+				class="btn btn-circle btn-ghost btn-sm text-error mt-2"
 				onclick={handleDelete}
 				aria-label={$_('recipe.delete_ingredient', { default: 'Delete ingredient' })}
 			>
