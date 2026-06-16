@@ -18,8 +18,7 @@ export type RecipeParseResponse = components['schemas']['RecipeParseResponse'];
 export type RecipeIngredient = components['schemas']['RecipeIngredient'];
 
 /** Base URL of the Score My Recipe backend. */
-const API_BASE_URL = env.PUBLIC_RECIPE_API_URL;
-
+const API_BASE_URL = env.PUBLIC_RECIPE_API_URL ?? '';
 /**
  * Parse a free-form recipe text and return the list of detected ingredients
  * with their quantities and taxonomy information.

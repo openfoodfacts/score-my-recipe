@@ -19,7 +19,7 @@ app.add_middleware(
     # But that will only allow certain types of communication, excluding everything that involves
     # credentials: Cookies, Authorization headers like those used with Bearer Tokens, etc.
     # So, for everything to work correctly, it's better to specify explicitly the allowed origins."
-    # => Workarround: use allow_origin_regex
+    # => Workaround: use allow_origin_regex
     # Source: https://github.com/tiangolo/fastapi/issues/133#issuecomment-646985050
     allow_origin_regex="https?://.*",
     allow_credentials=False,

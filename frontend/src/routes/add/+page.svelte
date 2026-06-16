@@ -41,7 +41,7 @@
 	</div>
 
 	<!-- Recipe Form -->
-	<form onsubmit={handleSubmit} class="space-y-6">
+	<form on:submit|preventDefault={handleSubmit} class="space-y-6">
 		<div class="form-control w-full">
 			<label class="label justify-start" for="recipe-text">
 				<span class="label-text font-medium"
