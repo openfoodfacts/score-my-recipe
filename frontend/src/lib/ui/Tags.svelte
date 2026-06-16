@@ -3,13 +3,13 @@
 
   A Svelte component for managing a list of tags with autocomplete suggestions.
   It supports adding new tags, editing existing ones, and removing tags.
-  The component uses Fuse.js for fuzzy searching through the autocomplete options and provides keyboard navigation for accessibility.
 
   Props:
     - tagtype: A string representing the type of tags (e.g., "labels", "origins")
 	  for fetching relevant autocomplete suggestions.
 	- tags: An array of strings representing the current tags.
-	- autocomplete: An array of strings for autocomplete suggestions.
+	- single: A boolean indicating whether only a single tag is allowed (default: false).
+	- id: An optional string to set the HTML id attribute for the root element.
 	- onChange: A callback function that is called whenever the tags change.
 
   Features:
@@ -126,7 +126,11 @@
 			if (autoCompleteIndex !== -1 && currentSuggestions[autoCompleteIndex]) {
 				newValue = currentSuggestions[autoCompleteIndex].item;
 			}
-
+			// don't validate empty tags
+			if (newValue.trim() === '') {
+				event.preventDefault();
+				return;
+			}
 			const tag = newValue.trim();
 
 			newValue = '';
