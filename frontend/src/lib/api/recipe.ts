@@ -9,6 +9,7 @@
 import type { components } from '../../api-schema';
 import type { Ingredient } from '$lib/types/ingredient';
 import { generateIngredientId } from '$lib/types/ingredient';
+import { env } from '$env/dynamic/public';
 
 /** Response schema for the `parse_text` endpoint, generated from the OpenAPI schema. */
 export type RecipeParseResponse = components['schemas']['RecipeParseResponse'];
@@ -17,7 +18,7 @@ export type RecipeParseResponse = components['schemas']['RecipeParseResponse'];
 export type RecipeIngredient = components['schemas']['RecipeIngredient'];
 
 /** Base URL of the Score My Recipe backend. */
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = env.PUBLIC_RECIPE_API_URL;
 
 /**
  * Parse a free-form recipe text and return the list of detected ingredients
