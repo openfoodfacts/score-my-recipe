@@ -1,4 +1,12 @@
-from fastapi import FastAPI
+"""HTTP API for recipes scoring.
+
+
+Note: the business logic is in api/recipes.py,
+this file should only handle the HTTP specific parts.
+"""
+from typing import Annotated
+
+from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 import api.recipes as recipes
@@ -44,3 +52,11 @@ async def parse_text(request: types.RecipeParseRequest) -> types.RecipeParseResp
     ingredients = await recipes.parse_text(request.text, request.lang)
     return types.RecipeParseResponse(ingredients=ingredients)
 
+@app.get("/v1/origins")
+async def get_origins(filter_query: Annotated[types.OriginsRequest, Query()]) -> types.OriginsResponse:
+    """Get the list of origins available in the database
+
+    Note: as the list is not too big, we let clients handle suggestions to users
+    """
+    origins = await recipes.get_origins(filter_query.lang)
+    return types.OriginsResponse(origins=origins)
