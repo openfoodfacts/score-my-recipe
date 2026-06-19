@@ -29,7 +29,7 @@ async def get_origins(lang: str) -> list[types.Origin]:
 
     Note: as the list is not too big, we let clients handle suggestions to users
     """
-    lang = lang.split("-")[0]  # Keep only the first part of the language code (e.g. "fr" from "fr-FR")
+    lang = lang.replace("_", "-").split("-")[0]  # Keep only the first part of the language code (e.g. "fr" from "fr-FR")
     countries_taxonomy = await off.get_countries_taxonomy()
     origins = countries_taxonomy.iter_nodes()
     origins_list = [types.Origin(id=origin[0], label=origin[1]) for origin in off.taxonomy_lang_label(lang, origins)]

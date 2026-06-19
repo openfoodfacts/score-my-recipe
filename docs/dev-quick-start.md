@@ -32,7 +32,7 @@ From the project root, run:
 
 ```bash
 cd server
-uv sync
+uv sync --all-extras
 ```
 
 This creates a virtual environment in `server/.venv` and installs all dependencies declared in `server/pyproject.toml`.
@@ -54,7 +54,7 @@ To run tests:
 
 ```bash
 cd server
-uv run pytest tests/ -v
+uv run pytest
 ```
 
 ## Frontend
