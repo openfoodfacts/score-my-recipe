@@ -1,0 +1,31 @@
+# Server commands
+
+# prefer bash
+set shell := ["bash", "-uc"]
+
+# this help
+[default]
+help:
+    @just --list
+
+# Refresh dependencies
+refresh:
+    uv sync --all-extras
+
+# Run dev server
+dev:
+    uv run uvicorn api.api:app --reload
+
+# Run all checks
+[group('quality')]
+check: test
+
+# Run tests
+[group('quality')]
+test:
+    uv run pytest -v
+
+# Lint
+[group('quality')]
+lint:
+    @echo "NO PYTHON LINTING YET (TODO)"

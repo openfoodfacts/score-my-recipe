@@ -1,0 +1,33 @@
+# frontend commands
+
+# prefer bash
+set shell := ["bash", "-uc"]
+
+# Frontend commands
+use_nvm := "[ -e local-nvm.sh ] && . ./local-nvm.sh ; nvm use "
+
+# this help
+[default]
+help:
+    @just --list
+
+# Refresh dependencies
+refresh:
+    {{ use_nvm }} && pnpm install
+
+# Run dev server
+dev:
+    @echo "Running dev frontend"
+    {{ use_nvm }} && pnpm run dev
+
+# ===========================================
+# QUALITY
+# ===========================================
+
+lint:
+    {{ use_nvm }} && pnpm format
+
+check:
+    {{ use_nvm }} && pnpm check
+    {{ use_nvm }} && pnpm lint
+    {{ use_nvm }} && pnpm build
