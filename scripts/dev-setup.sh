@@ -41,6 +41,7 @@ just_setup() {
     else
       info "Installing just via official install script..."
       curl -LsSf https://just.systems/install.sh | bash -s -- --to "$HOME/.local/bin"
+      export PATH="$HOME/.local/bin:$PATH"
     fi
     if ! command_exists just; then
       error "just installation failed. Please install manually: https://github.com/casey/just"
@@ -130,7 +131,7 @@ frontend_setup() {
 # ─── Main ──────────────────────────────────────────────────────────────────────
 
 
-case "${1:-nothing}" in
+case "${1:-full}" in
   frontend)
     just_setup
     frontend_setup
@@ -145,7 +146,7 @@ case "${1:-nothing}" in
     server_setup
     ;;
   *)
-    echo "Usage: $0 [frontend|server|full]"
+    echo "Usage: $0 [frontend|server|full|all]"
     exit 1
     ;;
 esac

@@ -4,7 +4,7 @@
 set shell := ["bash", "-uc"]
 
 # Frontend commands
-use_nvm := "[ -e local-nvm.sh ] && . ./local-nvm.sh ; nvm use "
+use_nvm := "export NVM_DIR=\"${NVM_DIR:-$HOME/.nvm}\"; [ -s \"$NVM_DIR/nvm.sh\" ] && . \"$NVM_DIR/nvm.sh\"; [ -e ./local-nvm.sh ] && . ./local-nvm.sh; nvm use"
 
 # this help
 [default]
@@ -31,3 +31,6 @@ check:
     {{ use_nvm }} && pnpm check
     {{ use_nvm }} && pnpm lint
     {{ use_nvm }} && pnpm build
+
+test:
+    {{ use_nvm }} && pnpm test

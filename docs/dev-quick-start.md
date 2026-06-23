@@ -15,8 +15,7 @@ For an automated setup, run the dev setup script from the repository root:
 It will install all prerequisites and dependencies for both backend and frontend.
 If you prefer to do things manually, follow the steps below.
 
-On windows, the best option seems to use the automated setup above in WSL.
-
+On Windows, the best option seems to use the automated setup above in WSL.
 ### Manual install
 
 You must install [`just`](https://just.systems/man/en/).
@@ -27,8 +26,7 @@ For server (backend), install [`uv`](https://docs.astral.sh/uv/) and then use `u
 
 For frontend, install [nvm (Node version Manager)](https://github.com/nvm-sh/nvm),
 go in `frontend` folder and use `nvm use && npm install -g pnpm && pnpm install`.
-Also copy `.env-example` to `.env`
-
+Also copy `.env.example` to `.env`.
 ### Refreshing your project
 
 If you want to refresh your project dependencies,
@@ -44,7 +42,7 @@ We use [`just`](https://just.systems/man/en/) for common operations.
 Just run `just` in main folder or in `frontend` and `server` folder
 to get the list of actions.
 
-Don't hesitate to look at `justfile` in you need to tweak some commands.
+Don't hesitate to look at `justfile` if you need to tweak some commands.
 
 ### Checks
 
