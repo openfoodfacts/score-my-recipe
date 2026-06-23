@@ -28,6 +28,11 @@ export type Label = TaxonomyItem;
 export type Origin = TaxonomyItem;
 
 /**
+ * Represents a codified ingredient from taxonomy
+ */
+export type IngredientType = TaxonomyItem;
+
+/**
  * Represents a single ingredient in a recipe
  */
 export interface Ingredient {
@@ -38,7 +43,7 @@ export interface Ingredient {
 	/** Weight in grams (null if not specified) */
 	weight: number | null;
 	/** Codified ingredient from taxonomy */
-	codifiedIngredient: TaxonomyItem | null;
+	codifiedIngredient: IngredientType | null;
 	/** List of labels (e.g., organic, fair-trade) */
 	labels: Label[];
 	/** Whether the ingredient is seasonal */

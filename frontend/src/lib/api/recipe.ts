@@ -7,7 +7,7 @@
  */
 
 import type { components } from '../../api-schema';
-import type { Ingredient, TaxonomyItem } from '$lib/types/ingredient';
+import type { Ingredient, IngredientType } from '$lib/types/ingredient';
 import { generateIngredientId } from '$lib/types/ingredient';
 import { env } from '$env/dynamic/public';
 
@@ -56,7 +56,7 @@ export async function parseRecipeText(text: string, lang: string): Promise<Recip
  * @returns An `Ingredient` ready to be displayed in an `IngredientLine`.
  */
 export function apiIngredientToIngredient(apiIngredient: RecipeIngredient): Ingredient {
-	const taxonomyItem: TaxonomyItem = {
+	const taxonomyItem: IngredientType = {
 		id: apiIngredient.taxonomy_id ?? apiIngredient.codified_ingredient,
 		label: apiIngredient.codified_ingredient,
 		isInTaxonomy: true
