@@ -6,6 +6,28 @@
  */
 
 /**
+ * A taxonomy item with id and localized label
+ */
+export interface TaxonomyItem {
+	/** Taxonomy identifier */
+	id: string;
+	/** Display label in the current language */
+	label: string;
+	/** Whether this item comes from the taxonomy (true) or is a custom user entry (false) */
+	isInTaxonomy: boolean;
+}
+
+/**
+ * Represents a label/certification (e.g., organic, fair-trade)
+ */
+export type Label = TaxonomyItem;
+
+/**
+ * Represents an origin/country
+ */
+export type Origin = TaxonomyItem;
+
+/**
  * Represents a single ingredient in a recipe
  */
 export interface Ingredient {
@@ -16,13 +38,13 @@ export interface Ingredient {
 	/** Weight in grams (null if not specified) */
 	weight: number | null;
 	/** Codified ingredient from taxonomy */
-	codifiedIngredient: string;
+	codifiedIngredient: TaxonomyItem | null;
 	/** List of labels (e.g., organic, fair-trade) */
-	labels: string[];
+	labels: Label[];
 	/** Whether the ingredient is seasonal */
 	seasonality: boolean;
 	/** Origin countries/regions */
-	origin: string;
+	origin: Origin | null;
 }
 
 /**
@@ -42,10 +64,10 @@ export function createEmptyIngredient(): Ingredient {
 		id: generateIngredientId(),
 		name: '',
 		weight: null,
-		codifiedIngredient: '',
+		codifiedIngredient: null,
 		labels: [],
 		seasonality: false,
-		origin: ''
+		origin: null
 	};
 }
 
@@ -59,9 +81,9 @@ export function isIngredientEmpty(ingredient: Ingredient): boolean {
 	return (
 		ingredient.name.trim() === '' &&
 		ingredient.weight === null &&
-		ingredient.codifiedIngredient === '' &&
+		ingredient.codifiedIngredient === null &&
 		ingredient.labels.length === 0 &&
-		ingredient.origin.trim() === ''
+		ingredient.origin === null
 	);
 }
 
