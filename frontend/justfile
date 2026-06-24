@@ -11,9 +11,9 @@ use_nvm := "export NVM_DIR=\"${NVM_DIR:-$HOME/.nvm}\"; [ -s \"$NVM_DIR/nvm.sh\" 
 help:
     @just --list
 
-# Refresh dependencies
+# Refresh dependencies locally
 refresh:
-    {{ use_nvm }} && pnpm install
+    {{ use_nvm }} && pnpm install --frozen-lockfile
 
 # Run dev server
 dev:
