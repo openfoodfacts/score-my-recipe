@@ -134,7 +134,7 @@
 		const tag =
 			autoCompleteIndex !== -1 && currentSuggestions[autoCompleteIndex]
 				? currentSuggestions[autoCompleteIndex].item
-				: { id: newValue.trim(), label: newValue.trim(), isInTaxonomy: false };
+				: tagFromStrValue(newValue);
 		newValue = '';
 		autoCompleteIndex = -1;
 		addTag(tag);
@@ -195,6 +195,14 @@
 	function removeTag(tag: TaxonomyItem) {
 		tags = tags.filter((t) => t.id !== tag.id);
 		onChange?.(tags);
+	}
+
+	/**
+	 * Create an out of taxonomy TaxonomyItem from a string value
+	 * @param value
+	 */
+	function tagFromStrValue(value: string): TaxonomyItem {
+		return { id: value.trim(), label: value.trim(), isInTaxonomy: false };
 	}
 
 	/**
