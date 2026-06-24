@@ -6,6 +6,8 @@ readme = "../README.md"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.136.1",
+    "pydantic>=2.13",
+    "pydantic-settings>=2.14",
     "uvicorn>=0.47.0",
     "openfoodfacts>=5.1.0",
 ]
@@ -14,4 +16,6 @@ dependencies = [
 dev = [
     "httpx>=0.28.0",
     "pytest>=8.0.0",
+    "pytest-asyncio>=1.4.0"
 ]
+

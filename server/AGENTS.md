@@ -25,7 +25,7 @@ uv sync
 | Command       | Purpose                                     | Approx. time       |
 | ------------- | ------------------------------------------- | ------------------ |
 | `uv run uvicorn api.api.app --reload`       | Start server |  |
-| `uv run pytest tests -v` | Run tests | ~20s        |
+| `uv run pytest -v` | Run tests | ~20s        |
 
 > External API calls to OpenFoodFacts will fail in sandboxed environments — this is expected. Focus on UI and code correctness.
 
@@ -36,7 +36,7 @@ uv sync
 Before opening any pull request, run all of the following and fix every error:
 
 ```bash
-uv run pytest tests -v
+uv run pytest -v
 ```
 
 No PR should be opened with errors.

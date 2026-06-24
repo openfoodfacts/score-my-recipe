@@ -1,5 +1,5 @@
-from typing import Optional
-from pydantic import BaseModel
+from typing import Annotated, Optional
+from pydantic import Field, BaseModel
 
 
 class OFFIngredient(BaseModel):
@@ -21,13 +21,27 @@ class RecipeIngredient(BaseModel):
     codified_ingredient: str
     quantity_g: Optional[float] = None
 
+class Origin(BaseModel):
+    """Origin model for Score My Recipe API"""
+    id: Annotated[str, Field(description="Taxonomy id of the origin")]
+    label: Annotated[str, Field(description="Name of the origin")]
 
 class RecipeParseResponse(BaseModel):
     """Response model for parse_text endpoint"""
     ingredients: list[RecipeIngredient]
 
 
-class RecipeParseRequest(BaseModel):
+class LangRequest(BaseModel):
+    """Request model for parse_text endpoint"""
+    lang: Annotated[str, Field(description="Language for the request (2 or 5 letter code)")]
+
+class OriginsRequest(LangRequest):
+    pass  # No additional fields for now, but we keep the class for future extensions
+
+class RecipeParseRequest(LangRequest):
     """Request model for parse_text endpoint"""
     text: str
-    lang: str
+
+class OriginsResponse(BaseModel):
+    """Response model for get_origins endpoint"""
+    origins: list[Origin]

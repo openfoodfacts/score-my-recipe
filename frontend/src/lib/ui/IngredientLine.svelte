@@ -30,7 +30,7 @@
 
 	let {
 		ingredient = $bindable(),
-		isFirstItem = false,
+		isFirstItem = false, // eslint-disable-line @typescript-eslint/no-unused-vars
 		isLastItem = false,
 		onDelete,
 		onNotEmpty
@@ -67,12 +67,10 @@
 		<Tags
 			tagtype="ingredients"
 			id="ingredient-codified-{ingredient.id}"
-			bind:tags={
-				() => (ingredient.codifiedIngredient.trim() === '' ? [] : [ingredient.codifiedIngredient]),
-				(newTags) => {
-					ingredient.codifiedIngredient = newTags?.[0] ?? '';
-				}
-			}
+			tags={ingredient.codifiedIngredient ? [ingredient.codifiedIngredient] : []}
+			onChange={(newTags) => {
+				ingredient.codifiedIngredient = newTags[0] ?? null;
+			}}
 			single={true}
 		/>
 	</div>
@@ -129,12 +127,10 @@
 		</label>
 		<Tags
 			tagtype="countries"
-			bind:tags={
-				() => (ingredient.origin.trim() === '' ? [] : [ingredient.origin]),
-				(newTags) => {
-					ingredient.origin = newTags?.[0] ?? '';
-				}
-			}
+			tags={ingredient.origin ? [ingredient.origin] : []}
+			onChange={(newTags) => {
+				ingredient.origin = newTags[0] ?? null;
+			}}
 			single={true}
 		/>
 	</div>

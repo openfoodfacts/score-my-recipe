@@ -7,7 +7,7 @@
   Props:
     - tagtype: A string representing the type of tags (e.g., "labels", "origins")
 	  for fetching relevant autocomplete suggestions.
-	- tags: An array of strings representing the current tags.
+	- tags: An array of TaxonomyItem representing the current tags.
 	- single: A boolean indicating whether only a single tag is allowed (default: false).
 	- id: An optional string to set the HTML id attribute for the root element.
 	- onChange: A callback function that is called whenever the tags change.
@@ -23,19 +23,20 @@
 	import { fade } from 'svelte/transition';
 	import debounce from 'lodash.debounce';
 	import { getMatchingTags } from '$lib/api/taxonomy';
+	import type { TaxonomyItem } from '$lib/types/ingredient';
 
 	import IconMdiClose from '@iconify-svelte/mdi/close';
 
 	type Props = {
 		id?: string;
 		tagtype: string;
-		tags?: string[];
+		tags?: TaxonomyItem[];
 		single?: boolean; // optional prop to allow only a single tag
-		onChange?: (tags: string[]) => void;
+		onChange?: (tags: TaxonomyItem[]) => void;
 	};
 
 	type Suggestion = {
-		item: string;
+		item: TaxonomyItem;
 	};
 
 	let { id, tagtype, tags = $bindable([]), single = false, onChange }: Props = $props();
@@ -122,13 +123,18 @@
 	 */
 	function addTagInput() {
 		if (autoCompleteIndex !== -1 && currentSuggestions[autoCompleteIndex]) {
-			newValue = currentSuggestions[autoCompleteIndex].item;
+			const selectedItem = currentSuggestions[autoCompleteIndex].item;
+			newValue = selectedItem.label;
 		}
 		// don't validate empty tags
 		if (newValue.trim() === '') {
 			return;
 		}
-		const tag = newValue.trim();
+		// If we selected from suggestions, we have the full item object; otherwise create a new one
+		const tag =
+			autoCompleteIndex !== -1 && currentSuggestions[autoCompleteIndex]
+				? currentSuggestions[autoCompleteIndex].item
+				: tagFromStrValue(newValue);
 		newValue = '';
 		autoCompleteIndex = -1;
 		addTag(tag);
@@ -173,9 +179,9 @@
 	 * Trims whitespace and ignores empty tags. Logs a warning if the tag already exists.
 	 * @param tag
 	 */
-	function addTag(tag: string) {
-		if (tags.includes(tag)) {
-			console.warn(`Tag "${tag}" already exists.`);
+	function addTag(tag: TaxonomyItem) {
+		if (tags.some((t) => t.id === tag.id)) {
+			console.warn(`Tag "${tag.label}" already exists.`);
 			return;
 		}
 		tags = [...tags, tag];
@@ -186,9 +192,17 @@
 	 * Remove a tag by filtering it out of the tags array.
 	 * @param tag
 	 */
-	function removeTag(tag: string) {
-		tags = tags.filter((t) => t !== tag);
+	function removeTag(tag: TaxonomyItem) {
+		tags = tags.filter((t) => t.id !== tag.id);
 		onChange?.(tags);
+	}
+
+	/**
+	 * Create an out of taxonomy TaxonomyItem from a string value
+	 * @param value
+	 */
+	function tagFromStrValue(value: string): TaxonomyItem {
+		return { id: value.trim(), label: value.trim(), isInTaxonomy: false };
 	}
 
 	/**
@@ -196,9 +210,9 @@
 	 * @param index
 	 * @param tag
 	 */
-	function startEditing(index: number, tag: string) {
+	function startEditing(index: number, tag: TaxonomyItem) {
 		editingIndex = index;
-		editingValue = tag;
+		editingValue = tag.label;
 		autoCompleteIndex = -1;
 	}
 
@@ -208,8 +222,9 @@
 	 */
 	function saveEdit(index: number) {
 		const trimmedValue = editingValue.trim();
-		if (trimmedValue !== '' && trimmedValue !== tags[index]) {
-			tags = tags.map((tag, i) => (i === index ? trimmedValue : tag));
+		const originalTag = tags[index];
+		if (trimmedValue !== '' && trimmedValue !== originalTag.label) {
+			tags = tags.map((tag, i) => (i === index ? { ...originalTag, label: trimmedValue } : tag));
 			onChange?.(tags);
 		}
 		editingIndex = -1;
@@ -238,7 +253,7 @@
 	function handleEditKeydown(event: KeyboardEvent, index: number) {
 		if (event.key === 'Enter') {
 			if (autoCompleteIndex !== -1 && currentSuggestions[autoCompleteIndex]) {
-				editingValue = currentSuggestions[autoCompleteIndex].item;
+				editingValue = currentSuggestions[autoCompleteIndex].item.label;
 				autoCompleteIndex = -1;
 				event.preventDefault();
 				return;
@@ -256,17 +271,17 @@
 	/**
 	 * Handle selection of a suggestion from the autocomplete dropdown list.
 	 * Selecting it from known values, or adding the value as a new value.
-	 * @param key
+	 * @param item
 	 */
-	function selectSuggestion(key: string) {
+	function selectSuggestion(item: TaxonomyItem) {
 		if (editingIndex !== -1) {
-			editingValue = key;
+			editingValue = item.label;
 			const idx = editingIndex;
 			setTimeout(() => saveEdit(idx), 0);
 		} else {
 			newValue = '';
 			autoCompleteIndex = -1;
-			addTag(key);
+			addTag(item);
 		}
 	}
 
@@ -290,8 +305,8 @@
 		>
 			<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 			<ul tabindex="0" class="divide-base-200 divide-y">
-				{#each currentSuggestions as suggestion, index (suggestion.item)}
-					{@const key = suggestion.item}
+				{#each currentSuggestions as suggestion, index (suggestion.item.id)}
+					{@const item = suggestion.item}
 					<li>
 						<button
 							type="button"
@@ -301,10 +316,10 @@
 							onmousedown={(e) => {
 								// Use mousedown instead of click to fire selectSuggestion before the input's blur event
 								e.preventDefault();
-								selectSuggestion(key);
+								selectSuggestion(item);
 							}}
 						>
-							<span class="block truncate">{key}</span>
+							<span class="block truncate">{item.label}</span>
 						</button>
 					</li>
 				{/each}
@@ -319,7 +334,7 @@
 	class="bg-base-100 border-base-200 focus-within:border-primary focus-within:outline-primary flex h-auto min-h-12 w-full flex-wrap gap-x-1.5 gap-y-1 rounded-md"
 >
 	<!-- each value of the tag (multi valued) -->
-	{#each tags as tag, index (tag)}
+	{#each tags as tag, index (tag.id)}
 		<div class="badge badge-ghost flex h-min items-center py-2" transition:fade={{ duration: 100 }}>
 			{#if editingIndex === index}
 				<!-- Existing tag editing input with autocomplete dropdown -->
@@ -353,14 +368,14 @@
 						}
 					}}
 				>
-					{tag}
+					{tag.label}
 				</span>
 			{/if}
 			<!-- Remove tag button -->
 			<button
 				class="hover:bg-base-300 ml-1 cursor-pointer p-1 leading-0"
 				onclick={() => removeTag(tag)}
-				aria-label={`Remove tag "${tag}"`}
+				aria-label={`Remove tag "${tag.label}"`}
 			>
 				<IconMdiClose class="h-4 w-4" />
 			</button>
