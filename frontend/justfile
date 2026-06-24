@@ -28,8 +28,13 @@ lint:
     {{ use_nvm }} && pnpm format
 
 check:
+    @echo "pnpm check ======================================"
     {{ use_nvm }} && pnpm check
+    @echo "pnpm lint ======================================"
     {{ use_nvm }} && pnpm lint
+    @echo "pnpm i18ncheck ======================================"
+    {{ use_nvm }} && pnpm i18ncheck
+    @echo "pnpm build ======================================"
     {{ use_nvm }} && pnpm build
 
 test:
