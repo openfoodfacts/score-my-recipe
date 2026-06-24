@@ -1,5 +1,6 @@
 """Calls to openfoodfacts API"""
 
+from typing import Iterable
 import asyncio
 
 import openfoodfacts
@@ -36,7 +37,9 @@ async def parse_text(text: str, lang: str) -> list[OFFIngredient]:
     return [OFFIngredient(**ingredient) for ingredient in ingredients_data]
 
 
-def taxonomy_lang_label(lang: str, entries: list[taxonomy.TaxonomyNode]) -> list[tuple[str, str]]:
+def taxonomy_lang_label(
+    lang: str, entries: Iterable[taxonomy.TaxonomyNode]
+) -> list[tuple[str, str]]:
     """Get the list of (id, label) for a given language from a list of taxonomy entries
 
     It falls back to xx or english if the label is not available in the requested language.
