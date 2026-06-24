@@ -51,14 +51,22 @@ dev-frontend:
 # Linting
 [group('quality')]
 lint:
+    @echo "::group::Server lint"
     {{ just_server }} lint
+    @echo "::endgroup::"
+    @echo "::group::Frontend lint"
     {{ just_frontend }} lint
+    @echo "::endgroup::"
 
 # Quality Checks
 [group('quality')]
 check:
+    @echo "::group::Server check"
     {{ just_server }} check
+    @echo "::endgroup::"
+    @echo "::group::Frontend check"
     {{ just_frontend }} check
+    @echo "::endgroup::"
 
 # Run all tests
 [group('quality')]
