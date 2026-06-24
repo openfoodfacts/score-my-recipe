@@ -30,7 +30,7 @@
 
 	let {
 		ingredient = $bindable(),
-		isFirstItem = false,
+		isFirstItem = false, // eslint-disable-line @typescript-eslint/no-unused-vars
 		isLastItem = false,
 		onDelete,
 		onNotEmpty
