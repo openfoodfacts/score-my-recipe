@@ -71,7 +71,7 @@ server_setup() {
   # Install backend dependencies
   info "Installing backend dependencies..."
   cd "$REPO_ROOT/server"
-  uv sync
+  just refresh
   ok "Backend dependencies installed"
 }
 
@@ -116,7 +116,7 @@ frontend_setup() {
 
   # Install frontend dependencies
   info "Installing frontend dependencies..."
-  pnpm install --frozen-lockfile
+  just refresh
   ok "Frontend dependencies installed"
   
   # Copy .env.example → .env if needed
