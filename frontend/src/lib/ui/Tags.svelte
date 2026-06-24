@@ -7,7 +7,7 @@
   Props:
     - tagtype: A string representing the type of tags (e.g., "labels", "origins")
 	  for fetching relevant autocomplete suggestions.
-	- tags: An array of strings representing the current tags.
+	- tags: An array of TaxonomyItem representing the current tags.
 	- single: A boolean indicating whether only a single tag is allowed (default: false).
 	- id: An optional string to set the HTML id attribute for the root element.
 	- onChange: A callback function that is called whenever the tags change.

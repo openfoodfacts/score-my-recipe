@@ -35,10 +35,10 @@ class LangRequest(BaseModel):
     """Request model for parse_text endpoint"""
     lang: Annotated[str, Field(description="Language for the request (2 or 5 letter code)")]
 
-class OriginsRequest(LangRequest, BaseModel):
+class OriginsRequest(LangRequest):
     pass  # No additional fields for now, but we keep the class for future extensions
 
-class RecipeParseRequest(LangRequest, BaseModel):
+class RecipeParseRequest(LangRequest):
     """Request model for parse_text endpoint"""
     text: str
 
