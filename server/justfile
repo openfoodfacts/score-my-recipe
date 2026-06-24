@@ -18,7 +18,11 @@ dev:
 
 # Run all checks
 [group('quality')]
-check: test
+check: python_check test
+
+[group('quality')]
+python_check:
+  uv run ruff check
 
 # Run tests
 [group('quality')]
@@ -28,4 +32,4 @@ test:
 # Lint
 [group('quality')]
 lint:
-    @echo "NO PYTHON LINTING YET (TODO)"
+    uv run ruff format

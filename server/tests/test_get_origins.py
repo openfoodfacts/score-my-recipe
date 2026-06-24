@@ -15,12 +15,14 @@ client = TestClient(app)
 @dataclass
 class MockTaxonomyNode:
     """Mock taxonomy node for testing"""
+
     id: str
     names: dict
 
 
 class MockTaxonomy:
     """Mock taxonomy that mimics openfoodfacts.taxonomy.Taxonomy"""
+
     def __init__(self, nodes: list[MockTaxonomyNode]):
         self._nodes = nodes
 
@@ -46,7 +48,12 @@ def mock_countries_taxonomy():
         ),
         MockTaxonomyNode(
             id="en:germany",
-            names={"en": "Germany", "de": "Deutschland", "fr": "Allemagne", "xx": "Germany"},
+            names={
+                "en": "Germany",
+                "de": "Deutschland",
+                "fr": "Allemagne",
+                "xx": "Germany",
+            },
         ),
     ]
     mock_taxonomy = MockTaxonomy(mock_nodes)
@@ -73,6 +80,7 @@ async def test_get_origins_returns_correct_country_ids(mock_countries_taxonomy):
         "en:spain": "Spain",
         "en:germany": "Germany",
     }
+
 
 @pytest.mark.asyncio
 async def test_get_origins_uses_correct_language_labels(mock_countries_taxonomy):
@@ -107,6 +115,7 @@ def test_get_origins_api_returns_correct_data(mock_countries_taxonomy):
         "en:spain": "Spain",
         "en:germany": "Germany",
     }
+
 
 def test_get_origins_api_cache_control_header(mock_countries_taxonomy):
     """Test that /v1/origins returns Cache-Control header for 1 day"""

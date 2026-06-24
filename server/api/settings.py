@@ -6,9 +6,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix='SCORE_MY_RECIPE_')
+    model_config = SettingsConfigDict(env_prefix="SCORE_MY_RECIPE_")
 
-    cache_dir: Annotated[Path, Field(description="Directory where cache is stored")] = Path("./data/cache")
+    cache_dir: Annotated[Path, Field(description="Directory where cache is stored")] = Path(
+        "./data/cache"
+    )
 
 
 _settings: Settings | None = None

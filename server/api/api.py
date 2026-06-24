@@ -4,6 +4,7 @@
 Note: the business logic is in api/recipes.py,
 this file should only handle the HTTP specific parts.
 """
+
 from typing import Annotated
 
 from fastapi import FastAPI, Query, Response
@@ -36,6 +37,7 @@ app.add_middleware(
     expose_headers=["*"],
 )
 
+
 @app.get("/")
 async def root() -> dict:
     return {"message": "Score My Recipe API"}
@@ -45,15 +47,18 @@ async def root() -> dict:
 async def health() -> dict:
     return {"status": "ok"}
 
+
 @app.post("/v1/parse_text")
 async def parse_text(request: types.RecipeParseRequest) -> types.RecipeParseResponse:
-    """Parse a text and return a list of ingredients with quantities and eventual modifiers
-    """
+    """Parse a text and return a list of ingredients with quantities and eventual modifiers"""
     ingredients = await recipes.parse_text(request.text, request.lang)
     return types.RecipeParseResponse(ingredients=ingredients)
 
+
 @app.get("/v1/origins")
-async def get_origins(filter_query: Annotated[types.OriginsRequest, Query()], response: Response) -> types.OriginsResponse:
+async def get_origins(
+    filter_query: Annotated[types.OriginsRequest, Query()], response: Response
+) -> types.OriginsResponse:
     """Get the list of origins available in the database
 
     Note: as the list is not too big, we let clients handle suggestions to users
