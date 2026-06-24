@@ -1,4 +1,4 @@
-"""This is the programatic API for recipes scoring.
+"""This is the programmatic API for recipes scoring.
 It contains all the business logic.
 """
 import api.off as off

@@ -59,7 +59,7 @@ export function apiIngredientToIngredient(apiIngredient: RecipeIngredient): Ingr
 	const taxonomyItem: IngredientType = {
 		id: apiIngredient.taxonomy_id ?? apiIngredient.codified_ingredient,
 		label: apiIngredient.codified_ingredient,
-		isInTaxonomy: true
+		isInTaxonomy: apiIngredient.is_in_taxonomy
 	};
 	return {
 		id: generateIngredientId(),
