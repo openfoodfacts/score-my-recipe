@@ -1,5 +1,6 @@
-"""Calls to openfoodfacts API
-"""
+"""Calls to openfoodfacts API"""
+
+from typing import Iterable
 import asyncio
 
 import openfoodfacts
@@ -13,8 +14,7 @@ off_api = openfoodfacts.API(user_agent=USER_AGENT, version="v3")
 
 
 async def parse_text(text: str, lang: str) -> list[OFFIngredient]:
-    """Parse a text and return a list of ingredients
-    """
+    """Parse a text and return a list of ingredients"""
     # TODO: handle RuntimeError case
     # useful example:
     # ```bash
@@ -37,7 +37,9 @@ async def parse_text(text: str, lang: str) -> list[OFFIngredient]:
     return [OFFIngredient(**ingredient) for ingredient in ingredients_data]
 
 
-def taxonomy_lang_label(lang: str, entries: list[taxonomy.TaxonomyNode]) -> list[tuple[str, str]]:
+def taxonomy_lang_label(
+    lang: str, entries: Iterable[taxonomy.TaxonomyNode]
+) -> list[tuple[str, str]]:
     """Get the list of (id, label) for a given language from a list of taxonomy entries
 
     It falls back to xx or english if the label is not available in the requested language.
@@ -45,11 +47,17 @@ def taxonomy_lang_label(lang: str, entries: list[taxonomy.TaxonomyNode]) -> list
     return [
         (
             entry.id,
-            entry.names.get(lang, entry.names.get("xx", entry.names.get("en", entry.id)))
-        ) for entry in entries]
+            entry.names.get(lang, entry.names.get("xx", entry.names.get("en", entry.id))),
+        )
+        for entry in entries
+    ]
 
 
 async def get_countries_taxonomy() -> taxonomy.Taxonomy:
     """Get the countries taxonomy from Open Food Facts API"""
-    countries_taxonomy = await asyncio.to_thread(taxonomy.get_taxonomy, taxonomy.TaxonomyType.country, cache_dir=get_settings().cache_dir)
+    countries_taxonomy = await asyncio.to_thread(
+        taxonomy.get_taxonomy,
+        taxonomy.TaxonomyType.country,
+        cache_dir=get_settings().cache_dir,
+    )
     return countries_taxonomy
