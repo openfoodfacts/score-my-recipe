@@ -66,3 +66,14 @@ async def get_origins(
     origins = await recipes.get_origins(filter_query.lang)
     response.headers["Cache-Control"] = "max-age=86400"
     return types.OriginsResponse(origins=origins)
+
+
+@app.get("/v1/labels")
+async def get_labels(
+    filter_query: Annotated[types.LabelsRequest, Query()], response: Response
+) -> types.LabelsResponse:
+    """Get the list of labels relevant for green-score computation
+    """
+    labels = await recipes.get_labels(filter_query.lang)
+    response.headers["Cache-Control"] = "max-age=86400"
+    return types.LabelsResponse(labels=labels)

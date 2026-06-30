@@ -57,3 +57,20 @@ class OriginsResponse(BaseModel):
     """Response model for get_origins endpoint"""
 
     origins: list[Origin]
+
+
+class Label(BaseModel):
+    """Label model for Score My Recipe API"""
+
+    id: Annotated[str, Field(description="Taxonomy id of the label")]
+    label: Annotated[str, Field(description="Name of the label")]
+
+
+class LabelsRequest(LangRequest):
+    pass
+
+
+class LabelsResponse(BaseModel):
+    """Response model for get_labels endpoint"""
+
+    labels: list[Label]
