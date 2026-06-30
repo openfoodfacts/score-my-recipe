@@ -26,10 +26,11 @@ async def parse_text(text: str, lang: str) -> list[types.RecipeIngredient]:
     ]
     return ingredients
 
+
 def two_letter_lang_code(lang: str) -> str:
-    """Convert a language code to a 2-letter code
-    """
+    """Convert a language code to a 2-letter code"""
     return lang.replace("_", "-").split("-")[0]
+
 
 async def get_origins(lang: str) -> list[types.Origin]:
     """Get the list of origins available in the database
@@ -44,6 +45,7 @@ async def get_origins(lang: str) -> list[types.Origin]:
         for origin in off.taxonomy_lang_label(lang, origins)
     ]
     return origins_list
+
 
 # transcription of https://docs.score-environnemental.com/methodologie/produit/systeme-de-production/label
 GREEN_SCORE_PRODUCTION_LABELS = {
@@ -67,7 +69,7 @@ GREEN_SCORE_PRODUCTION_LABELS = {
         "fr:label-rouge",
         "en:responsible-aquaculture-asc",
         "en:sustainable-seafood-msc",
-    ]
+    ],
 }
 
 ALL_GREEN_SCORE_LABELS = set(
@@ -76,6 +78,8 @@ ALL_GREEN_SCORE_LABELS = set(
 
 # local caching
 _labels = dict()
+
+
 async def get_labels(lang: str) -> list[types.Label]:
     """Get the list of labels relevant for green-score computation
 
@@ -85,12 +89,15 @@ async def get_labels(lang: str) -> list[types.Label]:
         lang = two_letter_lang_code(lang)
         labels_taxonomy = await off.get_labels_taxonomy()
         all_labels = labels_taxonomy.iter_nodes()
-        filtered_labels = set(
-            label for label in all_labels if label.id in ALL_GREEN_SCORE_LABELS
-        )
+        filtered_labels = set(label for label in all_labels if label.id in ALL_GREEN_SCORE_LABELS)
         # add children of relevant labels
         for label in list(filtered_labels):
             filtered_labels.update(label.get_children_hierarchy())
+        # verify all green score labels are included
+        missing_labels = ALL_GREEN_SCORE_LABELS - {label.id for label in filtered_labels}
+        if missing_labels:
+            # log a warning
+            print(f"Warning: missing green-score relevant labels in taxonomy: {missing_labels}")
         labels_list = [
             types.Label(id=label[0], label=label[1])
             for label in off.taxonomy_lang_label(lang, filtered_labels)
