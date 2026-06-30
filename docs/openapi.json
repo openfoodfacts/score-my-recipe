@@ -1,0 +1,384 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Score My Recipe",
+    "description": "A tool to compute Green-Score of recipes.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Root",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Root  Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Health V1 Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/parse_text": {
+      "post": {
+        "summary": "Parse Text",
+        "description": "Parse a text and return a list of ingredients with quantities and eventual modifiers",
+        "operationId": "parse_text_v1_parse_text_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecipeParseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecipeParseResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/origins": {
+      "get": {
+        "summary": "Get Origins",
+        "description": "Get the list of origins available in the database\n\nNote: as the list is not too big, we let clients handle suggestions to users",
+        "operationId": "get_origins_v1_origins_get",
+        "parameters": [
+          {
+            "name": "lang",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Language for the request (2 or 5 letter code)",
+              "title": "Lang"
+            },
+            "description": "Language for the request (2 or 5 letter code)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OriginsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/labels": {
+      "get": {
+        "summary": "Get Labels",
+        "description": "Get the list of labels relevant for green-score computation",
+        "operationId": "get_labels_v1_labels_get",
+        "parameters": [
+          {
+            "name": "lang",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Language for the request (2 or 5 letter code)",
+              "title": "Lang"
+            },
+            "description": "Language for the request (2 or 5 letter code)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LabelsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Label": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Taxonomy id of the label"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Name of the label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label"
+        ],
+        "title": "Label",
+        "description": "Label model for Score My Recipe API"
+      },
+      "LabelsResponse": {
+        "properties": {
+          "labels": {
+            "items": {
+              "$ref": "#/components/schemas/Label"
+            },
+            "type": "array",
+            "title": "Labels"
+          }
+        },
+        "type": "object",
+        "required": [
+          "labels"
+        ],
+        "title": "LabelsResponse",
+        "description": "Response model for get_labels endpoint"
+      },
+      "Origin": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Taxonomy id of the origin"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Name of the origin"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label"
+        ],
+        "title": "Origin",
+        "description": "Origin model for Score My Recipe API"
+      },
+      "OriginsResponse": {
+        "properties": {
+          "origins": {
+            "items": {
+              "$ref": "#/components/schemas/Origin"
+            },
+            "type": "array",
+            "title": "Origins"
+          }
+        },
+        "type": "object",
+        "required": [
+          "origins"
+        ],
+        "title": "OriginsResponse",
+        "description": "Response model for get_origins endpoint"
+      },
+      "RecipeIngredient": {
+        "properties": {
+          "taxonomy_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taxonomy Id"
+          },
+          "is_in_taxonomy": {
+            "type": "boolean",
+            "title": "Is In Taxonomy"
+          },
+          "codified_ingredient": {
+            "type": "string",
+            "title": "Codified Ingredient"
+          },
+          "quantity_g": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity G"
+          }
+        },
+        "type": "object",
+        "required": [
+          "is_in_taxonomy",
+          "codified_ingredient"
+        ],
+        "title": "RecipeIngredient",
+        "description": "Ingredient model for Score My Recipe API"
+      },
+      "RecipeParseRequest": {
+        "properties": {
+          "lang": {
+            "type": "string",
+            "title": "Lang",
+            "description": "Language for the request (2 or 5 letter code)"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lang",
+          "text"
+        ],
+        "title": "RecipeParseRequest",
+        "description": "Request model for parse_text endpoint"
+      },
+      "RecipeParseResponse": {
+        "properties": {
+          "ingredients": {
+            "items": {
+              "$ref": "#/components/schemas/RecipeIngredient"
+            },
+            "type": "array",
+            "title": "Ingredients"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ingredients"
+        ],
+        "title": "RecipeParseResponse",
+        "description": "Response model for parse_text endpoint"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

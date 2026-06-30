@@ -44,6 +44,15 @@ dev-server:
 dev-frontend:
     {{ just_frontend }} dev
 
+# Regenerate OpenAPI spec
+[group('dev')]
+generate-openapi:
+    cd server && uv run typer api/cli.py run export-openapi ../docs/openapi.json
+    # generate typescript file with openapi-typescript
+    docker run --rm -v $(pwd)/docs/openapi.json:/openapi.json -v $(pwd)/frontend/src:/src courtapi/openapi-typescript:7.13.0 /openapi.json -o /src/api-schema.d.ts
+
+
+
 # ===========================================
 # QUALITY
 # ===========================================
