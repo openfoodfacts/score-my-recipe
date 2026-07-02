@@ -1,9 +1,12 @@
 """This is the programmatic API for recipes scoring.
 It contains all the business logic.
 """
-
+import logging
 import api.off as off
 import api.types as types
+
+
+logger = logging.getLogger(__name__)
 
 
 def off_ingredient_to_recipe_ingredient(
@@ -85,8 +88,8 @@ async def get_labels(lang: str) -> list[types.Label]:
 
     The list is filtered to only include labels that impact the green-score
     """
+    lang = two_letter_lang_code(lang)
     if lang not in _labels:
-        lang = two_letter_lang_code(lang)
         labels_taxonomy = await off.get_labels_taxonomy()
         all_labels = labels_taxonomy.iter_nodes()
         filtered_labels = set(label for label in all_labels if label.id in ALL_GREEN_SCORE_LABELS)
@@ -97,7 +100,7 @@ async def get_labels(lang: str) -> list[types.Label]:
         missing_labels = ALL_GREEN_SCORE_LABELS - {label.id for label in filtered_labels}
         if missing_labels:
             # log a warning
-            print(f"Warning: missing green-score relevant labels in taxonomy: {missing_labels}")
+            logger.warning(f"Missing green-score relevant labels in taxonomy: {missing_labels}")
         labels_list = [
             types.Label(id=label[0], label=label[1])
             for label in off.taxonomy_lang_label(lang, filtered_labels)
