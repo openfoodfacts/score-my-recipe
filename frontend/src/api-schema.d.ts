@@ -80,6 +80,26 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	'/v1/labels': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get Labels
+		 * @description Get the list of labels relevant for green-score computation
+		 */
+		get: operations['get_labels_v1_labels_get'];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -88,6 +108,30 @@ export interface components {
 		HTTPValidationError: {
 			/** Detail */
 			detail?: components['schemas']['ValidationError'][];
+		};
+		/**
+		 * Label
+		 * @description Label model for Score My Recipe API
+		 */
+		Label: {
+			/**
+			 * Id
+			 * @description Taxonomy id of the label
+			 */
+			id: string;
+			/**
+			 * Label
+			 * @description Name of the label
+			 */
+			label: string;
+		};
+		/**
+		 * LabelsResponse
+		 * @description Response model for get_labels endpoint
+		 */
+		LabelsResponse: {
+			/** Labels */
+			labels: components['schemas']['Label'][];
 		};
 		/**
 		 * Origin
@@ -266,6 +310,38 @@ export interface operations {
 				};
 				content: {
 					'application/json': components['schemas']['OriginsResponse'];
+				};
+			};
+			/** @description Validation Error */
+			422: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					'application/json': components['schemas']['HTTPValidationError'];
+				};
+			};
+		};
+	};
+	get_labels_v1_labels_get: {
+		parameters: {
+			query: {
+				/** @description Language for the request (2 or 5 letter code) */
+				lang: string;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Successful Response */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					'application/json': components['schemas']['LabelsResponse'];
 				};
 			};
 			/** @description Validation Error */

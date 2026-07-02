@@ -1,0 +1,1092 @@
+{
+    "en:rspo-identity-preserved": {
+        "name": {
+            "fr": "RSPO Identité Préservée",
+            "en": "RSPO Identity Preserved",
+            "fi": "RSPO Identiteetti suojattu"
+        },
+        "synonyms": {
+            "fr": [
+                "RSPO Identité Préservée"
+            ],
+            "fi": [
+                "RSPO Identiteetti suojattu",
+                "RSPO IP"
+            ],
+            "en": [
+                "RSPO Identity Preserved",
+                "RSPO IP"
+            ]
+        }
+    },
+    "en:rspo-segregated": {
+        "synonyms": {
+            "fi": [
+                "RSPO Erottelu",
+                "RSPO SG"
+            ],
+            "en": [
+                "RSPO Segregated",
+                "RSPO SG"
+            ],
+            "fr": [
+                "RSPO Séparé"
+            ]
+        },
+        "name": {
+            "fi": "RSPO Erottelu",
+            "en": "RSPO Segregated",
+            "fr": "RSPO Séparé"
+        }
+    },
+    "fr:label-rouge": {
+        "label_categories": {
+            "en": "en:Quality, en:Environment"
+        },
+        "auth_url": {
+            "fr": "https://www.labelrouge.fr/"
+        },
+        "synonyms": {
+            "xx": [
+                "Label Rouge"
+            ],
+            "fr": [
+                "Label Rouge"
+            ]
+        },
+        "wikidata": {
+            "en": "Q3214309"
+        },
+        "name": {
+            "fr": "Label Rouge",
+            "xx": "Label Rouge"
+        }
+    },
+    "en:responsible-aquaculture-asc": {
+        "synonyms": {
+            "it": [
+                "Acquacoltura responsabile ASC"
+            ],
+            "fi": [
+                "ASC -vastuullinen kalatalous"
+            ],
+            "en": [
+                "Responsible aquaculture ASC"
+            ],
+            "hr": [
+                "Odgovorna akvakultura certifikat ASC"
+            ],
+            "xx": [
+                "ASC",
+                "Aquaculture Stewardship Council"
+            ],
+            "nl": [
+                "Verantwoorde aquacultuur ASC"
+            ],
+            "fr": [
+                "Aquaculture responsable ASC"
+            ],
+            "ca": [
+                "Aqüicultura responsable ASC"
+            ],
+            "es": [
+                "ASC Acuicultura responsable"
+            ],
+            "de": [
+                "ASC"
+            ]
+        },
+        "wikidata": {
+            "en": "Q2028860"
+        },
+        "label_categories": {
+            "en": "en:Fishing labels"
+        },
+        "parents": [
+            "en:responsible-aquaculture"
+        ],
+        "name": {
+            "en": "Responsible aquaculture ASC"
+        }
+    },
+    "fr:bleu-blanc-coeur": {
+        "children": [
+            "fr:bleu-blanc-coeur-boeuf",
+            "fr:bleu-blanc-coeur-lait",
+            "fr:bleu-blanc-coeur-oeuf",
+            "fr:bleu-blanc-coeur-porc",
+            "fr:bleu-blanc-coeur-poulet",
+            "fr:bleu-blanc-coeur-viande",
+            "fr:bleu-blanc-coeur-volaille"
+        ],
+        "name": {
+            "fr": "Bleu Blanc Cœur"
+        },
+        "synonyms": {
+            "fr": [
+                "Bleu Blanc Cœur",
+                "Filière Qualité Bleu Blanc Cœur",
+                "Filière nutrition oméga 3 naturels Association Bleu-Blanc-Cœur",
+                "Bleu Blanc Cœur Oméga 3 Naturels",
+                "BBC"
+            ]
+        },
+        "auth_url": {
+            "fr": "https://www.bleu-blanc-coeur.org"
+        }
+    },
+    "fr:haute-valeur-environnementale": {
+        "name": {
+            "fr": "Haute Valeur Environnementale",
+            "xx": "Haute Valeur Environnementale"
+        },
+        "wikidata": {
+            "en": "Q3128557"
+        },
+        "synonyms": {
+            "fr": [
+                "Haute Valeur Environnementale",
+                "HVE"
+            ],
+            "xx": [
+                "Haute Valeur Environnementale",
+                "HVE"
+            ]
+        },
+        "auth_url": {
+            "fr": "https://hve-asso.com"
+        },
+        "label_categories": {
+            "en": "en:Environment"
+        }
+    },
+    "en:sustainable-seafood-msc": {
+        "label_categories": {
+            "en": "en:Fishing labels"
+        },
+        "synonyms": {
+            "nl": [
+                "Duurzaam Zeevruchten MSC"
+            ],
+            "xx": [
+                "MSC",
+                "Marine Stewardship Council"
+            ],
+            "bg": [
+                "Устойчива морска храна MSC"
+            ],
+            "fi": [
+                "MSC-sertifioitu",
+                "MSC-sertifioidusta"
+            ],
+            "it": [
+                "Frutti di Mare Sostenibili MSC"
+            ],
+            "en": [
+                "Sustainable Seafood MSC",
+                "sustainable food msc"
+            ],
+            "es": [
+                "Certificado MSC de pesca sostenible",
+                "Pesca sostenible MSC"
+            ],
+            "de": [
+                "Zertifizierte nachhaltige Fischerei MSC",
+                "MSC zertifiziert"
+            ],
+            "fr": [
+                "Pêche durable MSC",
+                "certifié MSC",
+                "certifiée MSC",
+                "certifiés MSC",
+                "certifiées MSC",
+                "labellisé MSC",
+                "labellisée MSC",
+                "labellisés MSC",
+                "labellisées MSC"
+            ],
+            "ca": [
+                "Marisc sostenible MSC",
+                "MSC",
+                "Consell per la Protecció Marina"
+            ]
+        },
+        "wikidata": {
+            "en": "Q1891246"
+        },
+        "auth_url": {
+            "en": "https://www.msc.org"
+        },
+        "name": {
+            "nl": "Duurzaam Zeevruchten MSC",
+            "xx": "MSC",
+            "bg": "Устойчива морска храна MSC",
+            "it": "Frutti di Mare Sostenibili MSC",
+            "fi": "MSC-sertifioitu",
+            "en": "Sustainable Seafood MSC",
+            "es": "Certificado MSC de pesca sostenible",
+            "de": "Zertifizierte nachhaltige Fischerei MSC",
+            "fr": "Pêche durable MSC",
+            "ca": "Marisc sostenible MSC"
+        },
+        "parents": [
+            "en:sustainable-fishery"
+        ]
+    },
+    "fr:nature-et-progres": {
+        "synonyms": {
+            "fr": [
+                "Nature et Progrès",
+                "Nature & Progrès"
+            ]
+        },
+        "wikidata": {
+            "en": "Q3337101"
+        },
+        "parents": [
+            "en:organic"
+        ],
+        "name": {
+            "fr": "Nature et Progrès"
+        }
+    },
+    "fr:ab-agriculture-biologique": {
+        "country": {
+            "en": "en:France"
+        },
+        "name": {
+            "fr": "AB Agriculture Biologique",
+            "xx": "AB Agriculture Biologique"
+        },
+        "parents": [
+            "en:eu-organic"
+        ],
+        "wikidata": {
+            "en": "Q396709"
+        },
+        "synonyms": {
+            "fr": [
+                "AB Agriculture Biologique",
+                "AB",
+                "Agence Bio",
+                "ab bio",
+                "bio ab",
+                "Ab-certifie-agriculture-biologique",
+                "ab certifié",
+                "AB France"
+            ],
+            "xx": [
+                "AB Agriculture Biologique"
+            ]
+        }
+    },
+    "fr:bio-coherence": {
+        "synonyms": {
+            "fr": [
+                "Bio-Cohérence",
+                "BioCohérence"
+            ]
+        },
+        "wikidata": {
+            "en": "Q30751117"
+        },
+        "parents": [
+            "en:organic"
+        ],
+        "name": {
+            "fr": "Bio-Cohérence"
+        }
+    },
+    "en:sustainable-fishing-method": {
+        "synonyms": {
+            "fr": [
+                "Méthode de pêche durable",
+                "Technique de pêche durable",
+                "Mode de pêche durable",
+                "Méthodes de pêche durables",
+                "techniques de pêche durables",
+                "modes de pêche durables"
+            ],
+            "en": [
+                "Sustainable fishing method",
+                "sustainable fishing technique"
+            ],
+            "nl": [
+                "Duurzame vismethoden"
+            ]
+        },
+        "parents": [
+            "en:fishing-method",
+            "en:sustainable-fishery"
+        ],
+        "name": {
+            "fr": "Méthode de pêche durable",
+            "en": "Sustainable fishing method",
+            "nl": "Duurzame vismethoden"
+        },
+        "children": [
+            "en:angled-fish",
+            "en:hand-fishing",
+            "en:trap-fishing"
+        ]
+    },
+    "en:eu-organic": {
+        "name": {
+            "vi": "Hữu cơ EU",
+            "pl": "EU Organic",
+            "bg": "ЕС Био",
+            "ru": "ЕС Органический",
+            "xx": "EU Organic",
+            "cs": "EU bio",
+            "tr": "AB Organik",
+            "fr": "Bio européen",
+            "es": "Ecológico UE",
+            "nb": "EU-økologisk",
+            "he": "אורגני בתקו",
+            "hu": "EU Organic",
+            "ro": "Organic UE",
+            "uk": "ЄС Органічний",
+            "ko": "EU 유기",
+            "ja": "EUオーガニック",
+            "et": "EL-ökoloogiline",
+            "it": "Biologico UE",
+            "en": "EU Organic",
+            "pt": "Orgânico EU",
+            "da": "EU-økologisk",
+            "sv": "EU-ekologisk",
+            "fi": "EU Luomu",
+            "lt": "ES ekologiškas",
+            "ca": "Orgànic UE",
+            "zh": "欧盟有机",
+            "el": "Βιολογικό ΕΕ",
+            "de": "EU-Öko-Verordnung"
+        },
+        "children": [
+            "de:eg-ökoverordnung",
+            "en:ad-bio-154",
+            "en:ae-bio-102"
+        ],
+        "wikidata": {
+            "en": "Q8379476"
+        },
+        "synonyms": {
+            "pt": [
+                "Orgânico EU",
+                "Bio UE"
+            ],
+            "nl": [
+                "EU biologisch",
+                "EU-bio"
+            ],
+            "he": [
+                "אורגני מוסמך EU"
+            ],
+            "fi": [
+                "EU-luomu"
+            ],
+            "es": [
+                "Ecológico UE",
+                "Bio UE"
+            ],
+            "fr": [
+                "Bio européen",
+                "Agriculture biologique européenne"
+            ],
+            "en": [
+                "EU Organic",
+                "European Union Organic"
+            ],
+            "da": [
+                "EU-økologisk"
+            ],
+            "de": [
+                "EU-Öko-Verordnung",
+                "Bio aus EU"
+            ],
+            "it": [
+                "Biologico UE",
+                "Bio UE"
+            ],
+            "cs": [
+                "EU bio"
+            ],
+            "sv": [
+                "EU-ekologisk"
+            ],
+            "ca": [
+                "Orgànic UE"
+            ]
+        }
+    },
+    "en:utz-certified": {
+        "auth_url": {
+            "en": "https://utz.org"
+        },
+        "name": {
+            "es": "Certificado UTZ",
+            "fr": "Certifié UTZ",
+            "nl": "UTZ Gecertificeerd",
+            "cs": "UTZ certifikováno",
+            "xx": "UTZ Certified",
+            "en": "UTZ Certified",
+            "it": "Certificato UTZ",
+            "de": "UTZ Zertifiziert",
+            "ca": "Certificat UTZ",
+            "fi": "UTZ-sertifioitu",
+            "hu": "UTZ Certified"
+        },
+        "children": [
+            "en:utz-certified-cocoa",
+            "en:utz-certified-coffee",
+            "en:utz-certified-hazelnut",
+            "en:utz-certified-tea"
+        ],
+        "parents": [
+            "en:sustainable-farming"
+        ],
+        "wikidata": {
+            "en": "Q2305872"
+        },
+        "synonyms": {
+            "en": [
+                "UTZ Certified",
+                "UTZ"
+            ],
+            "it": [
+                "Certificato UTZ",
+                "UTZ"
+            ],
+            "cs": [
+                "UTZ certifikováno"
+            ],
+            "xx": [
+                "UTZ Certified"
+            ],
+            "nl": [
+                "UTZ Gecertificeerd"
+            ],
+            "de": [
+                "UTZ Zertifiziert"
+            ],
+            "es": [
+                "Certificado UTZ"
+            ],
+            "ca": [
+                "Certificat UTZ"
+            ],
+            "fr": [
+                "Certifié UTZ"
+            ],
+            "fi": [
+                "UTZ-sertifioitu"
+            ],
+            "hu": [
+                "UTZ Certified"
+            ]
+        }
+    },
+    "en:demeter": {
+        "name": {
+            "fr": "Demeter",
+            "it": "Demetra",
+            "en": "Demeter",
+            "xx": "Demeter"
+        },
+        "parents": [
+            "en:biodynamic-agriculture"
+        ],
+        "wikidata": {
+            "en": "Q939877"
+        },
+        "synonyms": {
+            "en": [
+                "Demeter"
+            ],
+            "it": [
+                "Demetra"
+            ],
+            "fr": [
+                "Demeter",
+                "Association Demeter",
+                "Demeter France",
+                "Association Demeter France"
+            ],
+            "xx": [
+                "Demeter"
+            ]
+        }
+    },
+    "en:rainforest-alliance": {
+        "name": {
+            "it": "Alleanza della Foresta Pluviale",
+            "en": "Rainforest Alliance",
+            "cs": "certifikováno rainforest alliance",
+            "xx": "Rainforest Alliance",
+            "fr": "Vérifié Rainforest Alliance",
+            "da": "Rainforest Alliance",
+            "nb": "Rainforest Alliance",
+            "es": "Alianza para Bosques",
+            "sv": "Rainforest Alliance",
+            "hr": "Certificirano Rainforest Alliance",
+            "ca": "Aliança Tropical",
+            "de": "Rainforest Alliance"
+        },
+        "children": [
+            "en:rainforest-alliance-bananas",
+            "en:rainforest-alliance-black-tea",
+            "en:rainforest-alliance-cassave",
+            "en:rainforest-alliance-cocoa",
+            "en:rainforest-alliance-coffee",
+            "en:rainforest-alliance-ginger",
+            "en:rainforest-alliance-hazelnut",
+            "en:rainforest-alliance-mango",
+            "en:rainforest-alliance-rooibos",
+            "en:rainforest-alliance-tea",
+            "nl:rainforest-alliance-sinaasappelsap",
+            "xx:rainforest-alliance-vanilla"
+        ],
+        "wikidata": {
+            "en": "Q2034373"
+        },
+        "synonyms": {
+            "da": [
+                "Rainforest Alliance",
+                "Rainforest Alliance-certificeret"
+            ],
+            "nb": [
+                "Rainforest Alliance",
+                "Rainforest Alliance-sertifisert"
+            ],
+            "es": [
+                "Alianza para Bosques"
+            ],
+            "fr": [
+                "Vérifié Rainforest Alliance"
+            ],
+            "nl": [
+                "Rainforest Alliance"
+            ],
+            "de": [
+                "Rainforest Alliance"
+            ],
+            "en": [
+                "Rainforest Alliance"
+            ],
+            "it": [
+                "Alleanza della Foresta Pluviale"
+            ],
+            "xx": [
+                "Rainforest Alliance"
+            ],
+            "ca": [
+                "Aliança Tropical"
+            ],
+            "cs": [
+                "certifikováno rainforest alliance"
+            ],
+            "sv": [
+                "Rainforest Alliance"
+            ],
+            "hr": [
+                "Certificirano Rainforest Alliance"
+            ]
+        }
+    },
+    "en:fair-trade": {
+        "description": {
+            "hu": "A méltányos kereskedelem olyan irányított kereskedelem, amely hangsúlyt helyez arra, hogy a harmadik világbeli termelő megkapja az őt megillető pénzt a terményéért.",
+            "fr": "Le commerce équitable est un système d'échange dont l'objectif est de proposer une plus grande équité dans le commerce conventionnel, voire une alternative à celui-ci, basée notamment sur la réappropriation des échanges marchands par ceux qui les pratiquent.",
+            "en": "Fair trade is an arrangement designed to help producers in developing countries achieve sustainable and equitable trade relationships. Members of the fair trade movement add the payment of higher prices to exporters, as well as improved social and environmental standards.",
+            "nl": "Eerlijke handel is internationale handel die gericht is op duurzame ontwikkeling in ontwikkelingslanden, met name bij de export van zulke landen naar rijkere westerse landen. Fair trade duidt op een streven om boeren voor hun exportproducten een prijs te geven die in verhouding staat tot de werkelijke productiekosten, en niet een prijs die wordt bepaald door de verhoudingen op de internationale markt.",
+            "de": "Als Fairer Handel -englisch fair trade- wird ein kontrollierter Handel bezeichnet, bei dem die Erzeuger für ihre Produkte einen Mindestpreis erhalten, der von einer Fair-Trade-Organisation bestimmt wird. Damit soll den Produzenten auch bei niedrigeren Marktpreisen ein höheres und verlässlicheres Einkommen als im herkömmlichen Handel ermöglicht werden.",
+            "es": "El comercio justo es una forma alternativa de comercio promovida por varias ONG -organizaciones no gubernamentales-, por la Organización de las Naciones Unidas y por los movimientos sociales y políticos -como el pacifismo y el ecologismo- que promueven una relación comercial voluntaria y justa entre productores y consumidores.",
+            "pt": "O comércio justo é um acordo concebido para ajudar os produtores em países em desenvolvimento a alcançarem relações comerciais sustentáveis e justas."
+        },
+        "incompatible_with": {
+            "en": "labels:en:non-fair-trade"
+        },
+        "children": [
+            "en:fair-for-life",
+            "en:fair-trade-organic",
+            "en:fairtrade-cocoa",
+            "en:fairtrade-international",
+            "en:fairtrade-usa",
+            "en:small-producers-symbol",
+            "en:transfer",
+            "fr:agri-ethique-france",
+            "fr:bio-equitable",
+            "fr:bio-equitable-en-france",
+            "fr:biopartenaire"
+        ],
+        "name": {
+            "ca": "Comerç Just",
+            "de": "Fairer Handel",
+            "he": "סחר הוגן",
+            "hu": "Mltányos kereskedelem",
+            "fi": "Reilu kauppa",
+            "fr": "Commerce équitable",
+            "es": "Comercio justo",
+            "bg": "Справедлива търговия",
+            "it": "Commercio equo",
+            "en": "Fair trade",
+            "xx": "Fair trade",
+            "nl": "Fairtrade",
+            "pt": "Comércio justo"
+        },
+        "opposite": {
+            "en": "en:non-fair-trade"
+        },
+        "label_categories": {
+            "en": "en:Social responsibility"
+        },
+        "synonyms": {
+            "hu": [
+                "Méltányos kereskedelem"
+            ],
+            "nl": [
+                "Fairtrade"
+            ],
+            "fr": [
+                "Commerce équitable",
+                "Commerce juste"
+            ],
+            "de": [
+                "Fairer Handel"
+            ],
+            "en": [
+                "Fair trade",
+                "Fairtrade"
+            ],
+            "es": [
+                "Comercio justo"
+            ],
+            "it": [
+                "Commercio equo",
+                "Commercio giusto"
+            ],
+            "ca": [
+                "Comerç Just"
+            ],
+            "pt": [
+                "Comércio justo"
+            ],
+            "fi": [
+                "Reilu kauppa"
+            ]
+        }
+    },
+    "en:organic": {
+        "children": [
+            "de:bio-7-initiative",
+            "en:austria-bio-garantie",
+            "en:bio-austria",
+            "en:bio-suisse",
+            "en:biodynamic-agriculture",
+            "en:biogarantie",
+            "en:biokreis",
+            "en:bioland",
+            "en:canada-organic",
+            "en:catalan-council-of-organic-production",
+            "en:danish-state-controlled-organic",
+            "en:debio-organic",
+            "en:ecoveg",
+            "en:eu-organic",
+            "en:fair-trade-organic",
+            "en:farm-verified-organic",
+            "en:finnish-organic-association",
+            "en:india-organic",
+            "en:luomu-controlled-organic-production",
+            "en:migros-bio",
+            "en:naturaplan",
+            "en:naturland",
+            "en:soil-association-organic",
+            "en:tun-certified-organic",
+            "en:usda-organic",
+            "es:comite-aragones-de-agricultura-ecologica",
+            "es:comite-de-agricultura-ecologica",
+            "es:comite-de-agricultura-ecologica-de-la-comunidad-de-madrid",
+            "es:comite-de-agricultura-ecologica-de-la-comunitat-valenciana",
+            "es:consejo-de-agricultura-ecologica-de-la-region-de-murcia",
+            "es:organico-argentina",
+            "fr:bio-coherence",
+            "fr:bio-equitable",
+            "fr:bio-equitable-en-france",
+            "fr:bio-solidaire",
+            "fr:biopartenaire",
+            "fr:nature-et-progres",
+            "it:icea-bio-vegan",
+            "it:icea-bio-vegetariano",
+            "it:icea-biologico",
+            "pt:produto-organico-brasil",
+            "sv:krav"
+        ],
+        "name": {
+            "cs": "z ekologického zemědělství",
+            "zh": "有机",
+            "ca": "Orgànic",
+            "de": "Bio",
+            "sv": "Ekologisk",
+            "fi": "Luomu",
+            "lt": "Ekologiškas",
+            "hr": "ekološki uzgoj",
+            "da": "Økologisk",
+            "sl": "iz kontrolirane ekološke pridelave",
+            "sk": "z kontrolovaného ekologického poľnohospodárstva",
+            "en": "Organic",
+            "it": "Biologico",
+            "nl": "Biologisch",
+            "th": "ออร์แกนิก",
+            "pt": "Orgânico",
+            "ko": "유기",
+            "ja": "有機",
+            "he": "אורגני",
+            "hu": "Bio",
+            "ro": "din agricultură ecologică controlată",
+            "tr": "Organik",
+            "fr": "Bio",
+            "nb": "Økologisk",
+            "es": "Ecológico",
+            "bg": "Био",
+            "pl": "ekologiczny"
+        },
+        "opposite": {
+            "en": "en:non-organic"
+        },
+        "synonyms": {
+            "cs": [
+                "bio",
+                "ekologický",
+                "organický"
+            ],
+            "he": [
+                "אורגני"
+            ],
+            "it": [
+                "biologico",
+                "bio"
+            ],
+            "fi": [
+                "luomu",
+                "ekologinen"
+            ],
+            "fr": [
+                "bio",
+                "biologique",
+                "éco"
+            ],
+            "nl": [
+                "biologisch",
+                "bio"
+            ],
+            "pt": [
+                "biológico",
+                "orgânico",
+                "bio"
+            ],
+            "es": [
+                "biológico",
+                "ecológico",
+                "bio"
+            ],
+            "en": [
+                "organic",
+                "bio",
+                "eco"
+            ],
+            "ca": [
+                "biològic",
+                "ecològic",
+                "bio"
+            ],
+            "sv": [
+                "ekologisk",
+                "eko",
+                "bio"
+            ],
+            "de": [
+                "bio",
+                "ökologisch",
+                "organisch",
+                "eco"
+            ],
+            "da": [
+                "økologisk",
+                "øko",
+                "bio"
+            ],
+            "sl": [
+                "ekološki",
+                "organski",
+                "bio"
+            ],
+            "hr": [
+                "ekološki",
+                "organski",
+                "bio"
+            ],
+            "sk": [
+                "biologický",
+                "ekologický",
+                "organický"
+            ],
+            "ro": [
+                "ecologic",
+                "organic",
+                "bio"
+            ],
+            "pl": [
+                "ekologiczny",
+                "organiczny",
+                "bio"
+            ],
+            "lt": [
+                "ekologiškas",
+                "organiškas",
+                "bio"
+            ],
+            "nb": [
+                "økologisk",
+                "øko",
+                "bio"
+            ],
+            "tr": [
+                "organik",
+                "eko",
+                "bio"
+            ],
+            "bg": [
+                "био",
+                "екологичен",
+                "органичен"
+            ],
+            "hu": [
+                "bio",
+                "ökológiai",
+                "organikus"
+            ],
+            "ko": [
+                "유기",
+                "바이오",
+                "친환경"
+            ],
+            "ja": [
+                "有機",
+                "オーガニック",
+                "エコ"
+            ],
+            "zh": [
+                "有机",
+                "有机农业"
+            ],
+            "th": [
+                "ออร์แกนิก",
+                "ชีวภาพ",
+                "เกษตรอินทรีย์"
+            ]
+        },
+        "label_categories": {
+            "en": "en:Organic"
+        }
+    },
+    "en:biodynamic-agriculture": {
+        "name": {
+            "es": "Agricultura biodinámica",
+            "de": "Biodynamische Landwirtschaft",
+            "fr": "Bio-dynamie",
+            "ca": "Agricultura biodinàmica",
+            "nl": "Biodynamische landbouw",
+            "pt": "Agricultura biodinâmica",
+            "he": "חקלאות ביו-דינמית",
+            "it": "Agricoltura biodinamica",
+            "en": "Biodynamic agriculture",
+            "fi": "biodynaaminen maatalous",
+            "pl": "Rolnictwo biodynamiczne"
+        },
+        "children": [
+            "en:biodyvin",
+            "en:demeter"
+        ],
+        "synonyms": {
+            "he": [
+                "חקלאות ביו-דינמית",
+                "חקלאות ביו-דינאמית"
+            ],
+            "pl": [
+                "Rolnictwo biodynamiczne"
+            ],
+            "it": [
+                "Agricoltura biodinamica"
+            ],
+            "fi": [
+                "biodynaaminen maatalous"
+            ],
+            "en": [
+                "Biodynamic agriculture",
+                "biodynamic farming"
+            ],
+            "nl": [
+                "Biodynamische landbouw"
+            ],
+            "pt": [
+                "Agricultura biodinâmica"
+            ],
+            "fr": [
+                "Bio-dynamie",
+                "biodynamie",
+                "agriculture biodynamique"
+            ],
+            "es": [
+                "Agricultura biodinámica"
+            ],
+            "ca": [
+                "Agricultura biodinàmica"
+            ],
+            "de": [
+                "Biodynamische Landwirtschaft",
+                "Biologisch-dynamische Landwirtschaft"
+            ],
+            "sv": [
+                "biodynamiskt jordbruk"
+            ],
+            "cs": [
+                "Biodynamické zemědělství"
+            ],
+            "sk": [
+                "Biodynamické poľnohospodárstvo"
+            ],
+            "ro": [
+                "Agricultură biodinamică"
+            ],
+            "hr": [
+                "Biodinamična poljoprivreda"
+            ],
+            "sl": [
+                "Biodinamično kmetijstvo"
+            ],
+            "hu": [
+                "Biodinamikus mezőgazdaság"
+            ],
+            "lt": [
+                "Biologinė-dinaminė žemdirbystė"
+            ],
+            "fi": [
+                "Biodynaaminen maatalous"
+            ],
+            "da": [
+                "Biodynamisk landbrug"
+            ],
+            "nb": [
+                "Biodynamisk landbruk"
+            ],
+            "tr": [
+                "Biyo-dinamik tarım"
+            ],
+            "bg": [
+                "Биодинамично земеделие"
+            ]
+        },
+        "wikidata": {
+            "en": "Q273402"
+        },
+        "parents": [
+            "en:organic"
+        ]
+    },
+    "en:responsible-aquaculture": {
+        "label_categories": {
+            "en": "en:Fishing labels"
+        },
+        "synonyms": {
+            "fi": [
+                "Vastuullinen kalatalous",
+                "vastuullinen vesiviljely"
+            ],
+            "it": [
+                "Acuacoltura responsabile"
+            ],
+            "en": [
+                "Responsible aquaculture"
+            ],
+            "pt": [
+                "Aquacultura sustentáveis"
+            ],
+            "hr": [
+                "Odgovorna akvakultura"
+            ],
+            "nl": [
+                "Verantwoorde aquacultuur"
+            ],
+            "ca": [
+                "Aqüicultura responsable"
+            ],
+            "fr": [
+                "Aquaculture responsable"
+            ],
+            "de": [
+                "Verantwortliche Aquakultur"
+            ],
+            "es": [
+                "Aquicultura responsable"
+            ]
+        },
+        "children": [
+            "en:responsible-aquaculture-asc"
+        ],
+        "name": {
+            "fi": "Vastuullinen kalatalous",
+            "it": "Acuacoltura responsabile",
+            "en": "Responsible aquaculture",
+            "pt": "Aquacultura sustentáveis",
+            "hr": "Odgovorna akvakultura",
+            "nl": "Verantwoorde aquacultuur",
+            "ca": "Aqüicultura responsable",
+            "fr": "Aquaculture responsable",
+            "es": "Aquicultura responsable",
+            "de": "Verantwortliche Aquakultur"
+        }
+    },
+    "en:sustainable-farming": {
+        "name": {
+            "en": "Sustainable Farming",
+            "xx": "Sustainable Farming"
+        },
+        "synonyms": {
+            "en": [
+                "Sustainable Farming",
+                "sustainable agriculture"
+            ],
+            "xx": [
+                "Sustainable Farming"
+            ]
+        }
+    },
+    "en:sustainable-fishery": {
+        "name": {
+            "en": "Sustainable fishery",
+            "xx": "Sustainable fishery"
+        },
+        "synonyms": {
+            "en": [
+                "Sustainable fishery",
+                "sustainable fisheries"
+            ],
+            "xx": [
+                "Sustainable fishery"
+            ]
+        }
+    },
+    "en:fishing-method": {
+        "name": {
+            "en": "Fishing method",
+            "xx": "Fishing method"
+        },
+        "synonyms": {
+            "en": [
+                "Fishing method"
+            ],
+            "xx": [
+                "Fishing method"
+            ]
+        }
+    }
+}

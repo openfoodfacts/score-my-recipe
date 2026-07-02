@@ -27,6 +27,9 @@ dev:
 lint:
     {{ use_nvm }} && pnpm format
 
+lint-one file:
+    {{ use_nvm }} && pnpm prettier --write {{ file }}
+
 check:
     @echo "pnpm check ======================================"
     {{ use_nvm }} && pnpm check

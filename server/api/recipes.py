@@ -2,8 +2,12 @@
 It contains all the business logic.
 """
 
+import logging
 import api.off as off
 import api.types as types
+
+
+logger = logging.getLogger(__name__)
 
 
 def off_ingredient_to_recipe_ingredient(
@@ -27,14 +31,17 @@ async def parse_text(text: str, lang: str) -> list[types.RecipeIngredient]:
     return ingredients
 
 
+def two_letter_lang_code(lang: str) -> str:
+    """Convert a language code to a 2-letter code"""
+    return lang.replace("_", "-").split("-")[0]
+
+
 async def get_origins(lang: str) -> list[types.Origin]:
     """Get the list of origins available in the database
 
     Note: as the list is not too big, we let clients handle suggestions to users
     """
-    lang = lang.replace("_", "-").split("-")[
-        0
-    ]  # Keep only the first part of the language code (e.g. "fr" from "fr-FR")
+    lang = two_letter_lang_code(lang)
     countries_taxonomy = await off.get_countries_taxonomy()
     origins = countries_taxonomy.iter_nodes()
     origins_list = [
@@ -42,3 +49,62 @@ async def get_origins(lang: str) -> list[types.Origin]:
         for origin in off.taxonomy_lang_label(lang, origins)
     ]
     return origins_list
+
+
+# transcription of https://docs.score-environnemental.com/methodologie/produit/systeme-de-production/label
+GREEN_SCORE_PRODUCTION_LABELS = {
+    20: [
+        "fr:nature-et-progres",
+        "fr:bio-coherence",
+        "en:demeter",
+    ],
+    15: [
+        "fr:ab-agriculture-biologique",
+        "en:eu-organic",
+        "en:sustainable-fishing-method",
+    ],
+    10: [
+        "fr:haute-valeur-environnementale",
+        "en:utz-certified",
+        "en:rainforest-alliance",
+        "en:fair-trade",
+        "fr:bleu-blanc-coeur",
+        # note: only for certain meat
+        "fr:label-rouge",
+        "en:responsible-aquaculture-asc",
+        "en:sustainable-seafood-msc",
+    ],
+}
+
+ALL_GREEN_SCORE_LABELS = set(
+    label for labels in GREEN_SCORE_PRODUCTION_LABELS.values() for label in labels
+)
+
+# local caching
+_labels = dict()
+
+
+async def get_labels(lang: str) -> list[types.Label]:
+    """Get the list of labels relevant for green-score computation
+
+    The list is filtered to only include labels that impact the green-score
+    """
+    lang = two_letter_lang_code(lang)
+    if lang not in _labels:
+        labels_taxonomy = await off.get_labels_taxonomy()
+        all_labels = labels_taxonomy.iter_nodes()
+        filtered_labels = {label for label in all_labels if label.id in ALL_GREEN_SCORE_LABELS}
+        # add children of relevant labels
+        for label in list(filtered_labels):
+            filtered_labels.update(label.get_children_hierarchy())
+        # verify all green score labels are included
+        missing_labels = ALL_GREEN_SCORE_LABELS - {label.id for label in filtered_labels}
+        if missing_labels:
+            # log a warning
+            logger.warning(f"Missing green-score relevant labels in taxonomy: {missing_labels}")
+        labels_list = [
+            types.Label(id=label_id, label=label_label)
+            for label_id, label_label in off.taxonomy_lang_label(lang, filtered_labels)
+        ]
+        _labels[lang] = labels_list
+    return _labels[lang]

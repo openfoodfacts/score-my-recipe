@@ -6,6 +6,13 @@ import { OpenFoodFacts } from '@openfoodfacts/openfoodfacts-nodejs';
 import { getLocale } from '$lib/i18n';
 import { offLinks } from '$lib/offLink';
 import type { TaxonomyItem } from '$lib/types/ingredient';
+import type { components } from '../../api-schema';
+import { env } from '$env/dynamic/public';
+
+type Label = components['schemas']['Label'];
+type Origin = components['schemas']['Origin'];
+
+const API_BASE_URL = env.PUBLIC_RECIPE_API_URL ?? '';
 
 type TaxonomySuggestionResponse = {
 	suggestions: TaxonomyItem[];
@@ -307,19 +314,37 @@ export async function getIngredientsTaxonomy(): Promise<TaxonomyItem[]> {
 }
 
 /**
- * Simulates an API call to get the labels taxonomy
+ * Fetch the labels taxonomy from the backend API
  * @returns Promise resolving to the list of label taxonomy items
  */
 export async function getLabelsTaxonomy(): Promise<TaxonomyItem[]> {
-	const key = getLocaleKey();
-	return LABELS_TAXONOMY[key];
+	const lang = getLocaleKey();
+	const response = await fetch(`${API_BASE_URL}/v1/labels?lang=${encodeURIComponent(lang)}`);
+	if (!response.ok) {
+		throw new Error(`Failed to fetch labels: ${response.statusText}`);
+	}
+	const data = (await response.json()) as { labels: Label[] };
+	return data.labels.map((label) => ({
+		id: label.id,
+		label: label.label,
+		isInTaxonomy: true
+	}));
 }
 
 /**
- * Simulates an API call to get the countries taxonomy
+ * Fetch the countries taxonomy from the backend API
  * @returns Promise resolving to the list of country taxonomy items
  */
 export async function getCountriesTaxonomy(): Promise<TaxonomyItem[]> {
-	const key = getLocaleKey();
-	return COUNTRIES_TAXONOMY[key];
+	const lang = getLocaleKey();
+	const response = await fetch(`${API_BASE_URL}/v1/origins?lang=${encodeURIComponent(lang)}`);
+	if (!response.ok) {
+		throw new Error(`Failed to fetch origins: ${response.statusText}`);
+	}
+	const data = (await response.json()) as { origins: Origin[] };
+	return data.origins.map((origin) => ({
+		id: origin.id,
+		label: origin.label,
+		isInTaxonomy: true
+	}));
 }

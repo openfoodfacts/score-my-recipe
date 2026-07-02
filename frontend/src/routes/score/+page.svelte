@@ -30,7 +30,8 @@
 		const state = (page.state ?? {}) as { ingredients?: Ingredient[] };
 		const stateIngredients = state.ingredients;
 		if (stateIngredients && stateIngredients.length > 0) {
-			return stateIngredients;
+			// we need an empty line at the end for the user to add new ingredients
+			return addEmptyIngredientIfNeeded(stateIngredients);
 		}
 		return [createEmptyIngredient()];
 	}
