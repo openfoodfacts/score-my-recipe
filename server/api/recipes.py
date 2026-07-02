@@ -1,6 +1,7 @@
 """This is the programmatic API for recipes scoring.
 It contains all the business logic.
 """
+
 import logging
 import api.off as off
 import api.types as types
@@ -92,7 +93,7 @@ async def get_labels(lang: str) -> list[types.Label]:
     if lang not in _labels:
         labels_taxonomy = await off.get_labels_taxonomy()
         all_labels = labels_taxonomy.iter_nodes()
-        filtered_labels = set(label for label in all_labels if label.id in ALL_GREEN_SCORE_LABELS)
+        filtered_labels = {label for label in all_labels if label.id in ALL_GREEN_SCORE_LABELS}
         # add children of relevant labels
         for label in list(filtered_labels):
             filtered_labels.update(label.get_children_hierarchy())
@@ -102,8 +103,8 @@ async def get_labels(lang: str) -> list[types.Label]:
             # log a warning
             logger.warning(f"Missing green-score relevant labels in taxonomy: {missing_labels}")
         labels_list = [
-            types.Label(id=label[0], label=label[1])
-            for label in off.taxonomy_lang_label(lang, filtered_labels)
+            types.Label(id=label_id, label=label_label)
+            for label_id, label_label in off.taxonomy_lang_label(lang, filtered_labels)
         ]
         _labels[lang] = labels_list
     return _labels[lang]
