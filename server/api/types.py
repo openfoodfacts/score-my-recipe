@@ -137,6 +137,8 @@ class RecipeIngredientInput(CamelModel):
     ] = None
 
 
+RecipeInput = list[RecipeIngredientInput]
+
 class GreenScoreRequest(CamelModel):
     """Request body for the green-score computation endpoint.
 
@@ -144,7 +146,7 @@ class GreenScoreRequest(CamelModel):
     """
 
     ingredients: Annotated[
-        list[RecipeIngredientInput], Field(description="The ingredients of the recipe")
+        RecipeInput, Field(description="The ingredients of the recipe")
     ]
 
 

@@ -12,7 +12,7 @@ import api.types as types
 logger = logging.getLogger(__name__)
 
 
-async def match_ingredients_to_agribalyse(recipe: types.GreenScoreRequest) -> dict[str, types.IngredientAgribalyse]:
+async def match_ingredients_to_agribalyse(recipe: types.RecipeInput) -> dict[str, types.IngredientAgribalyse]:
     """Compute (for now: gather Agribalyse data for) the green-score of a recipe.
 
     Each ingredient is looked up in the ingredients taxonomy; its code properties
@@ -22,7 +22,7 @@ async def match_ingredients_to_agribalyse(recipe: types.GreenScoreRequest) -> di
     ingredients_taxonomy = await off.get_ingredients_taxonomy()
     results: dict[str, types.IngredientAgribalyse] = {}
 
-    for ingredient in recipe.ingredients:
+    for ingredient in recipe:
         node: Optional[taxonomy.TaxonomyNode] = None
         taxonomy_id = ingredient.codified_ingredient.id if ingredient.codified_ingredient else None
         if taxonomy_id and taxonomy_id in ingredients_taxonomy:
@@ -39,7 +39,7 @@ async def match_ingredients_to_agribalyse(recipe: types.GreenScoreRequest) -> di
         return results
 
 
-async def recipe_ef_score(recipe: types.GreenScoreRequest) -> Tuple[Optional[float], list[str]]:
+async def recipe_ef_score(recipe: types.RecipeInput) -> Tuple[Optional[float], list[str]]:
     """Compute the EF score of a recipe, given its ingredients and their weights.
 
     The EF score is computed as a weighted average of the EF scores of the
@@ -53,7 +53,7 @@ async def recipe_ef_score(recipe: types.GreenScoreRequest) -> Tuple[Optional[flo
     total_weight = 0
     ef_score_sum = 0.0
     missing_ingredient_ids = []
-    for ingredient in recipe.ingredients:
+    for ingredient in recipe:
         if ingredient.weight <= 0:
             raise ValueError(f"Ingredient {ingredient.id} has non-positive weight {ingredient.weight}, cannot compute EF score.")
         if ingredient.id not in ingredients_agribalyse:
@@ -89,7 +89,7 @@ async def score_to_letter(score: float) -> str:
         return "F"
 
 
-async def compute_green_score(recipe: types.GreenScoreRequest) -> types.GreenScoreResponse:
+async def compute_green_score(recipe: types.RecipeInput) -> types.GreenScoreResponse:
     """Compute (for now: gather Agribalyse data for) the green-score of a recipe.
 
     Each ingredient is looked up in the ingredients taxonomy; its code properties
