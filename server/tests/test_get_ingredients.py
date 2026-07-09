@@ -29,45 +29,38 @@ def ingredient_list_to_dict(ingredients: list[types.Ingredient]) -> dict[str, st
     return {ingredient.id: ingredient.label for ingredient in ingredients}
 
 
-# Ingredients directly having an Agribalyse food code in the test taxonomy
-INGREDIENTS_WITH_AGRIBALYSE_CODE = {
-    "en:conference-pear",
-    "en:dry-white-wine",
-    "en:nectarine",
-    "en:pear",
-    "en:pear-nectar",
-    "en:red-wine",
-    "en:white-wine",
-    "en:williams-bon-chretien-pear",
-}
+# Total number of ingredient nodes defined in the test taxonomy
+# (nodes parsed by Taxonomy.from_path from ingredients.full.json)
+INGREDIENTS_TOTAL_COUNT = 20
 
 
 @pytest.mark.asyncio
-async def test_get_ingredients_returns_only_agribalyse_relevant_ingredients(
-    mock_ingredients_taxonomy,
-):
-    """Test that get_ingredients returns only ingredients with an Agribalyse
-    food code and their children hierarchy."""
+async def test_get_ingredients_returns_all_ingredients(mock_ingredients_taxonomy):
+    """Test that get_ingredients returns every ingredient of the taxonomy,
+    without any filtering."""
     result = await recipes.get_ingredients("en")
     assert isinstance(result, list)
     assert all(isinstance(ingredient, types.Ingredient) for ingredient in result)
     ingredient_ids = {ingredient.id for ingredient in result}
 
-    # All ingredients with an Agribalyse code must be present
-    assert INGREDIENTS_WITH_AGRIBALYSE_CODE <= ingredient_ids
+    # Ingredients with an Agribalyse food code are still present
+    assert "en:conference-pear" in ingredient_ids
+    assert "en:dry-white-wine" in ingredient_ids
 
-    # Entries without an Agribalyse code and that are not children of one
-    # must be filtered out
-    assert "en:water" not in ingredient_ids
-    assert "en:wine" not in ingredient_ids  # parent of red-wine, not a child
+    # Ingredients without an Agribalyse code are also returned (no filtering)
+    assert "en:water" in ingredient_ids
+    assert "en:wine" in ingredient_ids  # parent of red-wine, kept as well
 
-    # Children of an ingredient with an Agribalyse code must be kept
+    # Children hierarchy is kept too
     assert "en:raw-pear" in ingredient_ids  # child of en:pear
     assert "en:organic-red-wine" in ingredient_ids  # child of en:red-wine
 
+    # All ingredients of the taxonomy are returned
+    assert len(ingredient_ids) == INGREDIENTS_TOTAL_COUNT
+
 
 @pytest.mark.asyncio
-async def test_get_ingredients_includes_children_of_children(mock_ingredients_taxonomy):
+async def test_get_ingredients_includes_full_hierarchy(mock_ingredients_taxonomy):
     """Test that get_ingredients keeps the full children hierarchy (children
     of children), not only direct children."""
     result = await recipes.get_ingredients("en")
