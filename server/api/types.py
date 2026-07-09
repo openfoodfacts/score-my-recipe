@@ -23,12 +23,15 @@ class RecipeIngredient(BaseModel):
     codified_ingredient: str
     quantity_g: Optional[float] = None
 
+
 class TaxonomyItem(BaseModel):
     id: Annotated[str, Field(description="Taxonomy id of the item")]
     label: Annotated[str, Field(description="Name of the item")]
 
+
 class Origin(TaxonomyItem):
     """Origin model for Score My Recipe API"""
+
 
 class RecipeParseResponse(BaseModel):
     """Response model for parse_text endpoint"""

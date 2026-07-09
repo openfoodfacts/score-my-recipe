@@ -125,8 +125,7 @@ _ingredients = dict()
 
 
 async def get_ingredients(lang: str) -> list[types.Ingredient]:
-    """Get the list of ingredients relevant for green-score computation
-    """
+    """Get the list of ingredients relevant for green-score computation"""
     lang = two_letter_lang_code(lang)
     if lang not in _ingredients:
         ingredients_taxonomy = await off.get_ingredients_taxonomy()
