@@ -24,10 +24,14 @@ const offAPIv3 = new OpenFoodFacts(fetch, { host: offLinks.website });
 
 /**
  * wrapper for taxonomy API calls
+ * @param tagtype taxonomy type to match against (e.g. 'ingredients', 'labels', 'countries')
+ * @param query search term used to filter taxonomy items by label
+ * @param limit maximum number of suggestions to return (defaults to 30)
  */
 export async function getMatchingTags(
 	tagtype: string,
-	query: string
+	query: string,
+	limit = 30
 ): Promise<TaxonomySuggestionResponse> {
 	// temporary simulation
 	const values = {
@@ -37,9 +41,14 @@ export async function getMatchingTags(
 	};
 	if (Object.hasOwn(values, tagtype)) {
 		const list = await values[tagtype as keyof typeof values];
-		const filtered = list.filter((item) => item.label.toLowerCase().includes(query.toLowerCase()));
+		const normalizedQuery = query.toLowerCase();
+		const filtered = list.filter((item) => item.label.toLowerCase().includes(normalizedQuery));
+		// shorter labels are returned first as they tend to be the most relevant matches
+		const suggestions = filtered
+			.sort((a, b) => a.label.length - b.label.length)
+			.slice(0, limit);
 		return {
-			suggestions: filtered,
+			suggestions,
 			matched_synonyms: {}
 		};
 	}
