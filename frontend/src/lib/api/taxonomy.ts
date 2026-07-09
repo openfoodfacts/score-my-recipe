@@ -1,6 +1,7 @@
 /**
  * Taxonomy related API functions
  */
+import Fuse from 'fuse.js';
 import type { TaxonomySuggestionsQuery } from '@openfoodfacts/openfoodfacts-nodejs';
 import { OpenFoodFacts } from '@openfoodfacts/openfoodfacts-nodejs';
 import { getLocale } from '$lib/i18n';
@@ -41,12 +42,17 @@ export async function getMatchingTags(
 	};
 	if (Object.hasOwn(values, tagtype)) {
 		const list = await values[tagtype as keyof typeof values];
-		const normalizedQuery = query.toLowerCase();
-		const filtered = list.filter((item) => item.label.toLowerCase().includes(normalizedQuery));
-		// shorter labels are returned first as they tend to be the most relevant matches
-		const suggestions = filtered
-			.sort((a, b) => a.label.length - b.label.length)
-			.slice(0, limit);
+		const fuse = new Fuse(list, {
+			keys: ['label'],
+			includeScore: true,
+			minMatchCharLength: 3,
+			ignoreDiacritics: true
+		});
+		const suggestions = fuse
+			.search(query)
+			.sort((a, b) => (a.score ?? 0) - (b.score ?? 0))
+			.slice(0, limit)
+			.map((result) => result.item);
 		return {
 			suggestions,
 			matched_synonyms: {}
