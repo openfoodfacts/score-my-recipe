@@ -63,7 +63,7 @@ export async function getMatchingTags(
 		tagtype: tagtype,
 		term: query,
 		lc: getLocaleKey(),
-		limit: '20',
+		limit: limit.toString(),
 		get_synonyms: '1'
 	};
 	const response = await offAPIv3.apiv3.getTaxonomySuggestions(suggestionQuery);

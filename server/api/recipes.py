@@ -114,12 +114,6 @@ async def get_labels(lang: str) -> list[types.Label]:
     return _labels[lang]
 
 
-# Properties linking an ingredient taxonomy entry to an Agribalyse food entry.
-# An ingredient having one of these is scorable (it has a corresponding
-# environmental impact in the Agribalyse database).
-# See https://docs.score-environnemental.com/
-AGRIBALSE_PROPERTY_KEYS = ("agribalyse_food_code", "agribalyse_proxy_food_code")
-
 # local caching
 _ingredients = dict()
 

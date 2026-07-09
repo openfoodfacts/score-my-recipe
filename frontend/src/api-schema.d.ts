@@ -110,9 +110,6 @@ export interface paths {
 		/**
 		 * Get Ingredients
 		 * @description Get the list of ingredients relevant for green-score computation
-		 *
-		 *     Only ingredients with an Agribalyse food code (and their children) are
-		 *     returned, as they are the ones that can be scored environmentally.
 		 */
 		get: operations['get_ingredients_v1_ingredients_get'];
 		put?: never;

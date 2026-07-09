@@ -82,11 +82,7 @@ async def get_labels(
 async def get_ingredients(
     filter_query: Annotated[types.IngredientsRequest, Query()], response: Response
 ) -> types.IngredientsResponse:
-    """Get the list of ingredients relevant for green-score computation
-
-    Only ingredients with an Agribalyse food code (and their children) are
-    returned, as they are the ones that can be scored environmentally.
-    """
+    """Get the list of ingredients relevant for green-score computation"""
     ingredients = await recipes.get_ingredients(filter_query.lang)
     response.headers["Cache-Control"] = "max-age=86400"
     return types.IngredientsResponse(ingredients=ingredients)
