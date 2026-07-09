@@ -168,6 +168,48 @@
           }
         }
       }
+    },
+    "/v1/ingredients": {
+      "get": {
+        "summary": "Get Ingredients",
+        "description": "Get the list of ingredients relevant for green-score computation",
+        "operationId": "get_ingredients_v1_ingredients_get",
+        "parameters": [
+          {
+            "name": "lang",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Language for the request (2 or 5 letter code)",
+              "title": "Lang"
+            },
+            "description": "Language for the request (2 or 5 letter code)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngredientsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -185,17 +227,55 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "Ingredient": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Taxonomy id of the item"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Name of the item"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label"
+        ],
+        "title": "Ingredient",
+        "description": "Ingredient model for Score My Recipe API"
+      },
+      "IngredientsResponse": {
+        "properties": {
+          "ingredients": {
+            "items": {
+              "$ref": "#/components/schemas/Ingredient"
+            },
+            "type": "array",
+            "title": "Ingredients"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ingredients"
+        ],
+        "title": "IngredientsResponse",
+        "description": "Response model for get_ingredients endpoint"
+      },
       "Label": {
         "properties": {
           "id": {
             "type": "string",
             "title": "Id",
-            "description": "Taxonomy id of the label"
+            "description": "Taxonomy id of the item"
           },
           "label": {
             "type": "string",
             "title": "Label",
-            "description": "Name of the label"
+            "description": "Name of the item"
           }
         },
         "type": "object",
@@ -228,12 +308,12 @@
           "id": {
             "type": "string",
             "title": "Id",
-            "description": "Taxonomy id of the origin"
+            "description": "Taxonomy id of the item"
           },
           "label": {
             "type": "string",
             "title": "Label",
-            "description": "Name of the origin"
+            "description": "Name of the item"
           }
         },
         "type": "object",

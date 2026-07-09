@@ -24,11 +24,13 @@ class RecipeIngredient(BaseModel):
     quantity_g: Optional[float] = None
 
 
-class Origin(BaseModel):
-    """Origin model for Score My Recipe API"""
+class TaxonomyItem(BaseModel):
+    id: Annotated[str, Field(description="Taxonomy id of the item")]
+    label: Annotated[str, Field(description="Name of the item")]
 
-    id: Annotated[str, Field(description="Taxonomy id of the origin")]
-    label: Annotated[str, Field(description="Name of the origin")]
+
+class Origin(TaxonomyItem):
+    """Origin model for Score My Recipe API"""
 
 
 class RecipeParseResponse(BaseModel):
@@ -59,11 +61,8 @@ class OriginsResponse(BaseModel):
     origins: list[Origin]
 
 
-class Label(BaseModel):
+class Label(TaxonomyItem):
     """Label model for Score My Recipe API"""
-
-    id: Annotated[str, Field(description="Taxonomy id of the label")]
-    label: Annotated[str, Field(description="Name of the label")]
 
 
 class LabelsRequest(LangRequest):
@@ -74,3 +73,17 @@ class LabelsResponse(BaseModel):
     """Response model for get_labels endpoint"""
 
     labels: list[Label]
+
+
+class Ingredient(TaxonomyItem):
+    """Ingredient model for Score My Recipe API"""
+
+
+class IngredientsRequest(LangRequest):
+    pass
+
+
+class IngredientsResponse(BaseModel):
+    """Response model for get_ingredients endpoint"""
+
+    ingredients: list[Ingredient]

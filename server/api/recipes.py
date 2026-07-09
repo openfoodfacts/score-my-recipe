@@ -48,6 +48,8 @@ async def get_origins(lang: str) -> list[types.Origin]:
         types.Origin(id=origin[0], label=origin[1])
         for origin in off.taxonomy_lang_label(lang, origins)
     ]
+    # sort by id for predictable order
+    origins_list.sort(key=lambda x: x.id)
     return origins_list
 
 
@@ -106,5 +108,28 @@ async def get_labels(lang: str) -> list[types.Label]:
             types.Label(id=label_id, label=label_label)
             for label_id, label_label in off.taxonomy_lang_label(lang, filtered_labels)
         ]
+        # sort by id for predictable order
+        labels_list.sort(key=lambda x: x.id)
         _labels[lang] = labels_list
     return _labels[lang]
+
+
+# local caching
+_ingredients = dict()
+
+
+async def get_ingredients(lang: str) -> list[types.Ingredient]:
+    """Get the list of ingredients relevant for green-score computation"""
+    lang = two_letter_lang_code(lang)
+    if lang not in _ingredients:
+        ingredients_taxonomy = await off.get_ingredients_taxonomy()
+        ingredients_list = [
+            types.Ingredient(id=ingredient_id, label=ingredient_label)
+            for ingredient_id, ingredient_label in off.taxonomy_lang_label(
+                lang, ingredients_taxonomy.iter_nodes()
+            )
+        ]
+        # sort by id for predictable order
+        ingredients_list.sort(key=lambda x: x.id)
+        _ingredients[lang] = ingredients_list
+    return _ingredients[lang]

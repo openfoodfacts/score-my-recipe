@@ -76,3 +76,13 @@ async def get_labels(
     labels = await recipes.get_labels(filter_query.lang)
     response.headers["Cache-Control"] = "max-age=86400"
     return types.LabelsResponse(labels=labels)
+
+
+@app.get("/v1/ingredients")
+async def get_ingredients(
+    filter_query: Annotated[types.IngredientsRequest, Query()], response: Response
+) -> types.IngredientsResponse:
+    """Get the list of ingredients relevant for green-score computation"""
+    ingredients = await recipes.get_ingredients(filter_query.lang)
+    response.headers["Cache-Control"] = "max-age=86400"
+    return types.IngredientsResponse(ingredients=ingredients)

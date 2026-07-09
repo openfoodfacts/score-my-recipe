@@ -1,0 +1,925 @@
+{
+  "en:alcohol": {
+    "ciqual_food_name": {
+      "fr": "Alcool pur",
+      "en": "Pure alcohol"
+    },
+    "ciqual_food_code": {
+      "en": "1014"
+    },
+    "name": {
+      "en": "alcohol",
+      "fr": "alcool",
+      "es": "alcohol"
+    },
+    "synonyms": {
+      "en": [
+        "alcohol",
+        "Pure alcohol"
+      ],
+      "fr": [
+        "alcool",
+        "Alcool pur"
+      ],
+      "es": [
+        "alcohol"
+      ]
+    },
+    "vegan": {
+      "en": "maybe"
+    },
+    "vegetarian": {
+      "en": "yes"
+    },
+    "children": [
+      "en:absinthe",
+      "en:armagnac",
+      "en:beer",
+      "en:brandy",
+      "en:calvados",
+      "en:campari",
+      "en:cava",
+      "en:champagne",
+      "en:chartreuse-liqueur",
+      "en:cider",
+      "en:cognac",
+      "en:cointreau",
+      "en:eau-de-vie",
+      "en:ethanol",
+      "en:gin",
+      "en:kirsch",
+      "en:liqueur",
+      "en:pomace-brandy",
+      "en:rakia",
+      "en:rectified-spirit",
+      "en:rice-wine",
+      "en:rum",
+      "en:sake",
+      "en:tequila",
+      "en:vermouth",
+      "en:vodka",
+      "en:whiskey",
+      "en:whiskeys",
+      "en:whisky",
+      "en:wine",
+      "fr:alcool-de-sucre-de-canne"
+    ]
+  },
+  "en:antioxidant": {
+    "children": [
+      "en:natural-antioxidant"
+    ],
+    "wikidata": {
+      "en": "Q133948"
+    },
+    "name": {
+      "es": "Antioxidante",
+      "en": "Antioxidant",
+      "fr": "Antioxydant"
+    },
+    "synonyms": {
+      "es": [
+        "Antioxidante",
+        "antipardeamiento",
+        "sinérgicos de antioxidantes",
+        "antioxidantes"
+      ],
+      "en": [
+        "Antioxidant",
+        "antibrowning agent",
+        "antioxidant synergist"
+      ],
+      "fr": [
+        "Antioxydant",
+        "antioxygène",
+        "antibrunissant",
+        "antioxydant synergique",
+        "anti-oxydant"
+      ]
+    },
+    "description": {
+      "en": "Antioxidants are substances which prolong the shelf-life of foods by protecting them against deterioration caused by oxidation, such as fat rancidity and colour changes.",
+      "fr": "Les antioxydants sont des substances qui prolongent la durée de conservation des denrées alimentaires en les protégeant des altérations provoquées par l'oxydation, telles que le rancissement des matières grasses et les modifications de la couleur.",
+      "es": "Antioxidantes: sustancias que prolongan la vida útil de los alimentos protegiéndolos del deterioro causado por la oxidación, como el enranciamiento de las grasas y los cambios de color."
+    }
+  },
+  "en:conference-pear": {
+    "agribalyse_proxy_food_code": {
+      "en": "13188"
+    },
+    "ciqual_proxy_food_code": {
+      "en": "13188"
+    },
+    "ciqual_proxy_food_name": {
+      "en": "Pear, var. Conférence, flesh without skin, raw"
+    },
+    "parents": [
+      "en:pear"
+    ],
+    "synonyms": {
+      "es": [
+        "pera conferencia"
+      ],
+      "fr": [
+        "poire conférence"
+      ],
+      "en": [
+        "Conference pear"
+      ],
+      "xx": [
+        "Conference"
+      ]
+    },
+    "wikidata": {
+      "en": "Q747247"
+    },
+    "name": {
+      "fr": "poire conférence",
+      "es": "pera conferencia",
+      "xx": "Conference",
+      "en": "Conference pear"
+    }
+  },
+  "en:dry-white-wine": {
+    "ciqual_food_code": {
+      "en": "5215"
+    },
+    "wikidata": {
+      "en": "Q11060609"
+    },
+    "name": {
+      "fr": "vin blanc sec",
+      "en": "dry white wine"
+    },
+    "ciqual_food_name": {
+      "en": "Wine, white, dry",
+      "fr": "Vin blanc -sec-"
+    },
+    "synonyms": {
+      "fr": [
+        "vin blanc sec"
+      ],
+      "en": [
+        "dry white wine"
+      ]
+    },
+    "agribalyse_food_code": {
+      "en": "5215"
+    },
+    "parents": [
+      "en:white-wine"
+    ]
+  },
+  "en:e473a": {
+    "vegetarian": {
+      "en": "maybe"
+    },
+    "efsa_evaluation": {
+      "en": "Opinion of the Scientific Panel on Food Additives, Flavourings, Processing Aids and Materials in Contact with Food on Sucrose esters of fatty acids, E 473 and sucroglycerides, E 474 based on a request from the Commission related to Sucrose Esters of Fatty Acids -E 473-"
+    },
+    "name": {
+      "fr": "E473a",
+      "en": "E473a",
+      "es": "E473a",
+      "xx": "E473a"
+    },
+    "wikidata": {
+      "en": "Q32418"
+    },
+    "additives_classes": {
+      "en": "en:emulsifier, en:stabiliser"
+    },
+    "synonyms": {
+      "fr": [
+        "E473a",
+        "Oligoesters de saccharose de type I",
+        "Oligoesters de saccharose de type II",
+        "Oligoesters de saccharose",
+        "Oligoesters de saccharose"
+      ],
+      "en": [
+        "E473a",
+        "Oligoesters of sucrose type I",
+        "Oligoesters of sucrose type II",
+        "Oligoesters of sucrose",
+        "Oligoesters of sucrose"
+      ],
+      "es": [
+        "E473a",
+        "Oligoésteres de sacarosa tipo I",
+        "Oligoésteres de sacarosa tipo II",
+        "Oligoésteres de sacarosa",
+        "Oligoésteres de sacarosa"
+      ],
+      "xx": [
+        "E473a"
+      ]
+    },
+    "efsa_evaluation_url": {
+      "en": "http://dx.doi.org/10.2903/j.efsa.2004.106"
+    },
+    "vegan": {
+      "en": "maybe"
+    },
+    "efsa_evaluation_date": {
+      "en": "2004-11-23"
+    },
+    "e_number": {
+      "en": "473a"
+    }
+  },
+  "en:e917": {
+    "mandatory_additive_class": {
+      "en": "en:flour-treatment-agent"
+    },
+    "comment": {
+      "en": "POTASSIUM IODATE is for the moment listed in both the additves and ingredients taxonomy."
+    },
+    "vegetarian": {
+      "en": "yes"
+    },
+    "e_number": {
+      "en": "917"
+    },
+    "wikidata": {
+      "en": "Q414599"
+    },
+    "name": {
+      "xx": "E917",
+      "es": "E917",
+      "en": "E917",
+      "fr": "E917"
+    },
+    "vegan": {
+      "en": "yes"
+    },
+    "organic_eu": {
+      "en": "authorized"
+    },
+    "synonyms": {
+      "fr": [
+        "E917",
+        "Iodate de potassium",
+        "Iodate de potassium"
+      ],
+      "en": [
+        "E917",
+        "potassium iodate",
+        "potassium iodate"
+      ],
+      "es": [
+        "E917",
+        "yodato de potasio",
+        "Yodato potásico",
+        "yodato de potasio",
+        "Yodato potásico"
+      ],
+      "xx": [
+        "E917"
+      ]
+    }
+  },
+  "en:fruit": {
+    "nutriscore_fruits_vegetables_nuts": {
+      "en": "yes"
+    },
+    "carbon_footprint_fr_foodges_ingredient": {
+      "fr": "Fruit ou légume moyen importé par bateau et camion"
+    },
+    "children": [
+      "de:mehrfruchtsaft-aus-mehrfruchtsaftkonzentrat",
+      "en:acai-berry",
+      "en:acerola",
+      "en:arctostaphylos-uva-ursi",
+      "en:banana",
+      "en:berries",
+      "en:bitter-orange",
+      "en:boabab",
+      "en:breadfruit",
+      "en:bullocks-heart",
+      "en:cactus-fig",
+      "en:carambola",
+      "en:cashew-apples",
+      "en:citrus-fruit",
+      "en:citrus-unshiu",
+      "en:coconut",
+      "en:cranberry",
+      "en:custard-apple",
+      "en:date",
+      "en:dried-fruit",
+      "en:durian",
+      "en:exotic-fruit",
+      "en:feijoa",
+      "en:fig",
+      "en:fruit-concentrate",
+      "en:fruit-juice",
+      "en:fruit-puree",
+      "en:fruits-and-nuts",
+      "en:grape",
+      "en:guava",
+      "en:horned-melon",
+      "en:jackfruit",
+      "en:java-plum",
+      "en:jujube",
+      "en:kiwifruit",
+      "en:kumquat",
+      "en:longan",
+      "en:lukuma",
+      "en:lychee",
+      "en:malaceous-fruit",
+      "en:mamey-sapote",
+      "en:mammy-apple",
+      "en:mango",
+      "en:medlar",
+      "en:melon",
+      "en:mixed-fruit",
+      "en:must",
+      "en:nance",
+      "en:naranjilla",
+      "en:orange",
+      "en:papaya",
+      "en:passionfruit",
+      "en:pear",
+      "en:persimmon",
+      "en:pineapple",
+      "en:pitanga",
+      "en:plantain-banana",
+      "en:pomegranate",
+      "en:prickly-pear",
+      "en:prunus-species-fruit",
+      "en:quince",
+      "en:rambutan",
+      "en:red-fruit",
+      "en:rose-apple",
+      "en:rose-hip",
+      "en:rowal",
+      "en:sapodilla",
+      "en:soursop",
+      "en:strawberry-guavas",
+      "en:sugar-apple",
+      "en:sweet-valencia-orange",
+      "en:tamarillo",
+      "en:ōhelo-berry",
+      "fr:pulpe-de-fruits",
+      "fr:puree-de-fruits"
+    ],
+    "vegetarian": {
+      "en": "yes"
+    },
+    "carbon_footprint_fr_foodges_value": {
+      "fr": "1.3"
+    },
+    "vegan": {
+      "en": "yes"
+    },
+    "synonyms": {
+      "es": [
+        "Fruta",
+        "frutas"
+      ],
+      "fr": [
+        "fruit"
+      ],
+      "en": [
+        "fruit"
+      ]
+    },
+    "eurocode_2_group_1": {
+      "en": "9"
+    },
+    "wikipedia": {
+      "en": "https://en.wikipedia.org/wiki/Fruit"
+    },
+    "name": {
+      "fr": "fruit",
+      "en": "fruit",
+      "es": "Fruta"
+    },
+    "wikidata": {
+      "en": "Q1364"
+    }
+  },
+  "en:nectarine": {
+    "ciqual_proxy_food_code": {
+      "en": "13030"
+    },
+    "parents": [
+      "en:prunus-species-fruit"
+    ],
+    "children": [
+      "en:garofa-nectarine",
+      "en:nectarine-pulp",
+      "en:raw-nectarine"
+    ],
+    "usda_ndb_proxy_code": {
+      "en": "9191"
+    },
+    "usda_ndb_proxy_name": {
+      "en": "Nectarines, raw"
+    },
+    "agribalyse_proxy_food_code": {
+      "en": "13030"
+    },
+    "ciqual_proxy_food_name": {
+      "en": "Nectarine, pulp and peel, raw",
+      "fr": "Nectarine ou brugnon, pulpe et peau, crue"
+    },
+    "name": {
+      "fr": "nectarine",
+      "en": "nectarine",
+      "es": "melocotonero"
+    },
+    "wikidata": {
+      "en": "Q841156"
+    },
+    "synonyms": {
+      "es": [
+        "melocotonero",
+        "nectarina",
+        "pelón"
+      ],
+      "fr": [
+        "nectarine"
+      ],
+      "en": [
+        "nectarine"
+      ]
+    },
+    "eurocode_2_group_3": {
+      "en": "9.20.15"
+    }
+  },
+  "en:organic-red-wine": {
+    "parents": [
+      "en:red-wine"
+    ],
+    "name": {
+      "en": "organic red wine",
+      "fr": "vin rouge bio"
+    },
+    "synonyms": {
+      "en": [
+        "organic red wine"
+      ],
+      "fr": [
+        "vin rouge bio",
+        "vin rouge biologique",
+        "vin biologique contient des sulfites"
+      ]
+    }
+  },
+  "en:pear": {
+    "usda_ndb_proxy_name": {
+      "en": "Pears, raw"
+    },
+    "description": {
+      "en": "The PEAR is any of several tree and shrub species of genus Pyrus, in the family Rosaceae. Note this refers to the tree and not the fruit"
+    },
+    "usda_ndb_proxy_code": {
+      "en": "9252"
+    },
+    "ifct_food_name": {
+      "en": "Pear"
+    },
+    "ecobalyse": {
+      "en": "bb00f430-ffda-46a3-ba45-267b0064a43e"
+    },
+    "ciqual_proxy_food_code": {
+      "en": "13037"
+    },
+    "ifct_food_code": {
+      "en": "E051"
+    },
+    "children": [
+      "en:asian-pear",
+      "en:bosc-pear",
+      "en:conference-pear",
+      "en:d-anjou-pear",
+      "en:pear-juice",
+      "en:pear-nectar",
+      "en:pear-puree",
+      "en:pears-in-cubes",
+      "en:raw-pear",
+      "en:williams-bon-chretien-pear"
+    ],
+    "parents": [
+      "en:fruit"
+    ],
+    "synonyms": {
+      "en": [
+        "pear",
+        "pears"
+      ],
+      "fr": [
+        "poire",
+        "poires"
+      ],
+      "es": [
+        "pera"
+      ]
+    },
+    "wikidata": {
+      "en": "Q13099586"
+    },
+    "name": {
+      "es": "pera",
+      "fr": "poire",
+      "en": "pear"
+    },
+    "wikipedia": {
+      "en": "https://en.wikipedia.org/wiki/Pear"
+    },
+    "carbon_footprint_fr_foodges_value": {
+      "fr": "1"
+    },
+    "ecobalyse_origins_en_france": {
+      "en": "eab762ca-1edc-4fcc-ba6d-c247bbab0ec8"
+    },
+    "agribalyse_proxy_food_code": {
+      "en": "13037"
+    },
+    "carbon_footprint_fr_foodges_ingredient": {
+      "fr": "Poire -Argentine-"
+    },
+    "ciqual_proxy_food_name": {
+      "en": "Pear, flesh and skin, raw"
+    }
+  },
+  "en:pear-nectar": {
+    "comment": {
+      "en": "is this ciqual entry actually the same as en:pear juice?"
+    },
+    "parents": [
+      "en:pear"
+    ],
+    "synonyms": {
+      "en": [
+        "pear nectar"
+      ]
+    },
+    "ciqual_food_code": {
+      "en": "2054"
+    },
+    "name": {
+      "en": "pear nectar"
+    },
+    "ciqual_food_name": {
+      "en": "Pear nectar"
+    },
+    "agribalyse_food_code": {
+      "en": "2054"
+    }
+  },
+  "en:prunus-species-fruit": {
+    "parents": [
+      "en:fruit"
+    ],
+    "children": [
+      "en:apricot",
+      "en:cherry",
+      "en:chickasaw-plum",
+      "en:damson",
+      "en:greengage",
+      "en:japanese-plum",
+      "en:mirabelle-plum",
+      "en:nectarine",
+      "en:peach",
+      "en:plum",
+      "en:sloe"
+    ],
+    "synonyms": {
+      "en": [
+        "prunus species fruit"
+      ]
+    },
+    "eurocode_2_group_2": {
+      "en": "9.20"
+    },
+    "name": {
+      "en": "prunus species fruit"
+    }
+  },
+  "en:raw-nectarine": {
+    "synonyms": {
+      "en": [
+        "raw nectarine"
+      ]
+    },
+    "name": {
+      "en": "raw nectarine"
+    },
+    "usda_ndb_name": {
+      "en": "Nectarines, raw"
+    },
+    "usda_ndb_code": {
+      "en": "9191"
+    },
+    "children": [
+      "en:raw-nectarine-pulp-and-skin"
+    ],
+    "parents": [
+      "en:nectarine"
+    ]
+  },
+  "en:raw-nectarine-pulp-and-skin": {
+    "parents": [
+      "en:raw-nectarine"
+    ],
+    "ciqual_food_name": {
+      "fr": "Nectarine ou brugnon, pulpe et peau, crue",
+      "en": "Nectarine, pulp and peel, raw"
+    },
+    "ciqual_food_code": {
+      "en": "13030"
+    },
+    "name": {
+      "en": "raw nectarine pulp and skin"
+    },
+    "synonyms": {
+      "en": [
+        "raw nectarine pulp and skin"
+      ]
+    }
+  },
+  "en:raw-pear": {
+    "synonyms": {
+      "en": [
+        "raw pear"
+      ]
+    },
+    "usda_ndb_name": {
+      "en": "Pears, raw"
+    },
+    "name": {
+      "en": "raw pear"
+    },
+    "usda_ndb_code": {
+      "en": "9252"
+    },
+    "parents": [
+      "en:pear"
+    ]
+  },
+  "en:red-wine": {
+    "parents": [
+      "en:wine"
+    ],
+    "children": [
+      "en:organic-red-wine",
+      "en:red-wine-extract",
+      "en:red-wine-from-france"
+    ],
+    "agribalyse_food_code": {
+      "en": "5214"
+    },
+    "ecobalyse": {
+      "en": "6621c18e-85de-4683-82be-7b236e68bc48"
+    },
+    "wikipedia": {
+      "en": "https://en.wikipedia.org/wiki/Red_wine"
+    },
+    "ciqual_food_name": {
+      "fr": "Vin rouge",
+      "en": "Wine, red"
+    },
+    "wikidata": {
+      "en": "Q1827"
+    },
+    "name": {
+      "fr": "vin rouge",
+      "en": "red wine",
+      "es": "vino tinto"
+    },
+    "ciqual_food_code": {
+      "en": "5214"
+    },
+    "description": {
+      "en": "RED WINE is a type of wine made from dark-colored -black- grape varieties. The actual color of the wine can range from intense violet, typical of young wines, through to brick red for mature wines and brown for older red wines. The juice from most purple grapes is greenish-white, the red color coming from anthocyan pigments present in the skin of the grape"
+    },
+    "synonyms": {
+      "en": [
+        "red wine"
+      ],
+      "fr": [
+        "vin rouge"
+      ],
+      "es": [
+        "vino tinto",
+        "vino tinto Mencia"
+      ]
+    }
+  },
+  "en:water": {
+    "carbon_footprint_fr_foodges_value": {
+      "fr": "0.4"
+    },
+    "wikidata": {
+      "en": "Q283"
+    },
+    "name": {
+      "en": "water",
+      "fr": "eau",
+      "es": "agua"
+    },
+    "ciqual_food_code": {
+      "en": "18066"
+    },
+    "wikipedia": {
+      "en": "https://en.wikipedia.org/wiki/Water"
+    },
+    "synonyms": {
+      "es": [
+        "agua",
+        "agua potable"
+      ],
+      "fr": [
+        "eau",
+        "eau potable",
+        "eau du robinet",
+        "eau osmosée"
+      ],
+      "en": [
+        "water",
+        "drinking water",
+        "tap water"
+      ]
+    },
+    "carbon_footprint_fr_foodges_ingredient": {
+      "fr": "Eau en bouteille PET, plate, 0.5 L"
+    },
+    "ecobalyse": {
+      "en": "36b3ffec-51e7-4e26-b1b5-7d52554e0aa6"
+    },
+    "ciqual_food_name": {
+      "fr": "Eau du robinet"
+    },
+    "vegan": {
+      "en": "yes"
+    },
+    "children": [
+      "en:brewing-water",
+      "en:carbonated-water",
+      "en:cooking-water",
+      "en:distilled-water",
+      "en:filtered-water",
+      "en:ice",
+      "en:mineral-water",
+      "en:spring-water",
+      "en:water-like-ice-wrap"
+    ],
+    "vegetarian": {
+      "en": "yes"
+    }
+  },
+  "en:white-wine": {
+    "parents": [
+      "en:wine"
+    ],
+    "children": [
+      "en:dry-white-wine",
+      "en:muscadet",
+      "en:white-wine-extract",
+      "en:white-wine-from-cava",
+      "en:white-wine-from-france",
+      "fr:vin-blanc-modifie",
+      "fr:vin-blanc-reduit"
+    ],
+    "ciqual_proxy_food_name": {
+      "fr": "Vin blanc -sec-"
+    },
+    "ciqual_proxy_food_code": {
+      "en": "5215"
+    },
+    "agribalyse_proxy_food_code": {
+      "en": "5215"
+    },
+    "wikipedia": {
+      "en": "https://en.wikipedia.org/wiki/White_wine"
+    },
+    "name": {
+      "fr": "vin blanc",
+      "en": "white wine",
+      "es": "vino blanco"
+    },
+    "wikidata": {
+      "en": "Q10210"
+    },
+    "description": {
+      "en": "WHITE WINE is a wine whose colour can be straw-yellow, yellow-green, or yellow-gold."
+    },
+    "synonyms": {
+      "es": [
+        "vino blanco"
+      ],
+      "en": [
+        "white wine"
+      ],
+      "fr": [
+        "vin blanc"
+      ]
+    }
+  },
+  "en:williams-bon-chretien-pear": {
+    "synonyms": {
+      "es": [
+        "pera Williams",
+        "peras Williams de los coteaux du Lyonnais"
+      ],
+      "fr": [
+        "poire Williams",
+        "poires Williams des coteaux du Lyonnais"
+      ],
+      "en": [
+        "Williams' bon chrétien pear",
+        "Williams pear",
+        "Bartlett pear"
+      ],
+      "xx": [
+        "Williams' bon chrétien"
+      ]
+    },
+    "usda_ndb_proxy_name": {
+      "en": "Pears, raw, bartlett -Includes foods for USDA's Food Distribution Program-"
+    },
+    "usda_ndb_proxy_code": {
+      "en": "9412"
+    },
+    "name": {
+      "en": "Williams' bon chrétien pear",
+      "xx": "Williams' bon chrétien",
+      "es": "pera Williams",
+      "fr": "poire Williams"
+    },
+    "wikidata": {
+      "en": "Q498862"
+    },
+    "ciqual_proxy_food_code": {
+      "en": "13189"
+    },
+    "agribalyse_proxy_food_code": {
+      "en": "13189"
+    },
+    "ciqual_proxy_food_name": {
+      "en": "Pear, var. Williams, flesh without skin, raw"
+    },
+    "parents": [
+      "en:pear"
+    ],
+    "children": [
+      "en:raw-bartlett-pear",
+      "en:williams-pear-puree"
+    ]
+  },
+  "en:wine": {
+    "carbon_footprint_fr_foodges_ingredient": {
+      "fr": "Vin France"
+    },
+    "parents": [
+      "en:alcohol"
+    ],
+    "children": [
+      "en:apple-wine",
+      "en:blackberry-wine",
+      "en:liqueur-wine",
+      "en:natural-sweet-wine",
+      "en:pedro-ximenez-wine",
+      "en:red-wine",
+      "en:rose-wine",
+      "en:sauternes",
+      "en:sparkling-wine",
+      "en:stale-wine",
+      "en:white-wine",
+      "fr:vin-aromatise",
+      "fr:vin-de-france"
+    ],
+    "carbon_footprint_fr_foodges_value": {
+      "fr": "1.4"
+    },
+    "description": {
+      "en": "WINE is an alcoholic beverage made from fermented grapes."
+    },
+    "synonyms": {
+      "en": [
+        "wine",
+        "fruit wine"
+      ],
+      "fr": [
+        "vin"
+      ],
+      "es": [
+        "vino"
+      ]
+    },
+    "wikipedia": {
+      "en": "https://en.wikipedia.org/wiki/Wine"
+    },
+    "wikidata": {
+      "en": "Q282"
+    },
+    "name": {
+      "en": "wine",
+      "fr": "vin",
+      "es": "vino"
+    }
+  }
+}
