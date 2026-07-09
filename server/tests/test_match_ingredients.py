@@ -48,9 +48,7 @@ async def test_falls_back_to_ciqual_column(agribalyse_index):
 @pytest.mark.asyncio
 async def test_searches_parents(agribalyse_index):
     """A missing property on the node is found on its parent."""
-    parent = MockTaxonomyNode(
-        "en:fruit", properties={"agribalyse_proxy_code": {"en": "10002"}}
-    )
+    parent = MockTaxonomyNode("en:fruit", properties={"agribalyse_proxy_code": {"en": "10002"}})
     taxonomy = MockTaxonomy({"en:pear": MockTaxonomyNode("en:pear", parents=[parent])})
     with patch_ingredients_taxonomy(taxonomy):
         result = await score.match_ingredients_to_agribalyse(
@@ -110,7 +108,9 @@ async def test_all_ingredients_returned(agribalyse_index):
     """Every ingredient is matched (regression test for an early-return bug)."""
     taxonomy = MockTaxonomy(
         {
-            "en:apple": MockTaxonomyNode("en:apple", properties={"agribalyse_code": {"en": "10001"}}),
+            "en:apple": MockTaxonomyNode(
+                "en:apple", properties={"agribalyse_code": {"en": "10001"}}
+            ),
             "en:pear": MockTaxonomyNode("en:pear", properties={"agribalyse_code": {"en": "10002"}}),
         }
     )

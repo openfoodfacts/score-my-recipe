@@ -210,10 +210,107 @@
           }
         }
       }
+    },
+    "/v1/green-score": {
+      "post": {
+        "summary": "Green Score",
+        "description": "Compute the green-score of a recipe given as a list of ingredients.",
+        "operationId": "green_score_v1_green_score_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GreenScoreRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GreenScoreResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "GreenScoreRequest": {
+        "properties": {
+          "ingredients": {
+            "items": {
+              "$ref": "#/components/schemas/RecipeIngredientInput"
+            },
+            "type": "array",
+            "title": "Ingredients",
+            "description": "The ingredients of the recipe"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ingredients"
+        ],
+        "title": "GreenScoreRequest",
+        "description": "Request body for the green-score computation endpoint.\n\nIt is a thin wrapper around a list of ingredients"
+      },
+      "GreenScoreResponse": {
+        "properties": {
+          "numericScore": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Numericscore",
+            "description": "The computed green-score of the recipe, null if no ingredients have a score"
+          },
+          "letterGrade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lettergrade",
+            "description": "The letter grade corresponding to the numeric score, null if no ingredients have a score"
+          },
+          "missingIngredientIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missingingredientids",
+            "description": "List of ingredient ids that were missing from the Agribalyse computation",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "GreenScoreResponse",
+        "description": "Response model for the green-score computation endpoint."
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -382,6 +479,64 @@
         "title": "RecipeIngredient",
         "description": "Ingredient model for Score My Recipe API"
       },
+      "RecipeIngredientInput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique identifier for the ingredient"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Display name of the ingredient"
+          },
+          "weight": {
+            "type": "number",
+            "title": "Weight",
+            "description": "Weight in grams"
+          },
+          "codifiedIngredient": {
+            "$ref": "#/components/schemas/TaxonomyItem",
+            "description": "Codified ingredient"
+          },
+          "labels": {
+            "items": {
+              "$ref": "#/components/schemas/TaxonomyItem"
+            },
+            "type": "array",
+            "title": "Labels",
+            "description": "Labels / certifications (organic, fair-trade...)",
+            "default": []
+          },
+          "seasonality": {
+            "type": "boolean",
+            "title": "Seasonality",
+            "description": "Whether the ingredient is seasonal",
+            "default": false
+          },
+          "origin": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaxonomyItem"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Origin country/region, null if unspecified"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "weight",
+          "codifiedIngredient"
+        ],
+        "title": "RecipeIngredientInput",
+        "description": "A single ingredient of a recipe"
+      },
       "RecipeParseRequest": {
         "properties": {
           "lang": {
@@ -418,6 +573,33 @@
         ],
         "title": "RecipeParseResponse",
         "description": "Response model for parse_text endpoint"
+      },
+      "TaxonomyItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Taxonomy identifier"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Display label in the current language"
+          },
+          "isInTaxonomy": {
+            "type": "boolean",
+            "title": "Isintaxonomy",
+            "description": "Whether the item comes from the taxonomy (true) or is custom"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "isInTaxonomy"
+        ],
+        "title": "TaxonomyItem",
+        "description": "A taxonomy reference with an id and a localized label.\n\nMirrors the frontend `TaxonomyItem` (used for codified ingredients, labels\nand origins)."
       },
       "ValidationError": {
         "properties": {

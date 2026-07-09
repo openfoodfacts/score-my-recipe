@@ -18,7 +18,6 @@ def patch_ingredients_taxonomy(taxonomy):
         yield mock_tax
 
 
-
 class MockTaxonomyNode:
     """Mock taxonomy node mimicking ``openfoodfacts.taxonomy.TaxonomyNode``."""
 

@@ -13,7 +13,9 @@ import api.types as types
 logger = logging.getLogger(__name__)
 
 
-async def match_ingredients_to_agribalyse(recipe: types.RecipeInput) -> dict[str, types.IngredientAgribalyse]:
+async def match_ingredients_to_agribalyse(
+    recipe: types.RecipeInput,
+) -> dict[str, types.IngredientAgribalyse]:
     """Compute (for now: gather Agribalyse data for) the green-score of a recipe.
 
     Each ingredient is looked up in the ingredients taxonomy; its code properties
@@ -31,12 +33,12 @@ async def match_ingredients_to_agribalyse(recipe: types.RecipeInput) -> dict[str
 
         code, source, row = agribalyse.find_agribalyse_row(node)
         results[ingredient.id] = types.IngredientAgribalyse(
-                id=ingredient.id,
-                name=ingredient.name,
-                matched_code=code,
-                code_source=source,
-                agribalyse=row,
-            )
+            id=ingredient.id,
+            name=ingredient.name,
+            matched_code=code,
+            code_source=source,
+            agribalyse=row,
+        )
     return results
 
 
@@ -56,7 +58,9 @@ async def recipe_ef_score(recipe: types.RecipeInput) -> tuple[Optional[float], l
     missing_ingredient_ids = []
     for ingredient in recipe:
         if ingredient.weight <= 0:
-            raise ValueError(f"Ingredient {ingredient.id} has non-positive weight {ingredient.weight}, cannot compute EF score.")
+            raise ValueError(
+                f"Ingredient {ingredient.id} has non-positive weight {ingredient.weight}, cannot compute EF score."
+            )
         if ingredient.id not in ingredients_agribalyse:
             missing_ingredient_ids.append(ingredient.id)
             continue
@@ -117,5 +121,3 @@ async def compute_green_score(recipe: types.RecipeInput) -> types.GreenScoreResp
         letter_grade=letter_grade,
         missing_ingredient_ids=missing_ingredient_ids,
     )
-
-

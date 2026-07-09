@@ -34,7 +34,9 @@ async def test_score_weighted_mix(agribalyse_index):
     """A mix of apple (100g) and pear (300g) -> ef 0.45 -> grade C."""
     taxonomy = MockTaxonomy(
         {
-            "en:apple": MockTaxonomyNode("en:apple", properties={"agribalyse_code": {"en": "10001"}}),
+            "en:apple": MockTaxonomyNode(
+                "en:apple", properties={"agribalyse_code": {"en": "10001"}}
+            ),
             "en:pear": MockTaxonomyNode("en:pear", properties={"agribalyse_code": {"en": "10002"}}),
         }
     )
@@ -57,7 +59,9 @@ async def test_missing_ingredients_reported(agribalyse_index):
     """Ingredients without an Agribalyse row are listed, the rest is scored."""
     taxonomy = MockTaxonomy(
         {
-            "en:apple": MockTaxonomyNode("en:apple", properties={"agribalyse_code": {"en": "10001"}}),
+            "en:apple": MockTaxonomyNode(
+                "en:apple", properties={"agribalyse_code": {"en": "10001"}}
+            ),
             "en:water": MockTaxonomyNode("en:water", properties={}),
         }
     )
@@ -78,9 +82,7 @@ async def test_missing_ingredients_reported(agribalyse_index):
 @pytest.mark.asyncio
 async def test_no_score_when_all_missing(agribalyse_index):
     """With no scorable ingredient the score and letter are null."""
-    taxonomy = MockTaxonomy(
-        {"en:water": MockTaxonomyNode("en:water", properties={})}
-    )
+    taxonomy = MockTaxonomy({"en:water": MockTaxonomyNode("en:water", properties={})})
     with patch_ingredients_taxonomy(taxonomy):
         result = await score.compute_green_score(
             types.GreenScoreRequest(

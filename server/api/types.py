@@ -120,6 +120,7 @@ class TaxonomyItem(CamelModel):
 
 class RecipeIngredientInput(CamelModel):
     """A single ingredient of a recipe"""
+
     # TODO: decide if we keep id and name
     id: Annotated[str, Field(description="Unique identifier for the ingredient")]
     name: Annotated[str, Field(description="Display name of the ingredient")]
@@ -139,15 +140,14 @@ class RecipeIngredientInput(CamelModel):
 
 RecipeInput = list[RecipeIngredientInput]
 
+
 class GreenScoreRequest(CamelModel):
     """Request body for the green-score computation endpoint.
 
     It is a thin wrapper around a list of ingredients
     """
 
-    ingredients: Annotated[
-        RecipeInput, Field(description="The ingredients of the recipe")
-    ]
+    ingredients: Annotated[RecipeInput, Field(description="The ingredients of the recipe")]
 
 
 class IngredientAgribalyse(CamelModel):
@@ -174,15 +174,22 @@ class IngredientAgribalyse(CamelModel):
 
 class GreenScoreResponse(CamelModel):
     """Response model for the green-score computation endpoint."""
+
     numeric_score: Annotated[
         Optional[float],
-        Field(description="The computed green-score of the recipe, null if no ingredients have a score"),
+        Field(
+            description="The computed green-score of the recipe, null if no ingredients have a score"
+        ),
     ] = None
     letter_grade: Annotated[
         Optional[str],
-        Field(description="The letter grade corresponding to the numeric score, null if no ingredients have a score"),
+        Field(
+            description="The letter grade corresponding to the numeric score, null if no ingredients have a score"
+        ),
     ] = None
     missing_ingredient_ids: Annotated[
         list[str],
-        Field(description="List of ingredient ids that were missing from the Agribalyse computation"),
+        Field(
+            description="List of ingredient ids that were missing from the Agribalyse computation"
+        ),
     ] = []

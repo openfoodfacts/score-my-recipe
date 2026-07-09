@@ -38,7 +38,9 @@ async def test_weighted_average(agribalyse_index):
     """
     taxonomy = MockTaxonomy(
         {
-            "en:apple": MockTaxonomyNode("en:apple", properties={"agribalyse_code": {"en": "10001"}}),
+            "en:apple": MockTaxonomyNode(
+                "en:apple", properties={"agribalyse_code": {"en": "10001"}}
+            ),
             "en:pear": MockTaxonomyNode("en:pear", properties={"agribalyse_code": {"en": "10002"}}),
         }
     )
@@ -58,7 +60,9 @@ async def test_missing_ingredient_excluded(agribalyse_index):
     """An ingredient with no Agribalyse match is excluded and reported missing."""
     taxonomy = MockTaxonomy(
         {
-            "en:apple": MockTaxonomyNode("en:apple", properties={"agribalyse_code": {"en": "10001"}}),
+            "en:apple": MockTaxonomyNode(
+                "en:apple", properties={"agribalyse_code": {"en": "10001"}}
+            ),
             "en:water": MockTaxonomyNode("en:water", properties={}),
         }
     )
@@ -102,6 +106,4 @@ async def test_non_positive_weight_raises(agribalyse_index):
     )
     with patch_ingredients_taxonomy(taxonomy):
         with pytest.raises(ValueError, match="non-positive weight"):
-            await score.recipe_ef_score(
-                [build_ingredient_obj("i1", "apple", "en:apple", weight=0)]
-            )
+            await score.recipe_ef_score([build_ingredient_obj("i1", "apple", "en:apple", weight=0)])
