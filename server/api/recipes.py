@@ -126,29 +126,14 @@ _ingredients = dict()
 
 async def get_ingredients(lang: str) -> list[types.Ingredient]:
     """Get the list of ingredients relevant for green-score computation
-
-    Only ingredients that have an Agribalyse food code (direct or proxy) are
-    scorable, so we filter the taxonomy to keep them and their children
-    (children inherit the Agribalyse mapping of their parent).
     """
     lang = two_letter_lang_code(lang)
     if lang not in _ingredients:
         ingredients_taxonomy = await off.get_ingredients_taxonomy()
-        all_ingredients = ingredients_taxonomy.iter_nodes()
-        # keep only entries with an Agribalyse food code
-        filtered_ingredients = {
-            ingredient
-            for ingredient in all_ingredients
-            if any(key in ingredient.properties for key in AGRIBALSE_PROPERTY_KEYS)
-        }
-        # add children hierarchy of relevant ingredients (children and children
-        # of children) as they inherit the Agribalyse mapping of their parent
-        for ingredient in list(filtered_ingredients):
-            filtered_ingredients.update(ingredient.get_children_hierarchy())
         ingredients_list = [
             types.Ingredient(id=ingredient_id, label=ingredient_label)
             for ingredient_id, ingredient_label in off.taxonomy_lang_label(
-                lang, filtered_ingredients
+                lang, ingredients_taxonomy.iter_nodes()
             )
         ]
         # sort by id for predictable order
