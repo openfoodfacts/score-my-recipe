@@ -27,6 +27,7 @@ async def test_matches_agribalyse_code(agribalyse_index):
         )
     assert result["i1"].matched_code == "10001"
     assert result["i1"].code_source == "agribalyse_code"
+    assert result["i1"].agribalyse is not None
     assert result["i1"].agribalyse["name_fr"] == "Apple"
 
 
@@ -42,6 +43,7 @@ async def test_falls_back_to_ciqual_column(agribalyse_index):
         )
     assert result["i1"].matched_code == "30000"
     assert result["i1"].code_source == "ciqual_code"
+    assert result["i1"].agribalyse is not None
     assert result["i1"].agribalyse["name_fr"] == "Carrot"
 
 

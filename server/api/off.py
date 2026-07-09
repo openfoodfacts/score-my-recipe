@@ -81,13 +81,3 @@ async def get_labels_taxonomy() -> taxonomy.Taxonomy:
         cache_dir=get_settings().cache_dir,
     )
     return labels_taxonomy
-
-
-async def get_ingredients_taxonomy() -> taxonomy.Taxonomy:
-    """Get the ingredients taxonomy from Open Food Facts API"""
-    ingredients_taxonomy = await asyncio.to_thread(
-        taxonomy.get_taxonomy,
-        taxonomy.TaxonomyType.ingredient,
-        cache_dir=get_settings().cache_dir,
-    )
-    return ingredients_taxonomy

@@ -96,7 +96,8 @@ def _property_value(node: taxonomy.TaxonomyNode, prop: str) -> Optional[str]:
     if raw is None:
         return None
     if isinstance(raw, dict):
-        return raw.get("en") or next(iter(raw.values()), None)
+        value = raw.get("en") or next(iter(raw.values()), None)
+        return str(value) if value is not None else None
     return str(raw)
 
 
