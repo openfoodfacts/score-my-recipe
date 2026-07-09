@@ -1,6 +1,7 @@
 """Green-score computation business logic."""
 
 import logging
+import math
 from typing import Optional
 
 import openfoodfacts.taxonomy as taxonomy
@@ -36,10 +37,10 @@ async def match_ingredients_to_agribalyse(recipe: types.RecipeInput) -> dict[str
                 code_source=source,
                 agribalyse=row,
             )
-        return results
+    return results
 
 
-async def recipe_ef_score(recipe: types.RecipeInput) -> Tuple[Optional[float], list[str]]:
+async def recipe_ef_score(recipe: types.RecipeInput) -> tuple[Optional[float], list[str]]:
     """Compute the EF score of a recipe, given its ingredients and their weights.
 
     The EF score is computed as a weighted average of the EF scores of the
@@ -68,7 +69,9 @@ async def recipe_ef_score(recipe: types.RecipeInput) -> Tuple[Optional[float], l
 
     if total_weight == 0:
         return (None, missing_ingredient_ids)
-    return (ef_score_sum / total_weight * 1000, missing_ingredient_ids)
+    # note we do a weighted average of the EF scores
+    # EF score is already per kg
+    return (ef_score_sum / total_weight, missing_ingredient_ids)
 
 
 async def score_to_letter(score: float) -> str:
