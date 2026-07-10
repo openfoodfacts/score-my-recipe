@@ -16,7 +16,7 @@ from tests.helpers import (
 async def test_score_for_single_ingredient(agribalyse_index):
     """An apple (ef_score 0.3) yields the normalized score and matching letter."""
     taxonomy = MockTaxonomy(
-        {"en:apple": MockTaxonomyNode("en:apple", properties={"agribalyse_code": {"en": "10001"}})}
+        {"en:apple": MockTaxonomyNode("en:apple", properties={"agribalyse_food_code": {"en": "10001"}})}
     )
     with patch_ingredients_taxonomy(taxonomy):
         result = await score.compute_green_score(
@@ -35,9 +35,9 @@ async def test_score_weighted_mix(agribalyse_index):
     taxonomy = MockTaxonomy(
         {
             "en:apple": MockTaxonomyNode(
-                "en:apple", properties={"agribalyse_code": {"en": "10001"}}
+                "en:apple", properties={"agribalyse_food_code": {"en": "10001"}}
             ),
-            "en:pear": MockTaxonomyNode("en:pear", properties={"agribalyse_code": {"en": "10002"}}),
+            "en:pear": MockTaxonomyNode("en:pear", properties={"agribalyse_food_code": {"en": "10002"}}),
         }
     )
     with patch_ingredients_taxonomy(taxonomy):
@@ -60,7 +60,7 @@ async def test_missing_ingredients_reported(agribalyse_index):
     taxonomy = MockTaxonomy(
         {
             "en:apple": MockTaxonomyNode(
-                "en:apple", properties={"agribalyse_code": {"en": "10001"}}
+                "en:apple", properties={"agribalyse_food_code": {"en": "10001"}}
             ),
             "en:water": MockTaxonomyNode("en:water", properties={}),
         }

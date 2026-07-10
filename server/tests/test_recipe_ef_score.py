@@ -20,7 +20,7 @@ from tests.helpers import (
 async def test_single_ingredient_ef_score(agribalyse_index):
     """A single ingredient yields its own ef_score (0.3 for apple)."""
     taxonomy = MockTaxonomy(
-        {"en:apple": MockTaxonomyNode("en:apple", properties={"agribalyse_code": {"en": "10001"}})}
+        {"en:apple": MockTaxonomyNode("en:apple", properties={"agribalyse_food_code": {"en": "10001"}})}
     )
     with patch_ingredients_taxonomy(taxonomy):
         ef_score, missing = await score.recipe_ef_score(
@@ -39,9 +39,9 @@ async def test_weighted_average(agribalyse_index):
     taxonomy = MockTaxonomy(
         {
             "en:apple": MockTaxonomyNode(
-                "en:apple", properties={"agribalyse_code": {"en": "10001"}}
+                "en:apple", properties={"agribalyse_food_code": {"en": "10001"}}
             ),
-            "en:pear": MockTaxonomyNode("en:pear", properties={"agribalyse_code": {"en": "10002"}}),
+            "en:pear": MockTaxonomyNode("en:pear", properties={"agribalyse_food_code": {"en": "10002"}}),
         }
     )
     with patch_ingredients_taxonomy(taxonomy):
@@ -61,7 +61,7 @@ async def test_missing_ingredient_excluded(agribalyse_index):
     taxonomy = MockTaxonomy(
         {
             "en:apple": MockTaxonomyNode(
-                "en:apple", properties={"agribalyse_code": {"en": "10001"}}
+                "en:apple", properties={"agribalyse_food_code": {"en": "10001"}}
             ),
             "en:water": MockTaxonomyNode("en:water", properties={}),
         }
@@ -100,10 +100,10 @@ async def test_all_ingredients_missing_returns_none(agribalyse_index):
 
 @pytest.mark.asyncio
 async def test_non_positive_weight_raises(agribalyse_index):
-    """A non-positive weight is invalid and raises a ValueError."""
+    """A negative weight is invalid and raises a ValueError."""
     taxonomy = MockTaxonomy(
-        {"en:apple": MockTaxonomyNode("en:apple", properties={"agribalyse_code": {"en": "10001"}})}
+        {"en:apple": MockTaxonomyNode("en:apple", properties={"agribalyse_food_code": {"en": "10001"}})}
     )
     with patch_ingredients_taxonomy(taxonomy):
         with pytest.raises(ValueError, match="non-positive weight"):
-            await score.recipe_ef_score([build_ingredient_obj("i1", "apple", "en:apple", weight=0)])
+            await score.recipe_ef_score([build_ingredient_obj("i1", "apple", "en:apple", weight=-1)])
