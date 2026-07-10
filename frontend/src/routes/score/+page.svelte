@@ -24,6 +24,7 @@
 		type Ingredient
 	} from '$lib/types/ingredient';
 	import { computeGreenScore, type GreenScoreResponse } from '$lib/api/recipe';
+	import { createBouncer, SUPERSEDED } from '$lib/api/bouncer';
 
 	/**
 	 * Initial ingredients coming from the `/add` page (passed via `goto` state).
@@ -49,6 +50,16 @@
 	let isScoreLoading = $state(false);
 	let scoreError = $state<string | null>(null);
 	let currentScoreRequestController = $state<AbortController | null>(null);
+
+	/**
+	 * Guard ensuring only the most recent green-score request is applied.
+	 *
+	 * The score is recomputed automatically after an inactivity delay, so
+	 * several requests can overlap. Without this guard, a slower earlier
+	 * request could resolve after a faster later one and overwrite the fresher
+	 * result with stale data.
+	 */
+	const scoreBouncer = createBouncer();
 
 	/** Inactivity delay (in ms) before the green-score is recomputed automatically. */
 	const SCORE_INACTIVITY_DELAY = 3000;
@@ -83,18 +94,21 @@
 
 	/**
 	 * Compute the green-score for the current ingredients.
-	 * Guards against concurrent computations and captures errors.
+	 *
+	 * Guards against concurrent computations: only the result of the most recent
+	 * call is applied, earlier (stale) results are discarded. Captures errors
+	 * from the latest call only.
 	 */
 	async function fetchGreenScore() {
+		currentScoreRequestController?.abort();  // abort previous request
 		// Only compute when there is at least one non-empty ingredient
 		if (!ingredients.some(isIngredientNotEmpty)) {
-			currentScoreRequestController?.abort();
 			currentScoreRequestController = null;
 			isScoreLoading = false;
 			greenScore = null;
+			isScoreLoading = false;
 			return;
 		}
-		currentScoreRequestController?.abort();
 		const requestController = new AbortController();
 		currentScoreRequestController = requestController;
 		isScoreLoading = true;
