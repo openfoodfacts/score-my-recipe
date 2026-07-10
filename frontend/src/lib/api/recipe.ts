@@ -49,7 +49,7 @@ export async function parseRecipeText(text: string, lang: string): Promise<Recip
 	});
 
 	if (!response.ok) {
-		throw new Error("Error ${response.status}: ${response.statusText}`);
+		throw new Error(`Error ${response.status}: ${response.statusText}`);
 	}
 
 	return (await response.json()) as RecipeParseResponse;
@@ -143,7 +143,7 @@ export async function computeGreenScore(
 	});
 
 	if (!response.ok) {
-		throw new Error("Error ${response.status}: ${response.statusText}`);
+		throw new Error(`Error ${response.status}: ${response.statusText}`);
 	}
 
 	return (await response.json()) as GreenScoreResponse;
@@ -160,7 +160,7 @@ export async function getOrigins(lang: string): Promise<Origin[]> {
 	const response = await fetch(`${API_BASE_URL}/v1/origins?lang=${encodeURIComponent(lang)}`);
 
 	if (!response.ok) {
-		throw new Error("Error ${response.status}: ${response.statusText}`);
+		throw new Error(`Error ${response.status}: ${response.statusText}`);
 	}
 
 	const data = (await response.json()) as OriginsResponse;
