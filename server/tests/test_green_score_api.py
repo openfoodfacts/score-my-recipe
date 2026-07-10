@@ -16,7 +16,11 @@ client = TestClient(app)
 def test_api_accepts_camel_case_payload(agribalyse_index):
     """The endpoint accepts the frontend camelCase payload and returns a score."""
     taxonomy = MockTaxonomy(
-        {"en:apple": MockTaxonomyNode("en:apple", properties={"agribalyse_food_code": {"en": "10001"}})}
+        {
+            "en:apple": MockTaxonomyNode(
+                "en:apple", properties={"agribalyse_food_code": {"en": "10001"}}
+            )
+        }
     )
     with patch_ingredients_taxonomy(taxonomy):
         response = client.post(

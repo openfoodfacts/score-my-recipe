@@ -48,7 +48,7 @@ async def recipe_ef_score(recipe: types.RecipeInput) -> tuple[Optional[float], l
     The EF score is computed as a weighted average of the EF scores of the
     ingredients, weighted by their weight in grams.
 
-    It returns a tuple of the EF score and a list of ingredient ids that missinog from the computation.
+    It returns a tuple of the EF score and a list of ingredient ids that missing from the computation.
     If no ingredients have an EF score, it returns None for the EF score.
     """
     ingredients_agribalyse = await match_ingredients_to_agribalyse(recipe)
@@ -59,14 +59,16 @@ async def recipe_ef_score(recipe: types.RecipeInput) -> tuple[Optional[float], l
     for ingredient in recipe:
         if ingredient.weight < 0:
             raise ValueError(
-                f"Ingredient {ingredient.id} has non-positive weight {ingredient.weight}, cannot compute EF score."
+                f"Ingredient {ingredient.id} has negative weight {ingredient.weight}, cannot compute EF score."
             )
+        # Note: we tolerate weight = 0 because it does not mess up computation,
+        # TODO: check weights and add a warning at a different level
         if ingredient.id not in ingredients_agribalyse:
             missing_ingredient_ids.append(ingredient.id)
             continue
         agribalyse_row = ingredients_agribalyse[ingredient.id].agribalyse
-        if agribalyse_row and "score" in agribalyse_row:
-            ef_score_sum += float(agribalyse_row["score"]) * ingredient.weight
+        if agribalyse_row and (score_str := agribalyse_row.get("score")):
+            ef_score_sum += float(score_str) * ingredient.weight
             total_weight += ingredient.weight
         else:
             missing_ingredient_ids.append(ingredient.id)

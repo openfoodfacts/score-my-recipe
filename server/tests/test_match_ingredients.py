@@ -19,7 +19,11 @@ from tests.helpers import (
 async def test_matches_agribalyse_code(agribalyse_index):
     """An ingredient whose node has an agribalyse_code matches the first column."""
     taxonomy = MockTaxonomy(
-        {"en:apple": MockTaxonomyNode("en:apple", properties={"agribalyse_food_code": {"en": "10001"}})}
+        {
+            "en:apple": MockTaxonomyNode(
+                "en:apple", properties={"agribalyse_food_code": {"en": "10001"}}
+            )
+        }
     )
     with patch_ingredients_taxonomy(taxonomy):
         result = await score.match_ingredients_to_agribalyse(
@@ -35,7 +39,11 @@ async def test_matches_agribalyse_code(agribalyse_index):
 async def test_falls_back_to_ciqual_column(agribalyse_index):
     """A ciqual_* property matches the second column (ciqual_code)."""
     taxonomy = MockTaxonomy(
-        {"en:carrot": MockTaxonomyNode("en:carrot", properties={"ciqual_food_code": {"en": "30000"}})}
+        {
+            "en:carrot": MockTaxonomyNode(
+                "en:carrot", properties={"ciqual_food_code": {"en": "30000"}}
+            )
+        }
     )
     with patch_ingredients_taxonomy(taxonomy):
         result = await score.match_ingredients_to_agribalyse(
@@ -50,7 +58,9 @@ async def test_falls_back_to_ciqual_column(agribalyse_index):
 @pytest.mark.asyncio
 async def test_searches_parents(agribalyse_index):
     """A missing property on the node is found on its parent."""
-    parent = MockTaxonomyNode("en:fruit", properties={"agribalyse_proxy_food_code": {"en": "10002"}})
+    parent = MockTaxonomyNode(
+        "en:fruit", properties={"agribalyse_proxy_food_code": {"en": "10002"}}
+    )
     taxonomy = MockTaxonomy({"en:pear": MockTaxonomyNode("en:pear", parents=[parent])})
     with patch_ingredients_taxonomy(taxonomy):
         result = await score.match_ingredients_to_agribalyse(
@@ -113,7 +123,9 @@ async def test_all_ingredients_returned(agribalyse_index):
             "en:apple": MockTaxonomyNode(
                 "en:apple", properties={"agribalyse_food_code": {"en": "10001"}}
             ),
-            "en:pear": MockTaxonomyNode("en:pear", properties={"agribalyse_food_code": {"en": "10002"}}),
+            "en:pear": MockTaxonomyNode(
+                "en:pear", properties={"agribalyse_food_code": {"en": "10002"}}
+            ),
         }
     )
     with patch_ingredients_taxonomy(taxonomy):
