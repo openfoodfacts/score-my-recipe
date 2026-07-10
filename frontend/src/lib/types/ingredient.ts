@@ -100,3 +100,16 @@ export function isIngredientEmpty(ingredient: Ingredient): boolean {
 export function isIngredientNotEmpty(ingredient: Ingredient): boolean {
 	return !isIngredientEmpty(ingredient);
 }
+
+/**
+ * Compute a signature string for an ingredient's relevant fields.
+ *
+ * Used to detect changes and reset inactivity timers (e.g. before recomputing
+ * the green-score). Only the fields that affect the score are included.
+ *
+ * @param ingredient - The ingredient to sign.
+ * @returns A string uniquely identifying the ingredient's relevant content.
+ */
+export function ingredientSignature(ingredient: Ingredient): string {
+	return `${ingredient.id}:${ingredient.name}:${ingredient.weight ?? ''}:${ingredient.codifiedIngredient?.id ?? ''}:${ingredient.seasonality}:${ingredient.origin?.id ?? ''}:${ingredient.labels.map((l) => l.id).join(',')}`;
+}
