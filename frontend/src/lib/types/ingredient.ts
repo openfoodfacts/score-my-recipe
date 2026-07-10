@@ -15,6 +15,8 @@ export interface TaxonomyItem {
 	label: string;
 	/** Whether this item comes from the taxonomy (true) or is a custom user entry (false) */
 	isInTaxonomy: boolean;
+	/** Synonyms in the current language (used for matching; may be empty) */
+	synonyms?: string[];
 }
 
 /**

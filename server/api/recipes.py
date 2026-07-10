@@ -36,7 +36,7 @@ def two_letter_lang_code(lang: str) -> str:
     return lang.replace("_", "-").split("-")[0]
 
 
-async def get_origins(lang: str) -> list[types.Origin]:
+async def get_origins(lang: str, include_synonyms: bool = False) -> list[types.Origin]:
     """Get the list of origins available in the database
 
     Note: as the list is not too big, we let clients handle suggestions to users
@@ -45,8 +45,12 @@ async def get_origins(lang: str) -> list[types.Origin]:
     countries_taxonomy = await off.get_countries_taxonomy()
     origins = countries_taxonomy.iter_nodes()
     origins_list = [
-        types.Origin(id=origin[0], label=origin[1])
-        for origin in off.taxonomy_lang_label(lang, origins)
+        types.Origin(
+            id=origin_id, label=origin_label, synonyms=origin_synonyms if include_synonyms else None
+        )
+        for origin_id, origin_label, origin_synonyms in off.taxonomy_lang_label_and_synonyms(
+            lang, origins
+        )
     ]
     # sort by id for predictable order
     origins_list.sort(key=lambda x: x.id)
@@ -86,7 +90,7 @@ ALL_GREEN_SCORE_LABELS = set(
 _labels = dict()
 
 
-async def get_labels(lang: str) -> list[types.Label]:
+async def get_labels(lang: str, include_synonyms: bool = False) -> list[types.Label]:
     """Get the list of labels relevant for green-score computation
 
     The list is filtered to only include labels that impact the green-score
@@ -104,32 +108,38 @@ async def get_labels(lang: str) -> list[types.Label]:
         if missing_labels:
             # log a warning
             logger.warning(f"Missing green-score relevant labels in taxonomy: {missing_labels}")
-        labels_list = [
-            types.Label(id=label_id, label=label_label)
-            for label_id, label_label in off.taxonomy_lang_label(lang, filtered_labels)
-        ]
+        labels_list = off.taxonomy_lang_label_and_synonyms(lang, filtered_labels)
         # sort by id for predictable order
-        labels_list.sort(key=lambda x: x.id)
+        labels_list.sort(key=lambda x: x[0])
         _labels[lang] = labels_list
-    return _labels[lang]
+    return [
+        types.Label(
+            id=label_id, label=label_label, synonyms=label_synonyms if include_synonyms else None
+        )
+        for label_id, label_label, label_synonyms in _labels[lang]
+    ]
 
 
 # local caching
 _ingredients = dict()
 
 
-async def get_ingredients(lang: str) -> list[types.Ingredient]:
+async def get_ingredients(lang: str, include_synonyms: bool = False) -> list[types.Ingredient]:
     """Get the list of ingredients relevant for green-score computation"""
     lang = two_letter_lang_code(lang)
     if lang not in _ingredients:
         ingredients_taxonomy = await off.get_ingredients_taxonomy()
-        ingredients_list = [
-            types.Ingredient(id=ingredient_id, label=ingredient_label)
-            for ingredient_id, ingredient_label in off.taxonomy_lang_label(
-                lang, ingredients_taxonomy.iter_nodes()
-            )
-        ]
+        ingredients_list = off.taxonomy_lang_label_and_synonyms(
+            lang, ingredients_taxonomy.iter_nodes()
+        )
         # sort by id for predictable order
-        ingredients_list.sort(key=lambda x: x.id)
+        ingredients_list.sort(key=lambda x: x[0])
         _ingredients[lang] = ingredients_list
-    return _ingredients[lang]
+    return [
+        types.Ingredient(
+            id=ingredient_id,
+            label=ingredient_label,
+            synonyms=ingredient_synonyms if include_synonyms else None,
+        )
+        for ingredient_id, ingredient_label, ingredient_synonyms in _ingredients[lang]
+    ]

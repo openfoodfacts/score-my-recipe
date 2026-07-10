@@ -27,6 +27,14 @@ class RecipeIngredient(BaseModel):
 class TaxonomyItem(BaseModel):
     id: Annotated[str, Field(description="Taxonomy id of the item")]
     label: Annotated[str, Field(description="Name of the item")]
+    synonyms: Annotated[
+        Optional[list[str]],
+        Field(
+            default=None,
+            description="Synonyms in the requested language. "
+            "Only present in the response when include_synonyms is true.",
+        ),
+    ]
 
 
 class Origin(TaxonomyItem):
@@ -45,7 +53,22 @@ class LangRequest(BaseModel):
     lang: Annotated[str, Field(description="Language for the request (2 or 5 letter code)")]
 
 
-class OriginsRequest(LangRequest):
+class TaxonomyRequest(LangRequest):
+    """Base request model for taxonomy endpoints (origins, labels, ingredients).
+
+    Adds the option to request synonyms alongside the canonical label.
+    """
+
+    include_synonyms: Annotated[
+        bool,
+        Field(
+            default=False,
+            description="If true, include the synonyms of each item in the response.",
+        ),
+    ]
+
+
+class OriginsRequest(TaxonomyRequest):
     pass  # No additional fields for now, but we keep the class for future extensions
 
 
@@ -65,7 +88,7 @@ class Label(TaxonomyItem):
     """Label model for Score My Recipe API"""
 
 
-class LabelsRequest(LangRequest):
+class LabelsRequest(TaxonomyRequest):
     pass
 
 
@@ -79,7 +102,7 @@ class Ingredient(TaxonomyItem):
     """Ingredient model for Score My Recipe API"""
 
 
-class IngredientsRequest(LangRequest):
+class IngredientsRequest(TaxonomyRequest):
     pass
 
 

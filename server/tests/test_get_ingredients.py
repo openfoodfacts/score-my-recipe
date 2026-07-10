@@ -101,3 +101,46 @@ def test_get_ingredients_api_cache_control_header(mock_ingredients_taxonomy):
     assert response.status_code == 200
     assert "Cache-Control" in response.headers
     assert response.headers["Cache-Control"] == "max-age=86400"
+
+
+@pytest.mark.asyncio
+async def test_get_ingredients_excludes_synonyms_by_default(mock_ingredients_taxonomy):
+    """Test that get_ingredients does not populate synonyms when include_synonyms is False"""
+    result = await recipes.get_ingredients("en")
+    assert all(ingredient.synonyms is None for ingredient in result)
+
+
+@pytest.mark.asyncio
+async def test_get_ingredients_includes_synonyms_when_requested(mock_ingredients_taxonomy):
+    """Test that get_ingredients populates synonyms in the requested language"""
+    result = await recipes.get_ingredients("en", include_synonyms=True)
+    synonyms_by_id = {ingredient.id: ingredient.synonyms for ingredient in result}
+    # en:alcohol has english synonyms 'alcohol' and 'Pure alcohol'
+    assert synonyms_by_id["en:alcohol"] == ["alcohol", "Pure alcohol"]
+
+
+@pytest.mark.asyncio
+async def test_get_ingredients_synonyms_language_fallback(mock_ingredients_taxonomy):
+    """Test that synonyms are returned in the requested language when available"""
+    result_fr = await recipes.get_ingredients("fr", include_synonyms=True)
+    synonyms_by_id = {ingredient.id: ingredient.synonyms for ingredient in result_fr}
+    # fr synonyms of en:alcohol
+    assert synonyms_by_id["en:alcohol"] == ["alcool", "Alcool pur"]
+
+
+def test_get_ingredients_api_synonyms_excluded_by_default(mock_ingredients_taxonomy):
+    """Test that /v1/ingredients omits the synonyms field by default"""
+    response = client.get("/v1/ingredients", params={"lang": "en"})
+    assert response.status_code == 200
+    for ingredient in response.json()["ingredients"]:
+        assert "synonyms" not in ingredient
+
+
+def test_get_ingredients_api_returns_synonyms_when_requested(mock_ingredients_taxonomy):
+    """Test that /v1/ingredients includes synonyms when include_synonyms=true"""
+    response = client.get("/v1/ingredients", params={"lang": "en", "include_synonyms": "true"})
+    assert response.status_code == 200
+    synonyms_by_id = {
+        ingredient["id"]: ingredient["synonyms"] for ingredient in response.json()["ingredients"]
+    }
+    assert synonyms_by_id["en:alcohol"] == ["alcohol", "Pure alcohol"]
