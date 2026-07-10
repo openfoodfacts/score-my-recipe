@@ -55,7 +55,14 @@
 		"delete_ingredient": "Supprimer l'ingrédient",
 		"action": "Action",
 		"summary": "Résumé",
-		"ingredients_count": "ingrédient(s) ajouté(s)"
+		"ingredients_count": "ingrédient(s) ajouté(s)",
+		"green_score": "Green-Score",
+		"computing": "Calcul du score...",
+		"numeric_score": "Score",
+		"ignored_ingredients": "ingrédient(s) ignoré(s)",
+		"ignored_weight": "du poids total",
+		"no_score": "Aucun score disponible. Ajoutez des ingrédients avec un poids pour calculer le score.",
+		"compute_score": "Calculer le score"
 	},
 	"homepage": {
 		"title": "Score My Recipe - Open Food Facts",

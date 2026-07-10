@@ -16,6 +16,10 @@ refresh:
 dev:
     uv run uvicorn api.api:app --reload
 
+# Rebuild the Agribalyse CSV from the official XLSX export (uses cache)
+fetch-agribalyse:
+    uv run typer api/cli.py run fetch-agribalyse
+
 # Run all checks
 [group('quality')]
 check: python_check test

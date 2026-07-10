@@ -120,10 +120,65 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	'/v1/green-score': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Green Score
+		 * @description Compute the green-score of a recipe given as a list of ingredients.
+		 */
+		post: operations['green_score_v1_green_score_post'];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 }
 export type webhooks = Record<string, never>;
 export interface components {
 	schemas: {
+		/**
+		 * GreenScoreRequest
+		 * @description Request body for the green-score computation endpoint.
+		 *
+		 *     It is a thin wrapper around a list of ingredients
+		 */
+		GreenScoreRequest: {
+			/**
+			 * Ingredients
+			 * @description The ingredients of the recipe
+			 */
+			ingredients: components['schemas']['RecipeIngredientInput'][];
+		};
+		/**
+		 * GreenScoreResponse
+		 * @description Response model for the green-score computation endpoint.
+		 */
+		GreenScoreResponse: {
+			/**
+			 * Numericscore
+			 * @description The computed green-score of the recipe, null if no ingredients have a score
+			 */
+			numericScore?: number | null;
+			/**
+			 * Lettergrade
+			 * @description The letter grade corresponding to the numeric score, null if no ingredients have a score
+			 */
+			letterGrade?: string | null;
+			/**
+			 * Missingingredientids
+			 * @description List of ingredient ids that were missing from the Agribalyse computation
+			 * @default []
+			 */
+			missingIngredientIds: string[];
+		};
 		/** HTTPValidationError */
 		HTTPValidationError: {
 			/** Detail */
@@ -231,6 +286,43 @@ export interface components {
 			quantity_g?: number | null;
 		};
 		/**
+		 * RecipeIngredientInput
+		 * @description A single ingredient of a recipe
+		 */
+		RecipeIngredientInput: {
+			/**
+			 * Id
+			 * @description Unique identifier for the ingredient
+			 */
+			id: string;
+			/**
+			 * Name
+			 * @description Display name of the ingredient
+			 */
+			name: string;
+			/**
+			 * Weight
+			 * @description Weight in grams
+			 */
+			weight: number;
+			/** @description Codified ingredient */
+			codifiedIngredient: components['schemas']['TaxonomyItem'];
+			/**
+			 * Labels
+			 * @description Labels / certifications (organic, fair-trade...)
+			 * @default []
+			 */
+			labels: components['schemas']['TaxonomyItem'][];
+			/**
+			 * Seasonality
+			 * @description Whether the ingredient is seasonal
+			 * @default false
+			 */
+			seasonality: boolean;
+			/** @description Origin country/region, null if unspecified */
+			origin?: components['schemas']['TaxonomyItem'] | null;
+		};
+		/**
 		 * RecipeParseRequest
 		 * @description Request model for parse_text endpoint
 		 */
@@ -250,6 +342,30 @@ export interface components {
 		RecipeParseResponse: {
 			/** Ingredients */
 			ingredients: components['schemas']['RecipeIngredient'][];
+		};
+		/**
+		 * TaxonomyItem
+		 * @description A taxonomy reference with an id and a localized label.
+		 *
+		 *     Mirrors the frontend `TaxonomyItem` (used for codified ingredients, labels
+		 *     and origins).
+		 */
+		TaxonomyItem: {
+			/**
+			 * Id
+			 * @description Taxonomy identifier
+			 */
+			id: string;
+			/**
+			 * Label
+			 * @description Display label in the current language
+			 */
+			label: string;
+			/**
+			 * Isintaxonomy
+			 * @description Whether the item comes from the taxonomy (true) or is custom
+			 */
+			isInTaxonomy: boolean;
 		};
 		/** ValidationError */
 		ValidationError: {
@@ -439,6 +555,39 @@ export interface operations {
 				};
 				content: {
 					'application/json': components['schemas']['IngredientsResponse'];
+				};
+			};
+			/** @description Validation Error */
+			422: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					'application/json': components['schemas']['HTTPValidationError'];
+				};
+			};
+		};
+	};
+	green_score_v1_green_score_post: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				'application/json': components['schemas']['GreenScoreRequest'];
+			};
+		};
+		responses: {
+			/** @description Successful Response */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					'application/json': components['schemas']['GreenScoreResponse'];
 				};
 			};
 			/** @description Validation Error */

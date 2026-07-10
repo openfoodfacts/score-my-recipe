@@ -12,6 +12,10 @@ class Settings(BaseSettings):
         "./data/cache"
     )
 
+    agribalyse_csv_path: Annotated[
+        Path, Field(description="Path to the merged Agribalyse Synthese CSV file")
+    ] = Path("./data/agribalyse.csv")
+
 
 _settings: Settings | None = None
 

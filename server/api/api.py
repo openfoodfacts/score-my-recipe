@@ -11,6 +11,7 @@ from fastapi import FastAPI, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 import api.recipes as recipes
+import api.score as score
 import api.types as types
 
 app = FastAPI(
@@ -86,3 +87,9 @@ async def get_ingredients(
     ingredients = await recipes.get_ingredients(filter_query.lang, filter_query.include_synonyms)
     response.headers["Cache-Control"] = "max-age=86400"
     return types.IngredientsResponse(ingredients=ingredients)
+
+
+@app.post("/v1/green-score")
+async def green_score(request: types.GreenScoreRequest) -> types.GreenScoreResponse:
+    """Compute the green-score of a recipe given as a list of ingredients."""
+    return await score.compute_green_score(request.ingredients)

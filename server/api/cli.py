@@ -46,5 +46,30 @@ def export_openapi(
     print(f"spec written to {target_path}")
 
 
+@cli.command()
+def fetch_agribalyse(
+    out: Path = typer.Option(Path("data/agribalyse.csv"), help="Output CSV file path."),
+    cache_dir: Path = typer.Option(
+        Path("data/cache"), help="Directory where the downloaded XLSX is cached."
+    ),
+    no_cache: bool = typer.Option(
+        False, "--no-cache", help="Force re-download of the XLSX export."
+    ),
+):
+    """Download the Agribalyse XLSX export and rebuild the Synthese CSV.
+
+    The heavy lifting lives in :mod:`api.agribalyse`; this command only wires
+    the options through.
+    """
+    import sys
+
+    # add server/ to path so `api` is importable when run as a script
+    sys.path.append(str(Path(__file__).parent.parent))
+
+    from api import agribalyse
+
+    raise SystemExit(agribalyse.fetch_agribalyse(out, cache_dir, no_cache))
+
+
 def main() -> None:
     cli()

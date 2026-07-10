@@ -1,26 +1,29 @@
 <!--
   Recipe Editor Page
-  
+
   Main page for creating and editing recipes.
-  Displays a list of ingredients with dynamic line addition when typing in the last empty line.
-  
+  Holds the shared state (ingredients + green-score) and orchestrates the
+  computation. The row edition logic lives in `RecipeRowEditor` and the score
+  display (logo + limitations) lives in `ScoreDisplay`.
+
   Features:
   - Dynamic ingredient lines (adds new line when typing in the last empty line)
-  - Delete ingredient lines (except the last empty line)
-  - Uses taxonomy data for codified ingredients, labels, and origin countries
+  - Computes the green-score automatically after a delay of inactivity or on demand
 -->
 <script lang="ts">
 	import { _ } from '$lib/i18n';
 	import { page } from '$app/state';
-	import IngredientLine from '$lib/ui/IngredientLine.svelte';
+	import RecipeRowEditor from '$lib/ui/RecipeRowEditor.svelte';
+	import ScoreDisplay from '$lib/ui/ScoreDisplay.svelte';
 	import { createEmptyIngredient } from '$lib/types/ingredient';
-	import {
-		removeIngredientFromList,
-		addEmptyIngredientIfNeeded,
-		countNonEmptyIngredients
-	} from '$lib/types/ingredientsList';
+	import { addEmptyIngredientIfNeeded, countNonEmptyIngredients } from '$lib/types/ingredientsList';
 	import type { IngredientsList } from '$lib/types/ingredientsList';
-	import type { Ingredient } from '$lib/types/ingredient';
+	import {
+		isIngredientNotEmpty,
+		ingredientSignature,
+		type Ingredient
+	} from '$lib/types/ingredient';
+	import { computeGreenScore, type GreenScoreResponse } from '$lib/api/recipe';
 
 	/**
 	 * Initial ingredients coming from the `/add` page (passed via `goto` state).
@@ -36,22 +39,91 @@
 		return [createEmptyIngredient()];
 	}
 
+	// --- Shared state -------------------------------------------------------
 	// Recipe state - starts with one empty ingredient line, or with parsed ingredients from /add
 	let ingredients = $state<IngredientsList>(getInitialIngredients());
 
-	/**
-	 * Handle delete of an ingredient
-	 */
-	function handleIngredientDelete(id: string) {
-		ingredients = removeIngredientFromList(ingredients, id);
-	}
+	// --- Green-score state -------------------------------------------------
+	// The latest computed score response (null until computed or while loading).
+	let greenScore = $state<GreenScoreResponse | null>(null);
+	let isScoreLoading = $state(false);
+	let scoreError = $state<string | null>(null);
+	let currentScoreRequestController = $state<AbortController | null>(null);
+
+	/** Inactivity delay (in ms) before the green-score is recomputed automatically. */
+	const SCORE_INACTIVITY_DELAY = 3000;
 
 	/**
-	 * Add an empty line - when last line is no more empty
+	 * Signature of the ingredients' relevant fields, used to detect changes and
+	 * reset the inactivity timer.
 	 */
-	function addIngredientLine() {
-		ingredients = addEmptyIngredientIfNeeded(ingredients);
+	let ingredientsSignature = $derived(ingredients.map(ingredientSignature).join('|'));
+
+	/**
+	 * Total weight (in grams) of the non-empty ingredients sent to the backend.
+	 */
+	let totalWeight = $derived(
+		ingredients.filter(isIngredientNotEmpty).reduce((sum, i) => sum + (i.weight ?? 0), 0)
+	);
+
+	/**
+	 * Total weight (in grams) of the ingredients that were ignored by the
+	 * backend (i.e. whose id appears in the missing list of the last response).
+	 */
+	let ignoredWeight = $derived.by(() => {
+		if (!greenScore) return 0;
+		const missing = new Set(greenScore.missingIngredientIds);
+		return ingredients
+			.filter((i) => missing.has(i.id))
+			.reduce((sum, i) => sum + (i.weight ?? 0), 0);
+	});
+
+	/** Number of non-empty ingredients currently in the editor. */
+	let nonEmptyIngredientCount = $derived(countNonEmptyIngredients(ingredients));
+
+	/**
+	 * Compute the green-score for the current ingredients.
+	 *
+	 * Guards against concurrent computations: only the result of the most recent
+	 * call is applied, earlier (stale) results are discarded. Captures errors
+	 * from the latest call only.
+	 */
+	async function fetchGreenScore() {
+		currentScoreRequestController?.abort(); // abort previous request
+		// Only compute when there is at least one non-empty ingredient
+		if (!ingredients.some(isIngredientNotEmpty)) {
+			currentScoreRequestController = null;
+			isScoreLoading = false;
+			greenScore = null;
+			isScoreLoading = false;
+			return;
+		}
+		const requestController = new AbortController();
+		currentScoreRequestController = requestController;
+		isScoreLoading = true;
+		scoreError = null;
+		try {
+			greenScore = await computeGreenScore(ingredients, requestController.signal);
+		} catch (e) {
+			if (e instanceof DOMException && e.name === 'AbortError') return;
+			scoreError = e instanceof Error ? e.message : 'An error occurred';
+			greenScore = null;
+		} finally {
+			if (currentScoreRequestController === requestController) {
+				currentScoreRequestController = null;
+				isScoreLoading = false;
+			}
+		}
 	}
+
+	// Reset the inactivity timer whenever the ingredients change.
+	// After the delay without edits, the score is recomputed automatically.
+	$effect(() => {
+		// Read the signature so the effect re-runs on any ingredient change
+		void ingredientsSignature;
+		const timer = setTimeout(fetchGreenScore, SCORE_INACTIVITY_DELAY);
+		return () => clearTimeout(timer);
+	});
 </script>
 
 <svelte:head>
@@ -67,25 +139,39 @@
 		</p>
 	</div>
 
-	<!-- Ingredients List -->
-	<div class="space-y-4">
-		{#each ingredients as ingredient, index (ingredient.id)}
-			<IngredientLine
-				bind:ingredient={ingredients[index]}
-				isLastItem={index === ingredients.length - 1}
-				isFirstItem={index === 0}
-				onDelete={handleIngredientDelete}
-				onNotEmpty={addIngredientLine}
-			/>
-		{/each}
+	<!-- Ingredients List (row edition logic delegated to RecipeRowEditor) -->
+	<RecipeRowEditor bind:ingredients />
+
+	<!-- Actions -->
+	<div class="mt-6 flex items-center gap-4">
+		<button
+			class="btn btn-primary"
+			onclick={fetchGreenScore}
+			disabled={isScoreLoading || !ingredients.some(isIngredientNotEmpty)}
+		>
+			{#if isScoreLoading}
+				<span class="loading loading-spinner loading-sm"></span>
+			{/if}
+			{$_('recipe.compute_score', { default: 'Compute score' })}
+		</button>
 	</div>
 
 	<!-- Summary -->
 	<div class="bg-base-200 mt-8 rounded-lg p-4">
 		<h2 class="text-lg font-semibold">{$_('recipe.summary', { default: 'Summary' })}</h2>
 		<p class="text-base-content/70 mt-1">
-			{countNonEmptyIngredients(ingredients)}
+			{nonEmptyIngredientCount}
 			{$_('recipe.ingredients_count', { default: 'ingredient(s) added' })}
 		</p>
 	</div>
+
+	<!-- Green Score display (logo + limitations) -->
+	<ScoreDisplay
+		score={greenScore}
+		totalIngredientCount={nonEmptyIngredientCount}
+		{totalWeight}
+		{ignoredWeight}
+		isLoading={isScoreLoading}
+		error={scoreError}
+	/>
 </div>
