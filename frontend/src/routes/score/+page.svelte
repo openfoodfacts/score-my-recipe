@@ -48,6 +48,7 @@
 	let greenScore = $state<GreenScoreResponse | null>(null);
 	let isScoreLoading = $state(false);
 	let scoreError = $state<string | null>(null);
+	let currentScoreRequestController = $state<AbortController | null>(null);
 
 	/** Inactivity delay (in ms) before the green-score is recomputed automatically. */
 	const SCORE_INACTIVITY_DELAY = 3000;
@@ -87,18 +88,28 @@
 	async function fetchGreenScore() {
 		// Only compute when there is at least one non-empty ingredient
 		if (!ingredients.some(isIngredientNotEmpty)) {
+			currentScoreRequestController?.abort();
+			currentScoreRequestController = null;
+			isScoreLoading = false;
 			greenScore = null;
 			return;
 		}
+		currentScoreRequestController?.abort();
+		const requestController = new AbortController();
+		currentScoreRequestController = requestController;
 		isScoreLoading = true;
 		scoreError = null;
 		try {
-			greenScore = await computeGreenScore(ingredients);
+			greenScore = await computeGreenScore(ingredients, requestController.signal);
 		} catch (e) {
+			if (e instanceof DOMException && e.name === 'AbortError') return;
 			scoreError = e instanceof Error ? e.message : 'An error occurred';
 			greenScore = null;
 		} finally {
-			isScoreLoading = false;
+			if (currentScoreRequestController === requestController) {
+				currentScoreRequestController = null;
+				isScoreLoading = false;
+			}
 		}
 	}
 

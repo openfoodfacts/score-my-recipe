@@ -128,14 +128,18 @@ export function ingredientToGreenScoreInput(
  * @returns The green-score response from the backend.
  * @throws {Error} If the backend responds with a non-2xx status code.
  */
-export async function computeGreenScore(ingredients: IngredientsList): Promise<GreenScoreResponse> {
+export async function computeGreenScore(
+	ingredients: IngredientsList,
+	signal?: AbortSignal
+): Promise<GreenScoreResponse> {
 	const payload: GreenScoreRequest = {
 		ingredients: ingredients.filter(isIngredientNotEmpty).map(ingredientToGreenScoreInput)
 	};
 	const response = await fetch(`${API_BASE_URL}/v1/green-score`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify(payload)
+		body: JSON.stringify(payload),
+		signal
 	});
 
 	if (!response.ok) {
