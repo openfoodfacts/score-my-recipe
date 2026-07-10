@@ -30,10 +30,10 @@ CIQUAL_CODE_COLUMN = "ciqual_code"
 # Taxonomy property names searched, in priority order, on each ingredient node
 # and its parents. The CSV column is derived from the property prefix.
 INGREDIENT_CODE_PROPERTIES: list[str] = [
-    "agribalyse_code",
-    "agribalyse_proxy_code",
-    "ciqual_code",
-    "ciqual_proxy_code",
+    "agribalyse_food_code",
+    "agribalyse_proxy_food_code",
+    "ciqual_food_code",
+    "ciqual_proxy_food_code",
 ]
 
 # Lazy caches for the Agribalyse lookup tables, keyed by code column value.

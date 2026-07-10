@@ -57,7 +57,7 @@ async def recipe_ef_score(recipe: types.RecipeInput) -> tuple[Optional[float], l
     ef_score_sum = 0.0
     missing_ingredient_ids = []
     for ingredient in recipe:
-        if ingredient.weight <= 0:
+        if ingredient.weight < 0:
             raise ValueError(
                 f"Ingredient {ingredient.id} has non-positive weight {ingredient.weight}, cannot compute EF score."
             )
@@ -65,8 +65,8 @@ async def recipe_ef_score(recipe: types.RecipeInput) -> tuple[Optional[float], l
             missing_ingredient_ids.append(ingredient.id)
             continue
         agribalyse_row = ingredients_agribalyse[ingredient.id].agribalyse
-        if agribalyse_row and "ef_score" in agribalyse_row:
-            ef_score_sum += agribalyse_row["ef_score"] * ingredient.weight
+        if agribalyse_row and "score" in agribalyse_row:
+            ef_score_sum += float(agribalyse_row["score"]) * ingredient.weight
             total_weight += ingredient.weight
         else:
             missing_ingredient_ids.append(ingredient.id)
