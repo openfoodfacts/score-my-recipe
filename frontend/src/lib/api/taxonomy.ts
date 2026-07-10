@@ -43,19 +43,33 @@ export async function getMatchingTags(
 	if (Object.hasOwn(values, tagtype)) {
 		const list = await values[tagtype as keyof typeof values];
 		const fuse = new Fuse(list, {
-			keys: ['label'],
+			// search both the canonical label and the synonyms so that
+			// alternative names also yield a match
+			keys: ['label', 'synonyms'],
 			includeScore: true,
+			includeMatches: true,
 			minMatchCharLength: 3,
 			ignoreDiacritics: true
 		});
-		const suggestions = fuse
+		const results = fuse
 			.search(query)
 			.sort((a, b) => (a.score ?? 0) - (b.score ?? 0))
-			.slice(0, limit)
-			.map((result) => result.item);
+			.slice(0, limit);
+		const suggestions = results.map((result) => result.item);
+		// for each suggestion, collect the synonyms that actually matched the query
+		// (matches on the 'synonyms' key carry the matched synonym string as value)
+		const matched_synonyms: Record<string, string[]> = {};
+		for (const result of results) {
+			const matched = (result.matches ?? [])
+				.filter((m) => m.key === 'synonyms' && typeof m.value === 'string')
+				.map((m) => m.value as string);
+			if (matched.length > 0) {
+				matched_synonyms[result.item.id] = [...new Set(matched)];
+			}
+		}
 		return {
 			suggestions,
-			matched_synonyms: {}
+			matched_synonyms
 		};
 	}
 
@@ -217,11 +231,16 @@ function getLocaleKey(): 'en' | 'fr' {
 
 /**
  * Fetch the ingredients taxonomy from the backend API
+ * @param includeSynonyms whether to also fetch synonyms (defaults to true, used for matching)
  * @returns Promise resolving to the list of ingredient taxonomy items
  */
-export async function getIngredientsTaxonomy(): Promise<TaxonomyItem[]> {
+export async function getIngredientsTaxonomy(includeSynonyms = true): Promise<TaxonomyItem[]> {
 	const lang = getLocaleKey();
-	const response = await fetch(`${API_BASE_URL}/v1/ingredients?lang=${encodeURIComponent(lang)}`);
+	const params = new URLSearchParams({ lang });
+	if (includeSynonyms) {
+		params.set('include_synonyms', 'true');
+	}
+	const response = await fetch(`${API_BASE_URL}/v1/ingredients?${params.toString()}`);
 	if (!response.ok) {
 		throw new Error(`Failed to fetch ingredients: ${response.statusText}`);
 	}
@@ -229,17 +248,23 @@ export async function getIngredientsTaxonomy(): Promise<TaxonomyItem[]> {
 	return data.ingredients.map((ingredient) => ({
 		id: ingredient.id,
 		label: ingredient.label,
-		isInTaxonomy: true
+		isInTaxonomy: true,
+		synonyms: ingredient.synonyms ?? []
 	}));
 }
 
 /**
  * Fetch the labels taxonomy from the backend API
+ * @param includeSynonyms whether to also fetch synonyms (defaults to true, used for matching)
  * @returns Promise resolving to the list of label taxonomy items
  */
-export async function getLabelsTaxonomy(): Promise<TaxonomyItem[]> {
+export async function getLabelsTaxonomy(includeSynonyms = true): Promise<TaxonomyItem[]> {
 	const lang = getLocaleKey();
-	const response = await fetch(`${API_BASE_URL}/v1/labels?lang=${encodeURIComponent(lang)}`);
+	const params = new URLSearchParams({ lang });
+	if (includeSynonyms) {
+		params.set('include_synonyms', 'true');
+	}
+	const response = await fetch(`${API_BASE_URL}/v1/labels?${params.toString()}`);
 	if (!response.ok) {
 		throw new Error(`Failed to fetch labels: ${response.statusText}`);
 	}
@@ -247,17 +272,23 @@ export async function getLabelsTaxonomy(): Promise<TaxonomyItem[]> {
 	return data.labels.map((label) => ({
 		id: label.id,
 		label: label.label,
-		isInTaxonomy: true
+		isInTaxonomy: true,
+		synonyms: label.synonyms ?? []
 	}));
 }
 
 /**
  * Fetch the countries taxonomy from the backend API
+ * @param includeSynonyms whether to also fetch synonyms (defaults to true, used for matching)
  * @returns Promise resolving to the list of country taxonomy items
  */
-export async function getCountriesTaxonomy(): Promise<TaxonomyItem[]> {
+export async function getCountriesTaxonomy(includeSynonyms = true): Promise<TaxonomyItem[]> {
 	const lang = getLocaleKey();
-	const response = await fetch(`${API_BASE_URL}/v1/origins?lang=${encodeURIComponent(lang)}`);
+	const params = new URLSearchParams({ lang });
+	if (includeSynonyms) {
+		params.set('include_synonyms', 'true');
+	}
+	const response = await fetch(`${API_BASE_URL}/v1/origins?${params.toString()}`);
 	if (!response.ok) {
 		throw new Error(`Failed to fetch origins: ${response.statusText}`);
 	}
@@ -265,6 +296,7 @@ export async function getCountriesTaxonomy(): Promise<TaxonomyItem[]> {
 	return data.origins.map((origin) => ({
 		id: origin.id,
 		label: origin.label,
-		isInTaxonomy: true
+		isInTaxonomy: true,
+		synonyms: origin.synonyms ?? []
 	}));
 }

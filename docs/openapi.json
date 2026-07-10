@@ -101,6 +101,18 @@
               "title": "Lang"
             },
             "description": "Language for the request (2 or 5 letter code)"
+          },
+          {
+            "name": "include_synonyms",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "If true, include the synonyms of each item in the response.",
+              "default": false,
+              "title": "Include Synonyms"
+            },
+            "description": "If true, include the synonyms of each item in the response."
           }
         ],
         "responses": {
@@ -143,6 +155,18 @@
               "title": "Lang"
             },
             "description": "Language for the request (2 or 5 letter code)"
+          },
+          {
+            "name": "include_synonyms",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "If true, include the synonyms of each item in the response.",
+              "default": false,
+              "title": "Include Synonyms"
+            },
+            "description": "If true, include the synonyms of each item in the response."
           }
         ],
         "responses": {
@@ -185,6 +209,18 @@
               "title": "Lang"
             },
             "description": "Language for the request (2 or 5 letter code)"
+          },
+          {
+            "name": "include_synonyms",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "If true, include the synonyms of each item in the response.",
+              "default": false,
+              "title": "Include Synonyms"
+            },
+            "description": "If true, include the synonyms of each item in the response."
           }
         ],
         "responses": {
@@ -238,6 +274,21 @@
             "type": "string",
             "title": "Label",
             "description": "Name of the item"
+          },
+          "synonyms": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Synonyms",
+            "description": "Synonyms in the requested language. Only present in the response when include_synonyms is true."
           }
         },
         "type": "object",
@@ -276,6 +327,21 @@
             "type": "string",
             "title": "Label",
             "description": "Name of the item"
+          },
+          "synonyms": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Synonyms",
+            "description": "Synonyms in the requested language. Only present in the response when include_synonyms is true."
           }
         },
         "type": "object",
@@ -314,6 +380,21 @@
             "type": "string",
             "title": "Label",
             "description": "Name of the item"
+          },
+          "synonyms": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Synonyms",
+            "description": "Synonyms in the requested language. Only present in the response when include_synonyms is true."
           }
         },
         "type": "object",

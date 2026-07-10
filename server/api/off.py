@@ -37,20 +37,21 @@ async def parse_text(text: str, lang: str) -> list[OFFIngredient]:
     return [OFFIngredient(**ingredient) for ingredient in ingredients_data]
 
 
-def taxonomy_lang_label(
+def taxonomy_lang_label_and_synonyms(
     lang: str, entries: Iterable[taxonomy.TaxonomyNode]
-) -> list[tuple[str, str]]:
-    """Get the list of (id, label) for a given language from a list of taxonomy entries
+) -> list[tuple[str, str, list[str]]]:
+    """Get the list of (id, label, synonyms) for a given language from a list of
+    taxonomy entries.
 
-    It falls back to xx or english if the label is not available in the requested language.
+    Both label and synonyms fall back to the "xx" (neutral) language then to
+    english if they are not available in the requested language.
     """
-    return [
-        (
-            entry.id,
-            entry.names.get(lang, entry.names.get("xx", entry.names.get("en", entry.id))),
-        )
-        for entry in entries
-    ]
+    result: list[tuple[str, str, list[str]]] = []
+    for entry in entries:
+        label = entry.names.get(lang, entry.names.get("xx", entry.names.get("en", entry.id)))
+        synonyms = entry.synonyms.get(lang, entry.synonyms.get("xx", entry.synonyms.get("en", [])))
+        result.append((entry.id, label, synonyms))
+    return result
 
 
 async def get_countries_taxonomy() -> taxonomy.Taxonomy:
