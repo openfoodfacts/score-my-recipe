@@ -44,7 +44,10 @@
 		const matching = Object.entries(scoreLogos).find(([path]) =>
 			path.endsWith(`green-score-${key}.svg`)
 		);
-		return matching?.[1] ?? scoreLogos['green-score-unknown.svg'] ?? '';
+		const unknown = Object.entries(scoreLogos).find(([path]) =>
+			path.endsWith('green-score-unknown.svg')
+		)?.[1];
+		return matching?.[1] ?? unknown ?? '';
 	});
 </script>
 
