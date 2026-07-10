@@ -32,7 +32,7 @@
 			{$_('homepage.hero_description')}
 		</p>
 		<div class="flex items-center justify-center">
-			<a href={resolve('/score')} class="btn btn-primary btn-lg">
+			<a href={resolve('/add')} class="btn btn-primary btn-lg">
 				{$_('homepage.cta_recipe_calculator')}
 			</a>
 		</div>
