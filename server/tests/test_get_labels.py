@@ -84,3 +84,46 @@ def test_get_labels_api_cache_control_header(mock_labels_taxonomy):
     assert response.status_code == 200
     assert "Cache-Control" in response.headers
     assert response.headers["Cache-Control"] == "max-age=86400"
+
+
+@pytest.mark.asyncio
+async def test_get_labels_excludes_synonyms_by_default(mock_labels_taxonomy):
+    """Test that get_labels does not populate synonyms when include_synonyms is False"""
+    result = await recipes.get_labels("en")
+    assert all(label.synonyms is None for label in result)
+
+
+@pytest.mark.asyncio
+async def test_get_labels_includes_synonyms_when_requested(mock_labels_taxonomy):
+    """Test that get_labels populates synonyms in the requested language"""
+    result = await recipes.get_labels("en", include_synonyms=True)
+    synonyms_by_id = {label.id: label.synonyms for label in result}
+    # en:demeter has a single english synonym 'Demeter'
+    assert synonyms_by_id["en:demeter"] == ["Demeter"]
+    # en:fair-trade english synonyms
+    assert synonyms_by_id["en:fair-trade"] == ["Fair trade", "Fairtrade"]
+
+
+@pytest.mark.asyncio
+async def test_get_labels_synonyms_language_fallback(mock_labels_taxonomy):
+    """Test that synonyms are returned in the requested language when available"""
+    result_fr = await recipes.get_labels("fr", include_synonyms=True)
+    synonyms_by_id = {label.id: label.synonyms for label in result_fr}
+    # fr:label-rouge only has 'xx' and 'fr' synonyms
+    assert synonyms_by_id["fr:label-rouge"] == ["Label Rouge"]
+
+
+def test_get_labels_api_synonyms_excluded_by_default(mock_labels_taxonomy):
+    """Test that /v1/labels omits the synonyms field by default"""
+    response = client.get("/v1/labels", params={"lang": "en"})
+    assert response.status_code == 200
+    for label in response.json()["labels"]:
+        assert "synonyms" not in label
+
+
+def test_get_labels_api_returns_synonyms_when_requested(mock_labels_taxonomy):
+    """Test that /v1/labels includes synonyms when include_synonyms=true"""
+    response = client.get("/v1/labels", params={"lang": "en", "include_synonyms": "true"})
+    assert response.status_code == 200
+    synonyms_by_id = {label["id"]: label["synonyms"] for label in response.json()["labels"]}
+    assert synonyms_by_id["en:demeter"] == ["Demeter"]

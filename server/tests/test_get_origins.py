@@ -1,5 +1,5 @@
 from unittest.mock import patch, AsyncMock
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import pytest
 from fastapi.testclient import TestClient
@@ -18,6 +18,7 @@ class MockTaxonomyNode:
 
     id: str
     names: dict
+    synonyms: dict = field(default_factory=dict)
 
 
 class MockTaxonomy:
@@ -37,14 +38,17 @@ def mock_countries_taxonomy():
         MockTaxonomyNode(
             id="en:france",
             names={"en": "France", "fr": "France", "xx": "France"},
+            synonyms={"en": ["French Republic"], "fr": ["République française"]},
         ),
         MockTaxonomyNode(
             id="en:italy",
             names={"en": "Italy", "it": "Italia", "fr": "Italie", "xx": "Italy"},
+            synonyms={"en": ["Italian Republic"], "fr": ["République italienne"]},
         ),
         MockTaxonomyNode(
             id="en:spain",
             names={"en": "Spain", "es": "España", "fr": "Espagne", "xx": "Spain"},
+            synonyms={"en": ["Kingdom of Spain"], "fr": ["Royaume d'Espagne"]},
         ),
         MockTaxonomyNode(
             id="en:germany",
@@ -53,6 +57,10 @@ def mock_countries_taxonomy():
                 "de": "Deutschland",
                 "fr": "Allemagne",
                 "xx": "Germany",
+            },
+            synonyms={
+                "en": ["Federal Republic of Germany"],
+                "fr": ["République fédérale d'Allemagne"],
             },
         ),
     ]
@@ -123,3 +131,45 @@ def test_get_origins_api_cache_control_header(mock_countries_taxonomy):
     assert response.status_code == 200
     assert "Cache-Control" in response.headers
     assert response.headers["Cache-Control"] == "max-age=86400"
+
+
+@pytest.mark.asyncio
+async def test_get_origins_excludes_synonyms_by_default(mock_countries_taxonomy):
+    """Test that get_origins does not populate synonyms when include_synonyms is False"""
+    result = await recipes.get_origins("en")
+    assert all(origin.synonyms is None for origin in result)
+
+
+@pytest.mark.asyncio
+async def test_get_origins_includes_synonyms_when_requested(mock_countries_taxonomy):
+    """Test that get_origins populates synonyms in the requested language"""
+    result = await recipes.get_origins("en", include_synonyms=True)
+    synonyms_by_id = {origin.id: origin.synonyms for origin in result}
+    assert synonyms_by_id["en:france"] == ["French Republic"]
+    assert synonyms_by_id["en:italy"] == ["Italian Republic"]
+
+
+@pytest.mark.asyncio
+async def test_get_origins_synonyms_language_fallback(mock_countries_taxonomy):
+    """Test that synonyms fall back to english when not available in requested language"""
+    # Italy has no spanish synonyms, should fall back to english
+    result_es = await recipes.get_origins("es", include_synonyms=True)
+    italy = next(origin for origin in result_es if origin.id == "en:italy")
+    assert italy.synonyms == ["Italian Republic"]
+
+
+def test_get_origins_api_synonyms_excluded_by_default(mock_countries_taxonomy):
+    """Test that /v1/origins omits the synonyms field by default"""
+    response = client.get("/v1/origins", params={"lang": "en"})
+    assert response.status_code == 200
+    for origin in response.json()["origins"]:
+        assert "synonyms" not in origin
+
+
+def test_get_origins_api_returns_synonyms_when_requested(mock_countries_taxonomy):
+    """Test that /v1/origins includes synonyms when include_synonyms=true"""
+    response = client.get("/v1/origins", params={"lang": "en", "include_synonyms": "true"})
+    assert response.status_code == 200
+    synonyms_by_id = {origin["id"]: origin["synonyms"] for origin in response.json()["origins"]}
+    assert synonyms_by_id["en:france"] == ["French Republic"]
+    assert synonyms_by_id["en:germany"] == ["Federal Republic of Germany"]

@@ -199,6 +199,11 @@ export interface components {
 			 * @description Name of the item
 			 */
 			label: string;
+			/**
+			 * Synonyms
+			 * @description Synonyms in the requested language. Only present in the response when include_synonyms is true.
+			 */
+			synonyms?: string[] | null;
 		};
 		/**
 		 * IngredientsResponse
@@ -223,6 +228,11 @@ export interface components {
 			 * @description Name of the item
 			 */
 			label: string;
+			/**
+			 * Synonyms
+			 * @description Synonyms in the requested language. Only present in the response when include_synonyms is true.
+			 */
+			synonyms?: string[] | null;
 		};
 		/**
 		 * LabelsResponse
@@ -247,6 +257,11 @@ export interface components {
 			 * @description Name of the item
 			 */
 			label: string;
+			/**
+			 * Synonyms
+			 * @description Synonyms in the requested language. Only present in the response when include_synonyms is true.
+			 */
+			synonyms?: string[] | null;
 		};
 		/**
 		 * OriginsResponse
@@ -456,6 +471,8 @@ export interface operations {
 			query: {
 				/** @description Language for the request (2 or 5 letter code) */
 				lang: string;
+				/** @description If true, include the synonyms of each item in the response. */
+				include_synonyms?: boolean;
 			};
 			header?: never;
 			path?: never;
@@ -488,6 +505,8 @@ export interface operations {
 			query: {
 				/** @description Language for the request (2 or 5 letter code) */
 				lang: string;
+				/** @description If true, include the synonyms of each item in the response. */
+				include_synonyms?: boolean;
 			};
 			header?: never;
 			path?: never;
@@ -520,6 +539,8 @@ export interface operations {
 			query: {
 				/** @description Language for the request (2 or 5 letter code) */
 				lang: string;
+				/** @description If true, include the synonyms of each item in the response. */
+				include_synonyms?: boolean;
 			};
 			header?: never;
 			path?: never;

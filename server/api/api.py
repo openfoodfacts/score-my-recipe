@@ -56,7 +56,7 @@ async def parse_text(request: types.RecipeParseRequest) -> types.RecipeParseResp
     return types.RecipeParseResponse(ingredients=ingredients)
 
 
-@app.get("/v1/origins")
+@app.get("/v1/origins", response_model_exclude_none=True)
 async def get_origins(
     filter_query: Annotated[types.OriginsRequest, Query()], response: Response
 ) -> types.OriginsResponse:
@@ -64,27 +64,27 @@ async def get_origins(
 
     Note: as the list is not too big, we let clients handle suggestions to users
     """
-    origins = await recipes.get_origins(filter_query.lang)
+    origins = await recipes.get_origins(filter_query.lang, filter_query.include_synonyms)
     response.headers["Cache-Control"] = "max-age=86400"
     return types.OriginsResponse(origins=origins)
 
 
-@app.get("/v1/labels")
+@app.get("/v1/labels", response_model_exclude_none=True)
 async def get_labels(
     filter_query: Annotated[types.LabelsRequest, Query()], response: Response
 ) -> types.LabelsResponse:
     """Get the list of labels relevant for green-score computation"""
-    labels = await recipes.get_labels(filter_query.lang)
+    labels = await recipes.get_labels(filter_query.lang, filter_query.include_synonyms)
     response.headers["Cache-Control"] = "max-age=86400"
     return types.LabelsResponse(labels=labels)
 
 
-@app.get("/v1/ingredients")
+@app.get("/v1/ingredients", response_model_exclude_none=True)
 async def get_ingredients(
     filter_query: Annotated[types.IngredientsRequest, Query()], response: Response
 ) -> types.IngredientsResponse:
     """Get the list of ingredients relevant for green-score computation"""
-    ingredients = await recipes.get_ingredients(filter_query.lang)
+    ingredients = await recipes.get_ingredients(filter_query.lang, filter_query.include_synonyms)
     response.headers["Cache-Control"] = "max-age=86400"
     return types.IngredientsResponse(ingredients=ingredients)
 
