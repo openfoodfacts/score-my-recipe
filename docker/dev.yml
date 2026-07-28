@@ -1,0 +1,17 @@
+# Docker compose to test for the deployment image,
+# Must be composed with the main docker-compose.yml file
+
+# Right now this is only used to test the deployment image,
+# Not (yet) to develop using docker
+
+services:
+  score_my_recipe_frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+  score_my_recipe_server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    volumes:
+    - ./server/data:/app/data

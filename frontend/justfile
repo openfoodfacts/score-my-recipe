@@ -13,7 +13,7 @@ help:
 
 # Refresh dependencies locally
 refresh:
-    {{ use_nvm }} && pnpm install --frozen-lockfile
+    {{ use_nvm }} && pnpm install
 
 # Run dev server
 dev:
