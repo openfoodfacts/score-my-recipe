@@ -1,0 +1,5 @@
+
+volumes:
+  server_data:
+    name: $COMPOSE_PROJECT_NAME-server_data
+    external: true

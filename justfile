@@ -31,6 +31,14 @@ refresh:
   {{ just_server }} refresh
 
 # ===========================================
+# PROD
+# ===========================================
+
+[group('prod')]
+create_external_volumes:
+    docker volume create --name $COMPOSE_PROJECT_NAME-server_data
+
+# ===========================================
 # DEVELOPMENT
 # ===========================================
 
