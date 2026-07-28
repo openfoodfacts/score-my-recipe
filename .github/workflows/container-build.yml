@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   build-and-push:
-    name: Build and push Explorer Docker image
+    name: Build and push Score My Recipe Docker image
     runs-on: ubuntu-latest
     strategy:
       matrix:

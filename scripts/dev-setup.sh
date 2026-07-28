@@ -132,6 +132,9 @@ frontend_setup() {
 
 
 case "${1:-full}" in
+  just)
+    just_setup
+    ;;
   frontend)
     just_setup
     frontend_setup
@@ -146,7 +149,7 @@ case "${1:-full}" in
     server_setup
     ;;
   *)
-    echo "Usage: $0 [frontend|server|full|all]"
+    echo "Usage: $0 [just|frontend|server|full|all]"
     exit 1
     ;;
 esac

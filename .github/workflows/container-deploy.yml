@@ -1,0 +1,200 @@
+name: Container Image Deployment CI
+
+on:
+  push:
+    branches:
+      - main
+      - deploy/*
+    # NO Production deployement yet
+    #tags:
+    #  - v*.*.*
+
+# Note on secrets used for connection
+# They are configured as environment secrets
+# SSH_PRIVATE_KEY is the private key (shared between VM and host)
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: read
+      checks: read
+
+    if: github.repository == 'openfoodfacts/score-my-recipe'
+    strategy:
+      matrix:
+        env:
+          - ${{ startsWith(github.ref, 'refs/tags/v') && 'score-my-recipe-org' || 'score-my-recipe-net' }}
+    environment: ${{ matrix.env }}
+    concurrency: ${{ matrix.env }}
+    steps:
+      - name: Set common variables
+        run: |
+          echo "SSH_USERNAME=off" >> $GITHUB_ENV
+      - name: Set various variable for staging (net) deployment
+        if: matrix.env == 'score-my-recipe-net'
+        run: |
+          echo "SSH_PROXY_HOST=ovh1.openfoodfacts.org" >> $GITHUB_ENV
+          echo "SSH_HOST=10.1.0.200" >> $GITHUB_ENV
+          # application parameters
+          echo "PUBLIC_RECIPE_API_URL=https://api.recipe.openfoodfacts.net" >> $GITHUB_ENV
+          echo "PUBLIC_OFF_BASE_URL=https://world.openfoodfacts.net" >> $GITHUB_ENV
+      - name: Set various variable for production deployment
+        if: matrix.env == 'score-my-recipe-org'
+        run: |
+          echo "NO PRODUCTION DEPLOYMENT YET" && exit 1
+
+      - name: Wait for frontend image container build workflow
+        uses: tomchv/wait-my-workflow@15c168cfa0cf8d5234974e0047908173d3ab39a1 # v1.1.0
+        id: wait-build-service-frontend-image
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          checkName: 'Build and push Score My Recipe Docker image (frontend)'
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          intervalSeconds: 10
+          timeoutSeconds: 600 # 10m
+      - name: Wait for server image container build workflow
+        uses: tomchv/wait-my-workflow@15c168cfa0cf8d5234974e0047908173d3ab39a1 # v1.1.0
+        id: wait-build-service-server-image
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          checkName: 'Build and push Score My Recipe Docker image (server)'
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          intervalSeconds: 10
+          timeoutSeconds: 600 # 10m
+
+      - name: Do something if frontend build isn't launch
+        if: steps.wait-build-service-frontend-image.outputs.conclusion == 'does not exist'
+        run: echo job does not exist && true
+
+      - name: Do something if frontend build fail
+        if: steps.wait-build-service-frontend-image.outputs.conclusion == 'failure'
+        run: echo fail && false # fail if build fail
+
+      - name: Do something if frontend build timeout
+        if: steps.wait-build-service-frontend-image.outputs.conclusion == 'timed_out'
+        run: echo Timeout && false # fail if build time out
+
+      - name: Do something if server build isn't launch
+        if: steps.wait-build-service-server-image.outputs.conclusion == 'does not exist'
+        run: echo job does not exist && true
+
+      - name: Do something if server build fail
+        if: steps.wait-build-service-server-image.outputs.conclusion == 'failure'
+        run: echo fail && false # fail if build fail
+
+      - name: Do something if server build timeout
+        if: steps.wait-build-service-server-image.outputs.conclusion == 'timed_out'
+        run: echo Timeout && false # fail if build time out
+
+      - name: Checkout git repository
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        with:
+          host: ${{ env.SSH_HOST }}
+          username: ${{ env.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          proxy_host: ${{ env.SSH_PROXY_HOST }}
+          proxy_username: ${{ env.SSH_USERNAME }}
+          proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Clone Git repository if not already there
+            [ ! -d '${{ matrix.env }}' ] && git clone --depth 1 https://github.com/${{ github.repository }} ${{ matrix.env }} --no-single-branch 2>&1
+
+            # Go to repository directory
+            cd ${{ matrix.env }}
+
+            # Fetch newest commits (in case it wasn't freshly cloned)
+            git fetch --depth=1 origin "${{ github.sha }}"
+            git checkout -qf FETCH_HEAD
+
+      - name: Set environment variables
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        with:
+          host: ${{ env.SSH_HOST }}
+          username: ${{ env.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          proxy_host: ${{ env.SSH_PROXY_HOST }}
+          proxy_username: ${{ env.SSH_USERNAME }}
+          proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Go to repository directory
+            cd ${{ matrix.env }}
+
+            # init .env
+            echo "# Env file generated by container-deploy action"> .env
+            echo "DOCKER_IMAGE_TAG=sha-${{ github.sha }}" >> .env
+            cat >> .env <<EOF=====
+            DOCKER_FRONTEND_EXPOSE=:3000
+            DOCKER_SERVER_EXPOSE=:8000
+            COMPOSE_PROJECT_NAME=${{ matrix.env }}
+            COMPOSE_PATH_SEPARATOR=;
+            COMPOSE_FILE=docker-compose.yml;docker/prod.yml
+            RESTART_POLICY=unless-stopped
+            EOF=====
+            # Set front variables
+            echo "# Env file generated by container-deploy action"> frontend/.env
+            echo "PUBLIC_OFF_BASE_URL=${{ env.PUBLIC_OFF_BASE_URL }}" >> .env
+            echo "PUBLIC_RECIPE_API_URL=${{ env.PUBLIC_RECIPE_API_URL }}" >> .env
+
+      - name: do some setups
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        with:
+          host: ${{ env.SSH_HOST }}
+          username: ${{ env.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          proxy_host: ${{ env.SSH_PROXY_HOST }}
+          proxy_username: ${{ env.SSH_USERNAME }}
+          proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd ${{ matrix.env }}
+            # install just
+            ./scripts/dev-setup.sh just
+            just create_external_volumes
+            docker compose pull
+
+      - name: Re-start services
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        with:
+          host: ${{ env.SSH_HOST }}
+          username: ${{ env.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          proxy_host: ${{ env.SSH_PROXY_HOST }}
+          proxy_username: ${{ env.SSH_USERNAME }}
+          proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd ${{ matrix.env }}
+            docker compose down || true
+            docker compose up -d --wait
+
+      - name: Check services are up
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        if: ${{ always() }}
+        with:
+          host: ${{ env.SSH_HOST }}
+          username: ${{ env.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          proxy_host: ${{ env.SSH_PROXY_HOST }}
+          proxy_username: ${{ env.SSH_USERNAME }}
+          proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ matrix.env }}
+            [[ -z $(docker compose  ps -q --status exited --status dead --status removing --status paused) ]] || exit 1
+
+      - name: Cleanup obsolete Docker objects
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        if: ${{ always() }}
+        with:
+          host: ${{ env.SSH_HOST }}
+          username: ${{ env.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          proxy_host: ${{ env.SSH_PROXY_HOST }}
+          proxy_username: ${{ env.SSH_USERNAME }}
+          proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script_stop: false
+          script: |
+            cd ${{ matrix.env }}
+            docker system prune -af

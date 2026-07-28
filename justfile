@@ -36,7 +36,7 @@ refresh:
 
 [group('prod')]
 create_external_volumes:
-    docker volume create --name $COMPOSE_PROJECT_NAME-server_data
+    docker volume create --name $COMPOSE_PROJECT_NAME-server_data || true
 
 # ===========================================
 # DEVELOPMENT
