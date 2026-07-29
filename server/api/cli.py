@@ -55,6 +55,9 @@ def fetch_agribalyse(
     no_cache: bool = typer.Option(
         False, "--no-cache", help="Force re-download of the XLSX export."
     ),
+    rebuild: bool = typer.Option(
+        False, "--rebuild", help="Rebuild CSV file even if it already exists."
+    )
 ):
     """Download the Agribalyse XLSX export and rebuild the Synthese CSV.
 
@@ -68,7 +71,7 @@ def fetch_agribalyse(
 
     from api import agribalyse
 
-    raise SystemExit(agribalyse.fetch_agribalyse(out, cache_dir, no_cache))
+    raise SystemExit(agribalyse.fetch_agribalyse(out, cache_dir, no_cache, rebuild))
 
 
 def main() -> None:

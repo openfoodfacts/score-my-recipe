@@ -156,6 +156,8 @@ jobs:
             ./scripts/dev-setup.sh just
             just create_external_volumes
             docker compose pull
+            # fetch agribalyse data if needed
+            docker compose run --rm recipe_server typer api/cli.py run fetch-agribalyse
 
       - name: Re-start services
         uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5

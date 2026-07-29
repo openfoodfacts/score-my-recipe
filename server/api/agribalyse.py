@@ -169,13 +169,16 @@ def write_csv(rows: list[list], out_path: Path) -> None:
     print(f"  wrote {len(rows)} rows -> {out_path}", file=sys.stderr)
 
 
-def fetch_agribalyse(out_path: Path, cache_dir: Path, no_cache: bool = False) -> int:
+def fetch_agribalyse(out_path: Path, cache_dir: Path, no_cache: bool = False, rebuild: bool = False) -> int:
     """Download the Agribalyse XLSX and dump its Synthese sheet to a CSV.
 
     The XLSX is cached under ``cache_dir`` and re-used unless ``no_cache`` is
     set or the cached file is missing/invalid. Returns ``0`` on success,
     non-zero on error.
     """
+    if out_path.exists() and not rebuild:
+        print(f"  {out_path} already exists, skipping (use rebuild to overwrite)", file=sys.stderr)
+        return 0
     cache_dir.mkdir(parents=True, exist_ok=True)
     dest = cache_dir / "agribalyse.xlsx"
     if no_cache or not dest.exists() or not is_xlsx(dest):
