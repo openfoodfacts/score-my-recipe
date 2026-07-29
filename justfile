@@ -3,8 +3,8 @@
 # prefer bash
 set shell := ["bash", "-uc"]
 # load dot env
-dotenv-load := true
-dotenv-required := true
+set dotenv-load := true
+set dotenv-required := true
 
 just_frontend := "cd frontend && just"
 just_server := "cd server && just"
