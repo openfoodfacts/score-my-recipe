@@ -150,6 +150,7 @@ jobs:
           script: |
             set -e
             cd ${{ matrix.env }}
+            echo "PATH is $PATH"
             # install just
             ./scripts/dev-setup.sh just
             just create_external_volumes

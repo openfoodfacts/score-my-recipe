@@ -31,8 +31,8 @@ command_exists() { command -v "$1" >/dev/null 2>&1; }
 # ─── Just Setup ───────────────────────────────────────────────────────────────
 
 just_setup() {
-  _JUST_INSTALLED=0
   if ! command_exists just; then
+    _JUST_INSTALLED=0
     if command_exists apt; then
       info "Installing just via apt..."
       ( sudo apt update && sudo apt install -y just && _JUST_INSTALLED=1 ) || true
