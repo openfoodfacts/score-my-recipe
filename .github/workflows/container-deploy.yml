@@ -149,8 +149,9 @@ jobs:
           proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             set -e
+            # set .local/bin in path
+            . /home/${{ env.SSH_USERNAME }}/.local/bin/env
             cd ${{ matrix.env }}
-            echo "PATH is $PATH"
             # install just
             ./scripts/dev-setup.sh just
             just create_external_volumes
