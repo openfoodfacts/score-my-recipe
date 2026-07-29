@@ -58,6 +58,12 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 FROM python-base AS runtime
 COPY --from=builder-base /app/ /app/
 ENV PATH="/app/.venv/bin:$PATH"
+
+PORT 8000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+    CMD curl -f http://localhost:8000/v1/health || exit 1
+
 # setting num workers using env variable allows for easy override in docker-compose or k8s
 ARG UVICORN_NUM_WORKERS_DEFAULT
 ENV UVICORN_WORKERS=${UVICORN_NUM_WORKERS_DEFAULT}
