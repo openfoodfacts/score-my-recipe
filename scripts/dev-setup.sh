@@ -31,14 +31,16 @@ command_exists() { command -v "$1" >/dev/null 2>&1; }
 # ─── Just Setup ───────────────────────────────────────────────────────────────
 
 just_setup() {
+  _JUST_INSTALLED=0
   if ! command_exists just; then
     if command_exists apt; then
       info "Installing just via apt..."
-      sudo apt update && sudo apt install -y just
+      ( sudo apt update && sudo apt install -y just && _JUST_INSTALLED=1 ) || true
     elif command_exists brew; then
       info "Installing just via Homebrew..."
-      brew install just
-    else
+      brew install just && _JUST_INSTALLED=1 || true
+    fi
+    if [ $_JUST_INSTALLED -eq 0 ]; then
       info "Installing just via official install script..."
       curl -LsSf https://just.systems/install.sh | bash -s -- --to "$HOME/.local/bin"
       export PATH="$HOME/.local/bin:$PATH"
