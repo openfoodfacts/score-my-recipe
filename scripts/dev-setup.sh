@@ -35,7 +35,7 @@ just_setup() {
     _JUST_INSTALLED=0
     if command_exists apt; then
       info "Installing just via apt..."
-      ( sudo apt update && sudo apt install -y just && _JUST_INSTALLED=1 ) || true
+      sudo apt update && sudo apt install -y just && _JUST_INSTALLED=1 || true
     elif command_exists brew; then
       info "Installing just via Homebrew..."
       brew install just && _JUST_INSTALLED=1 || true

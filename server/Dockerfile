@@ -43,14 +43,14 @@ COPY --from=uv-image /uv /uvx /bin/
 
 COPY --chown=off:off pyproject.toml uv.lock /app/
 # Install dependencies (bind mounting pyproject.toml and uv.lock)
-RUN --mount=type=cache,target=/var/lib/cache/uv \
+RUN --mount=type=cache,target=/var/cache/uv,uid=$USER_UID,gid=$USER_GID \
     uv sync --locked --no-install-project --no-editable
 
 # Copy the project into the intermediate image
 COPY --chown=off:off api /app/api
 
 # Sync the project
-RUN --mount=type=cache,target=/root/.cache/uv \
+RUN --mount=type=cache,target=/var/cache/uv,uid=$USER_UID,gid=$USER_GID \
     uv sync --locked --no-editable
 
 # This is our final image
