@@ -2,6 +2,9 @@
 
 # prefer bash
 set shell := ["bash", "-uc"]
+# load dot env
+set dotenv-load := true
+set dotenv-required := true
 
 just_frontend := "cd frontend && just"
 just_server := "cd server && just"
@@ -29,6 +32,14 @@ setup:
 refresh:
   {{ just_frontend }} refresh
   {{ just_server }} refresh
+
+# ===========================================
+# PROD
+# ===========================================
+
+[group('prod')]
+create_external_volumes:
+    docker volume create --name $COMPOSE_PROJECT_NAME-server_data || true
 
 # ===========================================
 # DEVELOPMENT

@@ -27,6 +27,7 @@ For server (backend), install [`uv`](https://docs.astral.sh/uv/) and then use `u
 For frontend, install [nvm (Node version Manager)](https://github.com/nvm-sh/nvm),
 go in `frontend` folder and use `nvm use && npm install -g pnpm && pnpm install`.
 Also copy `.env.example` to `.env`.
+
 ### Refreshing your project
 
 If you want to refresh your project dependencies,

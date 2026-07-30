@@ -32,13 +32,15 @@ command_exists() { command -v "$1" >/dev/null 2>&1; }
 
 just_setup() {
   if ! command_exists just; then
+    _JUST_INSTALLED=0
     if command_exists apt; then
       info "Installing just via apt..."
-      sudo apt update && sudo apt install -y just
+      sudo apt update && sudo apt install -y just && _JUST_INSTALLED=1 || true
     elif command_exists brew; then
       info "Installing just via Homebrew..."
-      brew install just
-    else
+      brew install just && _JUST_INSTALLED=1 || true
+    fi
+    if [ $_JUST_INSTALLED -eq 0 ]; then
       info "Installing just via official install script..."
       curl -LsSf https://just.systems/install.sh | bash -s -- --to "$HOME/.local/bin"
       export PATH="$HOME/.local/bin:$PATH"
@@ -132,6 +134,9 @@ frontend_setup() {
 
 
 case "${1:-full}" in
+  just)
+    just_setup
+    ;;
   frontend)
     just_setup
     frontend_setup
@@ -146,7 +151,7 @@ case "${1:-full}" in
     server_setup
     ;;
   *)
-    echo "Usage: $0 [frontend|server|full|all]"
+    echo "Usage: $0 [just|frontend|server|full|all]"
     exit 1
     ;;
 esac

@@ -1,0 +1,17 @@
+
+services:
+  recipe_frontend:
+    image: ghcr.io/openfoodfacts/score-my-recipe/frontend:${DOCKER_IMAGE_TAG}
+    restart: ${RESTART_POLICY:-unless-stopped}
+    ports:
+      - "${DOCKER_FRONTEND_EXPOSE:-127.0.0.1:3000}:3000"
+    env_file:
+      - ./frontend/.env
+
+  recipe_server:
+    image: ghcr.io/openfoodfacts/score-my-recipe/server:${DOCKER_IMAGE_TAG}
+    restart: ${RESTART_POLICY:-unless-stopped}
+    ports:
+      - "${DOCKER_SERVER_EXPOSE:-127.0.0.1:8000}:8000"
+    volumes:
+      - server_data:/app/data
