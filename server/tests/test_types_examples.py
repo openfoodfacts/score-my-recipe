@@ -21,11 +21,11 @@ from api import types
 def _models_with_examples():
     """Collect ``(model, example)`` pairs from every BaseModel in ``api.types``.
 
-    A model is only relevant when its own ``model_config`` declares a
-    non-empty ``examples`` list through ``json_schema_extra``. We read the
-    config straight from the class (rather than the merged JSON schema) so a
-    subclass is only tested against the examples it explicitly declares,
-    never against examples inherited from a parent.
+    A model is only relevant when its effective ``model_config`` declares a
+    non-empty ``examples`` list through ``json_schema_extra``. The examples are
+    read from ``model_config`` (not from the generated JSON schema) so the test
+    stays close to what is declared on the model classes.
+    
     """
     pairs = []
     num_classes = 0
@@ -48,16 +48,22 @@ def _models_with_examples():
             pairs.append(
                 pytest.param(obj, example, id=f"{obj.__name__}-{index}")
             )
-    # we want at least 50% of the models to have examples
-    if len(pairs) < num_classes / 2:
-        raise RuntimeError(
-            f"Not enough models with examples found in api.types ({len(pairs)}/{num_classes}). "
-            "Expecting at least 50% of the models to have examples. "
-        )
-    return pairs
+    # We want at least 50% of the models to have examples.
+    # Enforce this as a normal test assertion (not a collection-time exception).
+    return pairs, num_classes
 
 
-@pytest.mark.parametrize("model_cls, example", _models_with_examples())
+MODEL_EXAMPLES, NUM_MODEL_CLASSES = _models_with_examples()
+
+
+def test_minimum_examples_coverage():
+    assert len(MODEL_EXAMPLES) >= NUM_MODEL_CLASSES / 2, (
+        f"Not enough models with examples found in api.types ({len(MODEL_EXAMPLES)}/{NUM_MODEL_CLASSES}). "
+        "Expecting at least 50% of the models to have examples. "
+    )
+
+
+@pytest.mark.parametrize("model_cls, example", MODEL_EXAMPLES)
 def test_example_instantiates_model(model_cls, example):
     """Each documented example must be accepted by the model constructor."""
     instance = model_cls.model_validate(example)
