@@ -16,6 +16,7 @@
 	import { _ } from '$lib/i18n';
 	import Tags from './Tags.svelte';
 	import IconMdiDelete from '@iconify-svelte/mdi/delete';
+	import IconMdiAlertCircle from '@iconify-svelte/mdi/alert-circle';
 	import type { Ingredient } from '$lib/types/ingredient';
 	import { isIngredientEmpty, isIngredientNotEmpty } from '$lib/types/ingredient';
 
@@ -24,6 +25,8 @@
 		ingredient: Ingredient;
 		isFirstItem?: boolean;
 		isLastItem?: boolean;
+		// Ingredient ids flagged as missing in the last computed green-score.
+		missingIngredientIds?: string[];
 		onDelete?: (id: string) => void;
 		onNotEmpty?: () => void; // Optional callback for when line becomes non-empty
 	};
@@ -32,9 +35,13 @@
 		ingredient = $bindable(),
 		isFirstItem = false, // eslint-disable-line @typescript-eslint/no-unused-vars
 		isLastItem = false,
+		missingIngredientIds = [],
 		onDelete,
 		onNotEmpty
 	}: Props = $props();
+
+	/** Whether this ingredient was not accounted for in the last green-score. */
+	let isMissing = $derived(missingIngredientIds.includes(ingredient.id));
 
 	// Track if this ingredient was empty when the component was created
 	// This is used to detect when user starts typing in an empty last line
@@ -56,7 +63,28 @@
 	}
 </script>
 
-<div class="flex flex-col gap-2 rounded-lg p-3 sm:flex-row sm:items-start">
+<div
+	class="flex flex-col gap-2 rounded-lg p-3 sm:flex-row sm:items-start"
+	class:ingredient-missing={isMissing}
+>
+	{#if isMissing}
+		<!-- Badge column: an invisible label spacer aligns the badge with the
+		     sibling form fields (which sit below their own labels), rather than
+		     at the labels' top level. -->
+		<div class="flex w-auto flex-col">
+			<span class="label invisible py-1">&nbsp;</span>
+			<span
+				class="tooltip badge badge-warning badge-sm gap-1"
+				data-tip={$_('recipe.ingredient_not_accounted_tooltip', {
+					default: 'We could not find a correspondence in our impact database for this ingredient'
+				})}
+			>
+				<IconMdiAlertCircle class="h-4 w-4" aria-hidden="true" />
+				{$_('recipe.ingredient_not_accounted', { default: 'Not accounted' })}
+			</span>
+		</div>
+	{/if}
+
 	<!-- Codified Ingredient name -->
 	<div class="flex grow-3 flex-col">
 		<label class="label py-1" for="ingredient-codified-{ingredient.id}">

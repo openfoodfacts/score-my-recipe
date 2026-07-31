@@ -82,6 +82,16 @@
 	let nonEmptyIngredientCount = $derived(countNonEmptyIngredients(ingredients));
 
 	/**
+	 * Ingredient ids flagged as missing in the last computed score.
+	 *
+	 * Cleared while a recomputation is in flight (see `isScoreLoading`) so the
+	 * highlight always reflects the currently displayed score, never a stale one.
+	 */
+	let missingIngredientIds = $derived(
+		isScoreLoading || !greenScore ? [] : greenScore.missingIngredientIds
+	);
+
+	/**
 	 * Compute the green-score for the current ingredients.
 	 *
 	 * Guards against concurrent computations: only the result of the most recent
@@ -140,7 +150,7 @@
 	</div>
 
 	<!-- Ingredients List (row edition logic delegated to RecipeRowEditor) -->
-	<RecipeRowEditor bind:ingredients />
+	<RecipeRowEditor bind:ingredients {missingIngredientIds} />
 
 	<!-- Actions -->
 	<div class="mt-6 flex items-center gap-4">

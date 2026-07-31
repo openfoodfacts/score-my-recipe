@@ -18,9 +18,11 @@
 
 	type Props = {
 		ingredients: IngredientsList;
+		/** Ingredient ids flagged as missing in the last computed green-score. */
+		missingIngredientIds?: string[];
 	};
 
-	let { ingredients = $bindable() }: Props = $props();
+	let { ingredients = $bindable(), missingIngredientIds = [] }: Props = $props();
 
 	/** Handle delete of an ingredient by id. */
 	function handleIngredientDelete(id: string) {
@@ -41,6 +43,7 @@
 			isFirstItem={index === 0}
 			onDelete={handleIngredientDelete}
 			onNotEmpty={addIngredientLine}
+			{missingIngredientIds}
 		/>
 	{/each}
 </div>
