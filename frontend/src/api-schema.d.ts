@@ -149,6 +149,34 @@ export interface components {
 		 * @description Request body for the green-score computation endpoint.
 		 *
 		 *     It is a thin wrapper around a list of ingredients
+		 * @example {
+		 *       "ingredients": [
+		 *         {
+		 *           "codifiedIngredient": {
+		 *             "id": "en:apple",
+		 *             "isInTaxonomy": true,
+		 *             "label": "Apple"
+		 *           },
+		 *           "id": "i1",
+		 *           "labels": [],
+		 *           "name": "apple",
+		 *           "seasonality": false,
+		 *           "weight": 150
+		 *         },
+		 *         {
+		 *           "codifiedIngredient": {
+		 *             "id": "en:wheat-flour",
+		 *             "isInTaxonomy": true,
+		 *             "label": "Wheat flour"
+		 *           },
+		 *           "id": "i2",
+		 *           "labels": [],
+		 *           "name": "wheat flour",
+		 *           "seasonality": false,
+		 *           "weight": 200
+		 *         }
+		 *       ]
+		 *     }
 		 */
 		GreenScoreRequest: {
 			/**
@@ -160,6 +188,11 @@ export interface components {
 		/**
 		 * GreenScoreResponse
 		 * @description Response model for the green-score computation endpoint.
+		 * @example {
+		 *       "letterGrade": "A",
+		 *       "missingIngredientIds": [],
+		 *       "numericScore": 76.38
+		 *     }
 		 */
 		GreenScoreResponse: {
 			/**
@@ -187,6 +220,13 @@ export interface components {
 		/**
 		 * Ingredient
 		 * @description Ingredient model for Score My Recipe API
+		 * @example {
+		 *       "id": "en:apple",
+		 *       "label": "Apple",
+		 *       "synonyms": [
+		 *         "apples"
+		 *       ]
+		 *     }
 		 */
 		Ingredient: {
 			/**
@@ -208,6 +248,18 @@ export interface components {
 		/**
 		 * IngredientsResponse
 		 * @description Response model for get_ingredients endpoint
+		 * @example {
+		 *       "ingredients": [
+		 *         {
+		 *           "id": "en:apple",
+		 *           "label": "Apple"
+		 *         },
+		 *         {
+		 *           "id": "en:wheat-flour",
+		 *           "label": "Wheat flour"
+		 *         }
+		 *       ]
+		 *     }
 		 */
 		IngredientsResponse: {
 			/** Ingredients */
@@ -216,6 +268,13 @@ export interface components {
 		/**
 		 * Label
 		 * @description Label model for Score My Recipe API
+		 * @example {
+		 *       "id": "en:eu-organic",
+		 *       "label": "EU Organic",
+		 *       "synonyms": [
+		 *         "bio"
+		 *       ]
+		 *     }
 		 */
 		Label: {
 			/**
@@ -237,6 +296,18 @@ export interface components {
 		/**
 		 * LabelsResponse
 		 * @description Response model for get_labels endpoint
+		 * @example {
+		 *       "labels": [
+		 *         {
+		 *           "id": "en:eu-organic",
+		 *           "label": "EU Organic"
+		 *         },
+		 *         {
+		 *           "id": "en:fair-trade",
+		 *           "label": "Fair Trade"
+		 *         }
+		 *       ]
+		 *     }
 		 */
 		LabelsResponse: {
 			/** Labels */
@@ -245,6 +316,13 @@ export interface components {
 		/**
 		 * Origin
 		 * @description Origin model for Score My Recipe API
+		 * @example {
+		 *       "id": "en:france",
+		 *       "label": "France",
+		 *       "synonyms": [
+		 *         "french"
+		 *       ]
+		 *     }
 		 */
 		Origin: {
 			/**
@@ -266,6 +344,24 @@ export interface components {
 		/**
 		 * OriginsResponse
 		 * @description Response model for get_origins endpoint
+		 * @example {
+		 *       "origins": [
+		 *         {
+		 *           "id": "en:france",
+		 *           "label": "France",
+		 *           "synonyms": [
+		 *             "french"
+		 *           ]
+		 *         },
+		 *         {
+		 *           "id": "en:spain",
+		 *           "label": "Spain",
+		 *           "synonyms": [
+		 *             "spanish"
+		 *           ]
+		 *         }
+		 *       ]
+		 *     }
 		 */
 		OriginsResponse: {
 			/** Origins */
@@ -274,6 +370,12 @@ export interface components {
 		/**
 		 * RecipeIngredient
 		 * @description Ingredient model for Score My Recipe API
+		 * @example {
+		 *       "codified_ingredient": "apple",
+		 *       "is_in_taxonomy": true,
+		 *       "quantity_g": 150,
+		 *       "taxonomy_id": "en:apple"
+		 *     }
 		 */
 		RecipeIngredient: {
 			/** Taxonomy Id */
@@ -288,6 +390,29 @@ export interface components {
 		/**
 		 * RecipeIngredientInput
 		 * @description A single ingredient of a recipe
+		 * @example {
+		 *       "codifiedIngredient": {
+		 *         "id": "en:apple",
+		 *         "isInTaxonomy": true,
+		 *         "label": "Apple"
+		 *       },
+		 *       "id": "i1",
+		 *       "labels": [
+		 *         {
+		 *           "id": "en:eu-organic",
+		 *           "isInTaxonomy": true,
+		 *           "label": "EU Organic"
+		 *         }
+		 *       ],
+		 *       "name": "apple",
+		 *       "origin": {
+		 *         "id": "en:france",
+		 *         "isInTaxonomy": true,
+		 *         "label": "France"
+		 *       },
+		 *       "seasonality": false,
+		 *       "weight": 150
+		 *     }
 		 */
 		RecipeIngredientInput: {
 			/**
@@ -325,6 +450,10 @@ export interface components {
 		/**
 		 * RecipeParseRequest
 		 * @description Request model for parse_text endpoint
+		 * @example {
+		 *       "lang": "en",
+		 *       "text": "200g of apple, 1 cup of wheat flour"
+		 *     }
 		 */
 		RecipeParseRequest: {
 			/**
@@ -338,6 +467,22 @@ export interface components {
 		/**
 		 * RecipeParseResponse
 		 * @description Response model for parse_text endpoint
+		 * @example {
+		 *       "ingredients": [
+		 *         {
+		 *           "codified_ingredient": "apple",
+		 *           "is_in_taxonomy": true,
+		 *           "quantity_g": 150,
+		 *           "taxonomy_id": "en:apple"
+		 *         },
+		 *         {
+		 *           "codified_ingredient": "wheat flour",
+		 *           "is_in_taxonomy": true,
+		 *           "quantity_g": 200,
+		 *           "taxonomy_id": "en:wheat-flour"
+		 *         }
+		 *       ]
+		 *     }
 		 */
 		RecipeParseResponse: {
 			/** Ingredients */
@@ -349,6 +494,11 @@ export interface components {
 		 *
 		 *     Mirrors the frontend `TaxonomyItem` (used for codified ingredients, labels
 		 *     and origins).
+		 * @example {
+		 *       "id": "en:apple",
+		 *       "isInTaxonomy": true,
+		 *       "label": "Apple"
+		 *     }
 		 */
 		TaxonomyItem: {
 			/**
