@@ -89,6 +89,23 @@ async def get_ingredients(
     return types.IngredientsResponse(ingredients=ingredients)
 
 
+@app.get("/v1/suggest-scored-ingredient", response_model_exclude_none=True)
+async def suggest_scored_ingredient(
+    filter_query: Annotated[types.SuggestScoredIngredientRequest, Query()], response: Response
+) -> types.SuggestScoredIngredientResponse:
+    """Suggest scored ingredient alternatives for an ingredient with no Agribalyse match.
+
+    Given a taxonomy id (typically one returned in ``missing_ingredient_ids``),
+    walk down the ingredients taxonomy and return the descendants that resolve
+    to an Agribalyse row, so the user can pick a more specific alternative.
+    """
+    ingredients = await recipes.suggest_scored_ingredient(
+        filter_query.lang, filter_query.include_synonyms, filter_query.taxonomy_id
+    )
+    response.headers["Cache-Control"] = "max-age=86400"
+    return types.SuggestScoredIngredientResponse(ingredients=ingredients)
+
+
 @app.post("/v1/green-score")
 async def green_score(request: types.GreenScoreRequest) -> types.GreenScoreResponse:
     """Compute the green-score of a recipe given as a list of ingredients."""
