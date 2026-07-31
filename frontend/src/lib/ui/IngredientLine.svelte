@@ -68,16 +68,21 @@
 	class:ingredient-missing={isMissing}
 >
 	{#if isMissing}
-		<!-- Badge: ingredient not accounted for in the score -->
-		<span
-			class="tooltip badge badge-warning badge-sm gap-1 self-start"
-			data-tip={$_('recipe.ingredient_not_accounted_tooltip', {
-				default: 'We could not find a correspondence in our impact database for this ingredient'
-			})}
-		>
-			<IconMdiAlertCircle class="h-4 w-4" aria-hidden="true" />
-			{$_('recipe.ingredient_not_accounted', { default: 'Not accounted' })}
-		</span>
+		<!-- Badge column: an invisible label spacer aligns the badge with the
+		     sibling form fields (which sit below their own labels), rather than
+		     at the labels' top level. -->
+		<div class="flex w-auto flex-col">
+			<span class="label invisible py-1">&nbsp;</span>
+			<span
+				class="tooltip badge badge-warning badge-sm gap-1"
+				data-tip={$_('recipe.ingredient_not_accounted_tooltip', {
+					default: 'We could not find a correspondence in our impact database for this ingredient'
+				})}
+			>
+				<IconMdiAlertCircle class="h-4 w-4" aria-hidden="true" />
+				{$_('recipe.ingredient_not_accounted', { default: 'Not accounted' })}
+			</span>
+		</div>
 	{/if}
 
 	<!-- Codified Ingredient name -->
