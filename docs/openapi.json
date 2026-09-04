@@ -305,7 +305,37 @@
           "ingredients"
         ],
         "title": "GreenScoreRequest",
-        "description": "Request body for the green-score computation endpoint.\n\nIt is a thin wrapper around a list of ingredients"
+        "description": "Request body for the green-score computation endpoint.\n\nIt is a thin wrapper around a list of ingredients",
+        "examples": [
+          {
+            "ingredients": [
+              {
+                "codifiedIngredient": {
+                  "id": "en:apple",
+                  "isInTaxonomy": true,
+                  "label": "Apple"
+                },
+                "id": "i1",
+                "labels": [],
+                "name": "apple",
+                "seasonality": false,
+                "weight": 150
+              },
+              {
+                "codifiedIngredient": {
+                  "id": "en:wheat-flour",
+                  "isInTaxonomy": true,
+                  "label": "Wheat flour"
+                },
+                "id": "i2",
+                "labels": [],
+                "name": "wheat flour",
+                "seasonality": false,
+                "weight": 200
+              }
+            ]
+          }
+        ]
       },
       "GreenScoreResponse": {
         "properties": {
@@ -345,7 +375,14 @@
         },
         "type": "object",
         "title": "GreenScoreResponse",
-        "description": "Response model for the green-score computation endpoint."
+        "description": "Response model for the green-score computation endpoint.",
+        "examples": [
+          {
+            "letterGrade": "A",
+            "missingIngredientIds": [],
+            "numericScore": 76.38
+          }
+        ]
       },
       "HTTPValidationError": {
         "properties": {
@@ -394,7 +431,16 @@
           "label"
         ],
         "title": "Ingredient",
-        "description": "Ingredient model for Score My Recipe API"
+        "description": "Ingredient model for Score My Recipe API",
+        "examples": [
+          {
+            "id": "en:apple",
+            "label": "Apple",
+            "synonyms": [
+              "apples"
+            ]
+          }
+        ]
       },
       "IngredientsResponse": {
         "properties": {
@@ -411,7 +457,21 @@
           "ingredients"
         ],
         "title": "IngredientsResponse",
-        "description": "Response model for get_ingredients endpoint"
+        "description": "Response model for get_ingredients endpoint",
+        "examples": [
+          {
+            "ingredients": [
+              {
+                "id": "en:apple",
+                "label": "Apple"
+              },
+              {
+                "id": "en:wheat-flour",
+                "label": "Wheat flour"
+              }
+            ]
+          }
+        ]
       },
       "Label": {
         "properties": {
@@ -447,7 +507,16 @@
           "label"
         ],
         "title": "Label",
-        "description": "Label model for Score My Recipe API"
+        "description": "Label model for Score My Recipe API",
+        "examples": [
+          {
+            "id": "en:eu-organic",
+            "label": "EU Organic",
+            "synonyms": [
+              "bio"
+            ]
+          }
+        ]
       },
       "LabelsResponse": {
         "properties": {
@@ -464,7 +533,21 @@
           "labels"
         ],
         "title": "LabelsResponse",
-        "description": "Response model for get_labels endpoint"
+        "description": "Response model for get_labels endpoint",
+        "examples": [
+          {
+            "labels": [
+              {
+                "id": "en:eu-organic",
+                "label": "EU Organic"
+              },
+              {
+                "id": "en:fair-trade",
+                "label": "Fair Trade"
+              }
+            ]
+          }
+        ]
       },
       "Origin": {
         "properties": {
@@ -500,7 +583,16 @@
           "label"
         ],
         "title": "Origin",
-        "description": "Origin model for Score My Recipe API"
+        "description": "Origin model for Score My Recipe API",
+        "examples": [
+          {
+            "id": "en:france",
+            "label": "France",
+            "synonyms": [
+              "french"
+            ]
+          }
+        ]
       },
       "OriginsResponse": {
         "properties": {
@@ -517,7 +609,27 @@
           "origins"
         ],
         "title": "OriginsResponse",
-        "description": "Response model for get_origins endpoint"
+        "description": "Response model for get_origins endpoint",
+        "examples": [
+          {
+            "origins": [
+              {
+                "id": "en:france",
+                "label": "France",
+                "synonyms": [
+                  "french"
+                ]
+              },
+              {
+                "id": "en:spain",
+                "label": "Spain",
+                "synonyms": [
+                  "spanish"
+                ]
+              }
+            ]
+          }
+        ]
       },
       "RecipeIngredient": {
         "properties": {
@@ -558,7 +670,15 @@
           "codified_ingredient"
         ],
         "title": "RecipeIngredient",
-        "description": "Ingredient model for Score My Recipe API"
+        "description": "Ingredient model for Score My Recipe API",
+        "examples": [
+          {
+            "codified_ingredient": "apple",
+            "is_in_taxonomy": true,
+            "quantity_g": 150.0,
+            "taxonomy_id": "en:apple"
+          }
+        ]
       },
       "RecipeIngredientInput": {
         "properties": {
@@ -616,7 +736,32 @@
           "codifiedIngredient"
         ],
         "title": "RecipeIngredientInput",
-        "description": "A single ingredient of a recipe"
+        "description": "A single ingredient of a recipe",
+        "examples": [
+          {
+            "codifiedIngredient": {
+              "id": "en:apple",
+              "isInTaxonomy": true,
+              "label": "Apple"
+            },
+            "id": "i1",
+            "labels": [
+              {
+                "id": "en:eu-organic",
+                "isInTaxonomy": true,
+                "label": "EU Organic"
+              }
+            ],
+            "name": "apple",
+            "origin": {
+              "id": "en:france",
+              "isInTaxonomy": true,
+              "label": "France"
+            },
+            "seasonality": false,
+            "weight": 150
+          }
+        ]
       },
       "RecipeParseRequest": {
         "properties": {
@@ -636,7 +781,13 @@
           "text"
         ],
         "title": "RecipeParseRequest",
-        "description": "Request model for parse_text endpoint"
+        "description": "Request model for parse_text endpoint",
+        "examples": [
+          {
+            "lang": "en",
+            "text": "200g of apple, 1 cup of wheat flour"
+          }
+        ]
       },
       "RecipeParseResponse": {
         "properties": {
@@ -653,7 +804,25 @@
           "ingredients"
         ],
         "title": "RecipeParseResponse",
-        "description": "Response model for parse_text endpoint"
+        "description": "Response model for parse_text endpoint",
+        "examples": [
+          {
+            "ingredients": [
+              {
+                "codified_ingredient": "apple",
+                "is_in_taxonomy": true,
+                "quantity_g": 150.0,
+                "taxonomy_id": "en:apple"
+              },
+              {
+                "codified_ingredient": "wheat flour",
+                "is_in_taxonomy": true,
+                "quantity_g": 200.0,
+                "taxonomy_id": "en:wheat-flour"
+              }
+            ]
+          }
+        ]
       },
       "TaxonomyItem": {
         "properties": {
@@ -680,7 +849,14 @@
           "isInTaxonomy"
         ],
         "title": "TaxonomyItem",
-        "description": "A taxonomy reference with an id and a localized label.\n\nMirrors the frontend `TaxonomyItem` (used for codified ingredients, labels\nand origins)."
+        "description": "A taxonomy reference with an id and a localized label.\n\nMirrors the frontend `TaxonomyItem` (used for codified ingredients, labels\nand origins).",
+        "examples": [
+          {
+            "id": "en:apple",
+            "isInTaxonomy": true,
+            "label": "Apple"
+          }
+        ]
       },
       "ValidationError": {
         "properties": {

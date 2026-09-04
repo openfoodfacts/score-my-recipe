@@ -62,7 +62,9 @@
 		"ignored_ingredients": "ingrédient(s) ignoré(s)",
 		"ignored_weight": "du poids total",
 		"no_score": "Aucun score disponible. Ajoutez des ingrédients avec un poids pour calculer le score.",
-		"compute_score": "Calculer le score"
+		"compute_score": "Calculer le score",
+		"ingredient_not_accounted": "Non comptabilisé",
+		"ingredient_not_accounted_tooltip": "Nous n'avons pas trouvé de correspondance dans notre base de données d'impact pour cet ingrédient"
 	},
 	"homepage": {
 		"title": "Score My Recipe - Open Food Facts",

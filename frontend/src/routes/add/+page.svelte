@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { _ } from '$lib/i18n';
+	import { _, getLocale } from '$lib/i18n';
 	import { goto } from '$app/navigation';
 	import { parseRecipeText, apiIngredientsToIngredients } from '$lib/api/recipe';
 
@@ -13,7 +13,11 @@
 		error = null;
 
 		try {
-			const result = await parseRecipeText(recipeText, 'fr');
+			// the recipe text is most likely written in the language of the
+			// interface, in the future it could be changed
+			// the API expects a 2-letter language code (eg. "fr")
+			const lang = getLocale().split('-')[0];
+			const result = await parseRecipeText(recipeText, lang);
 			const ingredients = apiIngredientsToIngredients(result.ingredients);
 			await goto('/score', { state: { ingredients } });
 		} catch (e) {
