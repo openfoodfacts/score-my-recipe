@@ -25,6 +25,9 @@ def off_ingredient_to_recipe_ingredient(
 
 async def parse_text(text: str, lang: str) -> list[types.RecipeIngredient]:
     """Parse a text and return a list of ingredients with quantities and eventual modifiers"""
+    # normalize the language code (eg. "fr-FR" or "fr_FR" to "fr"), as the OFF
+    # ingredient parsing API only accepts 2-letter language codes
+    lang = two_letter_lang_code(lang)
     off_ingredients = await off.parse_text(text, lang)
     ingredients = [
         off_ingredient_to_recipe_ingredient(ingredient) for ingredient in off_ingredients

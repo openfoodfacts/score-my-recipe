@@ -95,3 +95,19 @@ def test_parse_text_empty_request():
         )
         assert response.status_code == 200
         assert response.json()["ingredients"] == []
+
+
+def test_parse_text_normalizes_language_code(mock_off_parse_text):
+    """Test that parse_text normalizes the language code (fr-FR or fr_FR -> fr)
+
+    This matches the behaviour of the taxonomy endpoints and is required as the
+    OFF ingredient parsing API only accepts 2-letter language codes.
+    """
+    for lang in ("fr-FR", "fr_FR"):
+        mock_off_parse_text.reset_mock()
+        response = client.post(
+            "/v1/parse_text",
+            json={"text": "tomates 500g", "lang": lang},
+        )
+        assert response.status_code == 200
+        mock_off_parse_text.assert_awaited_once_with("tomates 500g", "fr")
