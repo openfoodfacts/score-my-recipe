@@ -6,11 +6,24 @@ import asyncio
 import openfoodfacts
 import openfoodfacts.taxonomy as taxonomy
 from api.types import OFFIngredient
-from api.settings import get_settings
+from api.settings import OpenFoodFactsEnvironments, get_settings
 
 USER_AGENT = "Score-my-recipe - openfoodfacts"
 
-off_api = openfoodfacts.API(user_agent=USER_AGENT, version="v3")
+
+def off_env_setting(off_env: OpenFoodFactsEnvironments) -> openfoodfacts.Environment:
+    """Get the corresponding openfoodfacts.Environment for the given OpenFoodFactsEnvironments enum value."""
+    if off_env == OpenFoodFactsEnvironments.PROD:
+        return openfoodfacts.Environment.org
+    elif off_env == OpenFoodFactsEnvironments.STAGING:
+        return openfoodfacts.Environment.net
+
+
+off_api = openfoodfacts.API(
+    user_agent=USER_AGENT,
+    version="v3",
+    environment=off_env_setting(get_settings().openfoodfacts_env),
+)
 
 
 async def parse_text(text: str, lang: str) -> list[OFFIngredient]:
@@ -33,7 +46,9 @@ async def parse_text(text: str, lang: str) -> list[OFFIngredient]:
     # ```
     # TODO: change openfoodfacts package to be able to use async ?
     ingredients_data = await asyncio.to_thread(off_api.product.parse_ingredients, text, lang)
+    import pdb
 
+    pdb.set_trace()
     return [OFFIngredient(**ingredient) for ingredient in ingredients_data]
 
 

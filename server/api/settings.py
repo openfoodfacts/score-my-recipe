@@ -1,3 +1,4 @@
+from enum import StrEnum
 from pathlib import Path
 from typing import Annotated
 
@@ -5,7 +6,7 @@ from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class OpenFoodFactsEnvironments(str, Enum):
+class OpenFoodFactsEnvironments(StrEnum):
     """Enum for the OpenFoodFacts API environments."""
 
     PROD = "prod"
@@ -24,7 +25,8 @@ class Settings(BaseSettings):
     ] = Path("./data/agribalyse.csv")
 
     openfoodfacts_env: Annotated[
-        OpenFoodFactsEnvironments, Field(description="Environment to use for OpenFoodFacts API (prod or staging)")
+        OpenFoodFactsEnvironments,
+        Field(description="Environment to use for OpenFoodFacts API (prod or staging)"),
     ] = OpenFoodFactsEnvironments.PROD
 
 
