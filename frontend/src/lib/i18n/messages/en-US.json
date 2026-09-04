@@ -49,6 +49,8 @@
 		"weight": "Weight (g)",
 		"codified_ingredient": "Codified",
 		"labels": "Labels",
+		"quantity": "Qty",
+        "unit": "Unit",
 		"seasonality": "Seasonal",
 		"origin": "Origin",
 		"unknown": "Unknown",
@@ -63,6 +65,7 @@
 		"ignored_weight": "of total weight",
 		"no_score": "No score available. Add ingredients with weights to compute the score.",
 		"compute_score": "Compute score",
+
 		"ingredient_not_accounted": "Not accounted",
 		"ingredient_not_accounted_tooltip": "We could not find a correspondence in our impact database for this ingredient"
 	},

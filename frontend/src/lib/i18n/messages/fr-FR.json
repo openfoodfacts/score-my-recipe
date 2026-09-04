@@ -51,6 +51,8 @@
 		"labels": "Labels",
 		"seasonality": "Saisonnalité",
 		"origin": "Origine",
+		"quantity": "Qté",
+        "unit": "Unité",
 		"unknown": "Inconnu",
 		"delete_ingredient": "Supprimer l'ingrédient",
 		"action": "Action",

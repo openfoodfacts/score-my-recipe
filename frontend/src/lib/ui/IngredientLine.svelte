@@ -15,6 +15,7 @@
 <script lang="ts">
 	import { _ } from '$lib/i18n';
 	import Tags from './Tags.svelte';
+	import { recalculateWeight } from '$lib/api/recipe';
 	import IconMdiDelete from '@iconify-svelte/mdi/delete';
 	import IconMdiAlertCircle from '@iconify-svelte/mdi/alert-circle';
 	import type { Ingredient } from '$lib/types/ingredient';
@@ -54,7 +55,21 @@
 			onNotEmpty();
 		}
 	});
+    /** Handle Quantity Change with Cross Multiplication */
+    function handleQuantityChange(e: Event) {
+    const inputVal = (e.target as HTMLInputElement).value;
+    const newQty = inputVal !== '' ? parseFloat(inputVal) : null;
 
+    // Recalculate grams weight dynamically
+    ingredient.weight = recalculateWeight(ingredient.quantity ?? null, newQty, ingredient.weight);
+    ingredient.quantity = newQty;
+}
+
+     /** Handle Unit Dropdown Change */
+    function handleUnitChange(e: Event) {
+    const newUnit = (e.target as HTMLSelectElement).value;
+    ingredient.unit = newUnit;
+}
 	/**
 	 * Handle delete button click
 	 */
@@ -102,6 +117,42 @@
 			single={true}
 		/>
 	</div>
+	<!-- Quantity Field -->
+    <div class="flex w-20 flex-col">
+        <label class="label py-1" for="ingredient-quantity-{ingredient.id}">
+            <span class="label-text text-xs">{$_('recipe.quantity', { default: 'Qty' })}</span>
+        </label>
+        <input
+            id="ingredient-quantity-{ingredient.id}"
+            type="number"
+            step="any"
+            class="input input-bordered w-full"
+            placeholder="0"
+            value={ingredient.quantity ?? ''}
+            oninput={handleQuantityChange}
+            min="0"
+        />
+    </div>
+
+    <!-- Unit Field -->
+    <div class="flex w-24 flex-col">
+        <label class="label py-1" for="ingredient-unit-{ingredient.id}">
+            <span class="label-text text-xs">{$_('recipe.unit', { default: 'Unit' })}</span>
+        </label>
+        <select
+            id="ingredient-unit-{ingredient.id}"
+            class="select select-bordered w-full"
+            value={ingredient.unit ?? 'g'}
+            onchange={handleUnitChange}
+        >
+            <option value="g">g</option>
+            <option value="kg">kg</option>
+            <option value="ml">ml</option>
+            <option value="cl">cl</option>
+            <option value="l">l</option>
+            <option value="unit">unit</option>
+        </select>
+    </div>
 
 	<!-- Weight -->
 	<div class="flex w-24 flex-col">

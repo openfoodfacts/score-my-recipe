@@ -52,6 +52,8 @@ export interface Ingredient {
 	seasonality: boolean;
 	/** Origin countries/regions */
 	origin: Origin | null;
+	quantity?: number | null; 
+	unit?: string;
 }
 
 /**
@@ -113,5 +115,5 @@ export function isIngredientNotEmpty(ingredient: Ingredient): boolean {
  * @returns A string uniquely identifying the ingredient's relevant content.
  */
 export function ingredientSignature(ingredient: Ingredient): string {
-	return `${ingredient.id}:${ingredient.name}:${ingredient.weight ?? ''}:${ingredient.codifiedIngredient?.id ?? ''}:${ingredient.seasonality}:${ingredient.origin?.id ?? ''}:${ingredient.labels.map((l) => l.id).join(',')}`;
+    return `${ingredient.id}:${ingredient.name}:${ingredient.quantity ?? ''}:${ingredient.unit ?? ''}:${ingredient.weight ?? ''}:${ingredient.codifiedIngredient?.id ?? ''}:${ingredient.seasonality}:${ingredient.origin?.id ?? ''}:${ingredient.labels.map((l) => l.id).join(',')}`;
 }
