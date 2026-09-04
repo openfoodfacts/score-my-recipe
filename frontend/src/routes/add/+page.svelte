@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { _ } from '$lib/i18n';
+	import { _, locale } from '$lib/i18n';
 	import { goto } from '$app/navigation';
 	import { parseRecipeText, apiIngredientsToIngredients } from '$lib/api/recipe';
 
@@ -13,7 +13,8 @@
 		error = null;
 
 		try {
-			const result = await parseRecipeText(recipeText, 'fr');
+		    const currentLang = $locale || 'fr';
+			const result = await parseRecipeText(recipeText, currentLang);
 			const ingredients = apiIngredientsToIngredients(result.ingredients);
 			await goto('/score', { state: { ingredients } });
 		} catch (e) {
