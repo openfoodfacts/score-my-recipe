@@ -247,6 +247,71 @@
         }
       }
     },
+    "/v1/suggest-scored-ingredient": {
+      "get": {
+        "summary": "Suggest Scored Ingredient",
+        "description": "Suggest scored ingredient alternatives for an ingredient with no Agribalyse match.\n\nGiven a taxonomy id (typically one returned in ``missing_ingredient_ids``),\nwalk down the ingredients taxonomy and return the descendants that resolve\nto an Agribalyse row, so the user can pick a more specific alternative.",
+        "operationId": "suggest_scored_ingredient_v1_suggest_scored_ingredient_get",
+        "parameters": [
+          {
+            "name": "lang",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Language for the request (2 or 5 letter code)",
+              "title": "Lang"
+            },
+            "description": "Language for the request (2 or 5 letter code)"
+          },
+          {
+            "name": "include_synonyms",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "If true, include the synonyms of each item in the response.",
+              "default": false,
+              "title": "Include Synonyms"
+            },
+            "description": "If true, include the synonyms of each item in the response."
+          },
+          {
+            "name": "taxonomy_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Taxonomy id of the ingredient to find alternatives for",
+              "title": "Taxonomy Id"
+            },
+            "description": "Taxonomy id of the ingredient to find alternatives for"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuggestScoredIngredientResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/green-score": {
       "post": {
         "summary": "Green Score",
@@ -823,6 +888,77 @@
             ]
           }
         ]
+      },
+      "ScoredIngredient": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Taxonomy id of the item"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Name of the item"
+          },
+          "synonyms": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Synonyms",
+            "description": "Synonyms in the requested language. Only present in the response when include_synonyms is true."
+          },
+          "agribalyseCode": {
+            "type": "string",
+            "title": "Agribalysecode",
+            "description": "The Agribalyse row code (row identity) matching this ingredient"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "agribalyseCode"
+        ],
+        "title": "ScoredIngredient",
+        "description": "An ingredient alternative with its matching Agribalyse row code.\n\nMirrors the ``Ingredient`` structure (so it can be presented to the user just\nlike the ``get_ingredients`` results) and adds the Agribalyse row code that\nthe suggestion resolves to. Exposes camelCase aliases (matching the frontend\nconvention) for multi-word fields.",
+        "examples": [
+          {
+            "agribalyse_code": "10001",
+            "id": "en:apple",
+            "label": "Apple"
+          },
+          {
+            "agribalyseCode": "10602",
+            "id": "en:wheat-flour",
+            "label": "Wheat flour"
+          }
+        ]
+      },
+      "SuggestScoredIngredientResponse": {
+        "properties": {
+          "ingredients": {
+            "items": {
+              "$ref": "#/components/schemas/ScoredIngredient"
+            },
+            "type": "array",
+            "title": "Ingredients"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ingredients"
+        ],
+        "title": "SuggestScoredIngredientResponse",
+        "description": "Response model for the suggest-scored-ingredient endpoint."
       },
       "TaxonomyItem": {
         "properties": {

@@ -4,6 +4,7 @@ It contains all the business logic.
 
 import logging
 
+import api.agribalyse as agribalyse
 import api.off as off
 import api.types as types
 
@@ -146,4 +147,41 @@ async def get_ingredients(lang: str, include_synonyms: bool = False) -> list[typ
             synonyms=ingredient_synonyms if include_synonyms else None,
         )
         for ingredient_id, ingredient_label, ingredient_synonyms in _ingredients[lang]
+    ]
+
+
+async def suggest_scored_ingredient(
+    lang: str, include_synonyms: bool, taxonomy_id: str
+) -> list[types.ScoredIngredient]:
+    """Suggest scored ingredient alternatives for a taxonomy id.
+
+    Walks down the ingredients taxonomy from the node matching ``taxonomy_id``
+    and returns the nodes that resolve to an Agribalyse row, as a list of
+    ingredients (same structure as :func:`get_ingredients`) each annotated with
+    its Agribalyse row code.
+
+    Returns an empty list when the taxonomy id is unknown or no descendant
+    resolves to an Agribalyse row.
+    """
+    lang = two_letter_lang_code(lang)
+    ingredients_taxonomy = await off.get_ingredients_taxonomy()
+    node = ingredients_taxonomy[taxonomy_id] if taxonomy_id in ingredients_taxonomy else None
+    if node is None:
+        return []
+
+    suggestions = agribalyse.suggest_scored_ingredient(node)
+    if not suggestions:
+        return []
+
+    # Resolve localized labels/synonyms for the matched nodes in one pass.
+    labels = off.taxonomy_lang_label_and_synonyms(lang, [n for n, _ in suggestions])
+    code_by_id = {n.id: code for n, code in suggestions}
+    return [
+        types.ScoredIngredient(
+            id=ingredient_id,
+            label=ingredient_label,
+            synonyms=ingredient_synonyms if include_synonyms else None,
+            agribalyse_code=code_by_id[ingredient_id],
+        )
+        for ingredient_id, ingredient_label, ingredient_synonyms in labels
     ]

@@ -169,7 +169,9 @@ def write_csv(rows: list[list], out_path: Path) -> None:
     print(f"  wrote {len(rows)} rows -> {out_path}", file=sys.stderr)
 
 
-def fetch_agribalyse(out_path: Path, cache_dir: Path, no_cache: bool = False, rebuild: bool = False) -> int:
+def fetch_agribalyse(
+    out_path: Path, cache_dir: Path, no_cache: bool = False, rebuild: bool = False
+) -> int:
     """Download the Agribalyse XLSX and dump its Synthese sheet to a CSV.
 
     The XLSX is cached under ``cache_dir`` and re-used unless ``no_cache`` is
@@ -275,12 +277,18 @@ def _property_value(node: taxonomy.TaxonomyNode, prop: str) -> Optional[str]:
 
 def find_agribalyse_row(
     node: Optional[taxonomy.TaxonomyNode],
+    search_parents: bool = True,
 ) -> tuple[Optional[str], Optional[str], Optional[dict[str, Any]]]:
     """Find the Agribalyse row matching a taxonomy node.
 
-    The node's code properties (and those of its parents) are tried in priority
-    order. Returns ``(matched_code, code_source_property, row)`` where ``row``
-    is ``None`` when nothing matched.
+    The node's code properties are tried in priority order. When
+    ``search_parents`` is ``True`` (the default) the same properties are also
+    searched on the node's parents (closest first); when ``False`` only the
+    node itself is considered — useful when walking down the taxonomy where a
+    child should match on its own codes, not inherit a parent's.
+
+    Returns ``(matched_code, code_source_property, row)`` where ``row`` is
+    ``None`` when nothing matched.
     """
     if node is None:
         return None, None, None
@@ -288,11 +296,107 @@ def find_agribalyse_row(
     by_code, by_ciqual = _load_agribalyse()
     indexes = {AGRIBALYSE_CODE_COLUMN: by_code, CIQUAL_CODE_COLUMN: by_ciqual}
 
+    # Nodes inspected for each property: the node alone, or the node followed
+    # by its parents when parent search is enabled.
+    nodes = [node] if not search_parents else _node_chain(node)
+
     for prop in INGREDIENT_CODE_PROPERTIES:
         column = _column_for_property(prop)
         index = indexes[column]
-        for n in _node_chain(node):
+        for n in nodes:
             code = _property_value(n, prop)
             if code and code in index:
                 return code, prop, index[code]
     return None, None, None
+
+
+# --- Ingredient suggestions ------------------------------------------------
+
+
+def suggest_scored_ingredient(
+    node: Optional[taxonomy.TaxonomyNode],
+) -> list[tuple[taxonomy.TaxonomyNode, str]]:
+    """Suggest scored ingredient alternatives for a taxonomy node.
+
+    Starting from ``node``, walk down the taxonomy (the ingredients taxonomy is
+    a DAG, so a node may be reached through several parent paths) and collect
+    every node that resolves to an Agribalyse row.
+
+    A node is only reported when its matched Agribalyse row has a *different*
+    ``code`` (row identity) than the rows already found along the current path:
+    a child resolving to the same row as an already-reported ancestor brings no
+    new information and is skipped. Recursion nonetheless continues past such
+    skipped nodes, since a more specific descendant may resolve to a different
+    row.
+
+    Because the taxonomy is a DAG, the same node may finally be reported through
+    several paths. A last cleaning pass drops any reported node when one of its
+    taxonomy ancestors was itself reported with the same Agribalyse code (this
+    removes duplicates that the per-path suppression could not catch).
+
+    Returns a list of ``(node, agribalyse_row_code)`` tuples, each node
+    appearing at most once.
+    """
+    if node is None:
+        return []
+
+    # Reported nodes, in DFS order. The same node may be appended more than once
+    # if reached through several paths; it is deduplicated at the end.
+    reported: list[tuple[taxonomy.TaxonomyNode, str]] = []
+    # Memoization key (node id, ancestor codes) to bound traversal in the DAG.
+    seen: set[tuple[str, frozenset[str]]] = set()
+
+    def visit(current: taxonomy.TaxonomyNode, ancestor_codes: frozenset[str]) -> None:
+        key = (current.id, ancestor_codes)
+        if key in seen:
+            return
+        seen.add(key)
+
+        # Only look at the node's own codes: a child must match on its own
+        # properties, not inherit a parent's (that is the whole point of going
+        # down the hierarchy).
+        _, _, row = find_agribalyse_row(current, search_parents=False)
+        row_code: Optional[str] = row["code"] if row is not None else None
+
+        child_codes = ancestor_codes
+        if row_code is not None and row_code not in ancestor_codes:
+            reported.append((current, row_code))
+            child_codes = ancestor_codes | {row_code}
+
+        # Always recurse, even past a suppressed node: a deeper descendant may
+        # resolve to a different Agribalyse row.
+        for child in current.children:
+            visit(child, child_codes)
+
+    visit(node, frozenset())
+
+    return _dedupe_reported(reported)
+
+
+def _dedupe_reported(
+    reported: list[tuple[taxonomy.TaxonomyNode, str]],
+) -> list[tuple[taxonomy.TaxonomyNode, str]]:
+    """Final cleaning of the reported alternatives.
+
+    A node may appear several times (reached through several DAG paths); since a
+    node always resolves to the same Agribalyse code, we keep its first
+    occurrence. We then drop a node when one of its taxonomy ancestors was also
+    reported with the same code — that ancestor is a strictly more general
+    alternative already covered.
+    """
+    # First occurrence of each node id (codes are deterministic per node).
+    first: dict[str, tuple[taxonomy.TaxonomyNode, str]] = {}
+    for n, code in reported:
+        first.setdefault(n.id, (n, code))
+
+    result: list[tuple[taxonomy.TaxonomyNode, str]] = []
+    for n, code in first.values():
+        ancestor_ids = {p.id for p in n.get_parents_hierarchy()}
+        # Drop if any *other* reported node with the same code is an ancestor.
+        if any(
+            other_id != n.id and other_code == code and other_id in ancestor_ids
+            for other_id, (_, other_code) in first.items()
+        ):
+            continue
+        result.append((n, code))
+    return result
