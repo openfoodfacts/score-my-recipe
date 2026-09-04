@@ -259,13 +259,23 @@ class ScoredIngredient(Ingredient):
     convention) for multi-word fields.
     """
 
-    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+    model_config = ConfigDict()
 
     agribalyse_code: Annotated[
         str,
         Field(description="The Agribalyse row code (row identity) matching this ingredient"),
     ]
 
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+        json_schema_extra={
+            "examples": [
+                {"id": "en:apple", "label": "Apple", "agribalyse_code": "10001"},
+                {"id": "en:wheat-flour", "label": "Wheat flour", "agribalyseCode": "10602"},
+            ]
+        }
+    )
 
 class SuggestScoredIngredientRequest(TaxonomyRequest):
     """Request model for the suggest-scored-ingredient endpoint."""
@@ -274,6 +284,11 @@ class SuggestScoredIngredientRequest(TaxonomyRequest):
         str,
         Field(description="Taxonomy id of the ingredient to find alternatives for"),
     ]
+
+    model_config = ConfigDict(
+        json_schema_extra={"examples": [{"lang": "en", "include_synonyms": False, "taxonomy_id": "en:meat"}]}
+    )
+
 
 
 class SuggestScoredIngredientResponse(BaseModel):
