@@ -46,9 +46,6 @@ async def parse_text(text: str, lang: str) -> list[OFFIngredient]:
     # ```
     # TODO: change openfoodfacts package to be able to use async ?
     ingredients_data = await asyncio.to_thread(off_api.product.parse_ingredients, text, lang)
-    import pdb
-
-    pdb.set_trace()
     return [OFFIngredient(**ingredient) for ingredient in ingredients_data]
 
 
