@@ -120,6 +120,30 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	'/v1/suggest-scored-ingredient': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Suggest Scored Ingredient
+		 * @description Suggest scored ingredient alternatives for an ingredient with no Agribalyse match.
+		 *
+		 *     Given a taxonomy id (typically one returned in ``missing_ingredient_ids``),
+		 *     walk down the ingredients taxonomy and return the descendants that resolve
+		 *     to an Agribalyse row, so the user can pick a more specific alternative.
+		 */
+		get: operations['suggest_scored_ingredient_v1_suggest_scored_ingredient_get'];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	'/v1/green-score': {
 		parameters: {
 			query?: never;
@@ -489,6 +513,55 @@ export interface components {
 			ingredients: components['schemas']['RecipeIngredient'][];
 		};
 		/**
+		 * ScoredIngredient
+		 * @description An ingredient alternative with its matching Agribalyse row code.
+		 *
+		 *     Mirrors the ``Ingredient`` structure (so it can be presented to the user just
+		 *     like the ``get_ingredients`` results) and adds the Agribalyse row code that
+		 *     the suggestion resolves to. Exposes camelCase aliases (matching the frontend
+		 *     convention) for multi-word fields.
+		 * @example {
+		 *       "agribalyse_code": "10001",
+		 *       "id": "en:apple",
+		 *       "label": "Apple"
+		 *     }
+		 * @example {
+		 *       "agribalyseCode": "10602",
+		 *       "id": "en:wheat-flour",
+		 *       "label": "Wheat flour"
+		 *     }
+		 */
+		ScoredIngredient: {
+			/**
+			 * Id
+			 * @description Taxonomy id of the item
+			 */
+			id: string;
+			/**
+			 * Label
+			 * @description Name of the item
+			 */
+			label: string;
+			/**
+			 * Synonyms
+			 * @description Synonyms in the requested language. Only present in the response when include_synonyms is true.
+			 */
+			synonyms?: string[] | null;
+			/**
+			 * Agribalysecode
+			 * @description The Agribalyse row code (row identity) matching this ingredient
+			 */
+			agribalyseCode: string;
+		};
+		/**
+		 * SuggestScoredIngredientResponse
+		 * @description Response model for the suggest-scored-ingredient endpoint.
+		 */
+		SuggestScoredIngredientResponse: {
+			/** Ingredients */
+			ingredients: components['schemas']['ScoredIngredient'][];
+		};
+		/**
 		 * TaxonomyItem
 		 * @description A taxonomy reference with an id and a localized label.
 		 *
@@ -705,6 +778,42 @@ export interface operations {
 				};
 				content: {
 					'application/json': components['schemas']['IngredientsResponse'];
+				};
+			};
+			/** @description Validation Error */
+			422: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					'application/json': components['schemas']['HTTPValidationError'];
+				};
+			};
+		};
+	};
+	suggest_scored_ingredient_v1_suggest_scored_ingredient_get: {
+		parameters: {
+			query: {
+				/** @description Language for the request (2 or 5 letter code) */
+				lang: string;
+				/** @description If true, include the synonyms of each item in the response. */
+				include_synonyms?: boolean;
+				/** @description Taxonomy id of the ingredient to find alternatives for */
+				taxonomy_id: string;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Successful Response */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					'application/json': components['schemas']['SuggestScoredIngredientResponse'];
 				};
 			};
 			/** @description Validation Error */
