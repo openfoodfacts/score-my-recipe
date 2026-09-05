@@ -10,12 +10,12 @@
 import { init, register, getLocaleFromNavigator, isLoading } from 'svelte-i18n';
 import { browser } from '$app/environment';
 
-const locales = ['en-US', 'fr-FR'];
+const LOCALES = ['en-US', 'fr-FR'];
 
-const FALLBACK_LOCALE = 'en-US';
+const FALLBACK_LOCALE = LOCALES[0];
 
 // TODO: when we have many locales we should load them lazily, when we really need them
-locales.forEach((locale) => {
+LOCALES.forEach((locale) => {
 	register(locale, async () => {
 		const messages = await import(`./messages/${locale}.json`);
 		return messages.default;
