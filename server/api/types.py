@@ -499,6 +499,18 @@ class GreenScoreResponse(CamelModel):
         }
     )
 
+    global_ef_score: Annotated[
+        Optional[float],
+        Field(
+            description="The computed global EF score of the recipe, null if no ingredients have a score"
+        ),
+    ] = None
+    labels_bonus: Annotated[
+        Optional[float],
+        Field(
+            description="The bonus from ingredient labels, null if no ingredients have a score, 0 if no labels"
+        ),
+    ] = None
     numeric_score: Annotated[
         Optional[float],
         Field(

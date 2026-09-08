@@ -28,6 +28,10 @@ class IngredientMetrics(BaseModel):
         default=None,
         description="Per-kg EF score from Agribalyse (mPt/kg), None when the ingredient is missing",
     )
+    labels_bonus: Optional[float] = Field(
+        default=None,
+        description="Bonus from ingredient labels",
+    )
     ratio: Optional[float] = Field(
         default=None,
         description="Share of the ingredient weight in the chosen denominator "
@@ -37,3 +41,7 @@ class IngredientMetrics(BaseModel):
         default=False,
         description="True when the ingredient has no usable Agribalyse EF score",
     )
+
+
+#: Type alias for a list of per-ingredient metrics
+RecipeMetrics = list[IngredientMetrics]

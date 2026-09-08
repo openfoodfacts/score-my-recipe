@@ -14,6 +14,20 @@ import api.types as types
 logger = logging.getLogger(__name__)
 
 
+def safe_zip_recipe_metrics(recipe: types.RecipeInput, metrics: score_types.RecipeMetrics):
+    """Zip a recipe and its metrics, checking that they have the same ingredient ids at each line.
+
+    Raises a ValueError if the lengths differ or some ingredients does not match.
+    """
+    if len(recipe) != len(metrics):
+        raise ValueError(
+            f"Recipe and metrics have different lengths: {len(recipe)} vs {len(metrics)}"
+        )
+    if any(ingredient.id != metric.id for ingredient, metric in zip(recipe, metrics)):
+        raise ValueError("Recipe and metrics have different ingredient ids")
+    return zip(recipe, metrics)
+
+
 async def match_ingredients_to_agribalyse(
     recipe: types.RecipeInput,
 ) -> dict[str, types.IngredientAgribalyse]:
@@ -45,14 +59,14 @@ async def match_ingredients_to_agribalyse(
 
 async def gather_ef_metrics(
     recipe: types.RecipeInput,
-) -> list[score_types.IngredientMetrics]:
+) -> score_types.RecipeMetrics:
     """Gather the per-ingredient EF score from Agribalyse.
 
     Negative weights are invalid and raise a ``ValueError``. A zero weight is
     tolerated (it does not perturb the computation).
     """
     ingredients_agribalyse = await match_ingredients_to_agribalyse(recipe)
-    metrics: list[score_types.IngredientMetrics] = []
+    metrics: score_types.RecipeMetrics = []
     for ingredient in recipe:
         if ingredient.weight < 0:
             raise ValueError(
@@ -76,7 +90,7 @@ async def gather_ef_metrics(
 
 
 def compute_ratios(
-    metrics: list[score_types.IngredientMetrics],
+    metrics: score_types.RecipeMetrics,
     ratio_mode: score_types.AccountedWeights = score_types.AccountedWeights.ONLY_SCORABLE,
 ) -> None:
     """Compute each ingredient's weight ratio and EF contribution.
@@ -100,8 +114,9 @@ def compute_ratios(
             continue
         m.ratio = m.weight / total_weight
 
+
 def ponderated_ef_sum(
-    metrics: list[score_types.IngredientMetrics],
+    metrics: score_types.RecipeMetrics,
 ) -> Optional[float]:
     """Third pass: sum the per-ingredient EF contributions into the recipe EF score.
 
@@ -128,8 +143,80 @@ def normalize_ef_score(ef_score: float) -> float:
     normalized_score = 100 - numerator / divisor * 20
     return min(max(normalized_score, 0.0), 100.0)
 
+# see https://docs.score-environnemental.com/methodologie-recette/bonus-malus-recette/systeme-de-production/labels
+LABELS_BONUS = {
+    "fr:nature-et-progres": 20,
+    "fr:bio-coherence": 20,
+    "en:demeter": 20,
+    "fr:bio-equitable": 20,
+    "en:eu-organic": 15,
+    "fr:ab-agriculture-biologique": 15,
+    # TODO: Needs verification.
+    # it's there:
+    # https://docs.score-environnemental.com/methodologie/produit/systeme-de-production/label
+    # but not there:
+    # https://docs.score-environnemental.com/methodologie-recette/bonus-malus-recette/systeme-de-production/labels
+    "en:sustainable-fishing-method": 15,
+    "fr:haute-valeur-environnementale": 10,
+    "en:utz-certified": 10,
+    "en:rainforest-alliance": 10,
+    "en:fairtrade-international": 10,
+    "fr:bleu-blanc-coeur": 10,
+    "fr:label-rouge": 10,
+    "en:sustainable-seafood-msc": 10,
+    "en:responsible-aquaculture-asc": 10,
+}
 
-async def score_to_letter(score: float) -> str:
+
+# cache
+_LABELS_BONUS_FULL: Optional[dict[str, int]] = None
+
+
+async def labels_bonus_full() -> dict[str, int]:
+    """Return the labels bonus dictionary, including all children of the listed labels.
+    """
+    global _LABELS_BONUS_FULL
+    if _LABELS_BONUS_FULL is None:
+        taxonomy = await off.get_labels_taxonomy()
+        labels_bonus_full = dict(LABELS_BONUS)
+        for label_id, bonus in LABELS_BONUS.items():
+            try:
+                node = taxonomy[label_id]
+            except KeyError:
+                node = None
+            if not node:
+                logger.warning("Label %s not found in taxonomy", label_id)
+                continue
+            for child in node.get_children_hierarchy():
+                labels_bonus_full[child.id] = max(labels_bonus_full.get(child.id, -1), bonus)
+        _LABELS_BONUS_FULL = labels_bonus_full
+    return _LABELS_BONUS_FULL
+
+
+async def gather_labels_bonus(recipe: types.RecipeInput, metrics: score_types.RecipeMetrics) -> None:
+    """Gather the bonus points from labels for the recipe.
+
+    The bonus is the maximum of the bonuses of all ingredients.
+    """
+    labels_bonus = await labels_bonus_full()
+    for ingredient, metric in safe_zip_recipe_metrics(recipe, metrics):
+        if metric.missing or not ingredient.labels:
+            continue
+        max_bonus = max(labels_bonus.get(label.id, -1) for label in ingredient.labels)
+        if max_bonus > 0:
+            metric.labels_bonus = max_bonus
+
+
+def global_labels_bonus(metrics: score_types.RecipeMetrics) -> float:
+    """Compute the global labels bonus for the recipe.
+
+    The global bonus is the weighted average of the per-ingredient bonuses.
+    """
+    bonuses = [m.labels_bonus * m.ratio for m in metrics if m.labels_bonus is not None and m.ratio is not None]
+    return sum(bonuses) if bonuses else 0.0
+
+
+def score_to_letter(score: float) -> str:
     """Convert a score to a letter grade (A, B, C, D, E)"""
     if score >= 90:
         return "A+"
@@ -161,17 +248,25 @@ async def compute_green_score(
     # compute the EF score for the recipe
     metrics = await gather_ef_metrics(recipe)
     compute_ratios(metrics, accounted_weights)
+    await gather_labels_bonus(recipe, metrics)
     ef_score = ponderated_ef_sum(metrics)
     missing_ingredient_ids = [m.id for m in metrics if m.missing]
     if ef_score is not None:
         normalized_ef_score = normalize_ef_score(ef_score)
+        # account for bonus / malus
+        labels_bonus = global_labels_bonus(metrics)
+        numeric_score = normalized_ef_score - labels_bonus
         # TODO account for labels, packaging, origins and seasonality in the green-score computation
-        letter_grade = await score_to_letter(normalized_ef_score)
+        letter_grade = score_to_letter(numeric_score)
     else:
         normalized_ef_score = None
+        labels_bonus = None
+        numeric_score = None
         letter_grade = None
     return types.GreenScoreResponse(
-        numeric_score=normalized_ef_score,
+        global_ef_score=normalized_ef_score,
+        labels_bonus=labels_bonus,
+        numeric_score=numeric_score,
         letter_grade=letter_grade,
         missing_ingredient_ids=missing_ingredient_ids,
     )

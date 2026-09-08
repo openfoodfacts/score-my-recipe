@@ -40,6 +40,8 @@ def test_api_empty_recipe():
         response = client.post("/v1/green-score", json={"ingredients": []})
     assert response.status_code == 200
     assert response.json() == {
+        "globalEfScore": None,
+        "labelsBonus": None,
         "numericScore": None,
         "letterGrade": None,
         "missingIngredientIds": [],
