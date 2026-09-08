@@ -237,6 +237,16 @@ export interface components {
 		 */
 		GreenScoreResponse: {
 			/**
+			 * Globalefscore
+			 * @description The computed global EF score of the recipe, null if no ingredients have a score
+			 */
+			globalEfScore?: number | null;
+			/**
+			 * Labelsbonus
+			 * @description The bonus from ingredient labels, null if no ingredients have a score, 0 if no labels
+			 */
+			labelsBonus?: number | null;
+			/**
 			 * Numericscore
 			 * @description The computed green-score of the recipe, null if no ingredients have a score
 			 */
