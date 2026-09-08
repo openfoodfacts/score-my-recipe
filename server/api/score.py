@@ -143,6 +143,7 @@ def normalize_ef_score(ef_score: float) -> float:
     normalized_score = 100 - numerator / divisor * 20
     return min(max(normalized_score, 0.0), 100.0)
 
+
 # see https://docs.score-environnemental.com/methodologie-recette/bonus-malus-recette/systeme-de-production/labels
 LABELS_BONUS = {
     "fr:nature-et-progres": 20,
@@ -173,8 +174,7 @@ _LABELS_BONUS_FULL: Optional[dict[str, int]] = None
 
 
 async def labels_bonus_full() -> dict[str, int]:
-    """Return the labels bonus dictionary, including all children of the listed labels.
-    """
+    """Return the labels bonus dictionary, including all children of the listed labels."""
     global _LABELS_BONUS_FULL
     if _LABELS_BONUS_FULL is None:
         taxonomy = await off.get_labels_taxonomy()
@@ -193,7 +193,9 @@ async def labels_bonus_full() -> dict[str, int]:
     return _LABELS_BONUS_FULL
 
 
-async def gather_labels_bonus(recipe: types.RecipeInput, metrics: score_types.RecipeMetrics) -> None:
+async def gather_labels_bonus(
+    recipe: types.RecipeInput, metrics: score_types.RecipeMetrics
+) -> None:
     """Gather the bonus points from labels for the recipe.
 
     The bonus is the maximum of the bonuses of all ingredients.
@@ -212,7 +214,11 @@ def global_labels_bonus(metrics: score_types.RecipeMetrics) -> float:
 
     The global bonus is the weighted average of the per-ingredient bonuses.
     """
-    bonuses = [m.labels_bonus * m.ratio for m in metrics if m.labels_bonus is not None and m.ratio is not None]
+    bonuses = [
+        m.labels_bonus * m.ratio
+        for m in metrics
+        if m.labels_bonus is not None and m.ratio is not None
+    ]
     return sum(bonuses) if bonuses else 0.0
 
 
@@ -235,9 +241,9 @@ def score_to_letter(score: float) -> str:
 
 
 async def compute_green_score(
-        recipe: types.RecipeInput,
-        accounted_weights: score_types.AccountedWeights = score_types.AccountedWeights.ONLY_SCORABLE
-    ) -> types.GreenScoreResponse:
+    recipe: types.RecipeInput,
+    accounted_weights: score_types.AccountedWeights = score_types.AccountedWeights.ONLY_SCORABLE,
+) -> types.GreenScoreResponse:
     """Compute (for now: gather Agribalyse data for) the green-score of a recipe.
 
     Each ingredient is looked up in the ingredients taxonomy; its code properties

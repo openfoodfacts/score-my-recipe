@@ -4,7 +4,6 @@ These mirror the structures exposed by `openfoodfacts.taxonomy` so the
 green-score logic can be exercised without hitting the OpenFoodFacts API.
 """
 
-import math
 from contextlib import contextmanager
 from unittest.mock import AsyncMock, patch
 

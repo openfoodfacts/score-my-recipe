@@ -1,5 +1,4 @@
-"""Tests for ``score.compute_green_score``.
-"""
+"""Tests for ``score.compute_green_score``."""
 
 import pytest
 

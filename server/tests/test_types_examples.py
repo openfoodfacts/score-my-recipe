@@ -25,7 +25,7 @@ def _models_with_examples():
     non-empty ``examples`` list through ``json_schema_extra``. The examples are
     read from ``model_config`` (not from the generated JSON schema) so the test
     stays close to what is declared on the model classes.
-    
+
     """
     pairs = []
     num_classes = 0
@@ -45,9 +45,7 @@ def _models_with_examples():
             continue
 
         for index, example in enumerate(examples):
-            pairs.append(
-                pytest.param(obj, example, id=f"{obj.__name__}-{index}")
-            )
+            pairs.append(pytest.param(obj, example, id=f"{obj.__name__}-{index}"))
     # We want at least 50% of the models to have examples.
     # Enforce this as a normal test assertion (not a collection-time exception).
     return pairs, num_classes

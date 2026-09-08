@@ -1,5 +1,5 @@
-"""Per-ingredient metrics gathered during green-score computation.
-"""
+"""Per-ingredient metrics gathered during green-score computation."""
+
 import enum
 from typing import Optional
 
@@ -12,6 +12,7 @@ class AccountedWeights(enum.StrEnum):
     * scorable takes the ratio of each ingredient compared to the total weight of ingredients that have an EF score
     * total takes the ratio of each ingredient compared to the total weight of all ingredients, including unmatched ones
     """
+
     ONLY_SCORABLE = "scorable"
     ALL_WEIGHTS = "total"
 

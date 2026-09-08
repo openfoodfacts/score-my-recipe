@@ -50,9 +50,7 @@ class TaxonomyItem(BaseModel):
 
     model_config = ConfigDict(
         json_schema_extra={
-            "examples": [
-                {"id": "en:apple", "label": "Apple", "synonyms": ["apples", "pommes"]}
-            ]
+            "examples": [{"id": "en:apple", "label": "Apple", "synonyms": ["apples", "pommes"]}]
         }
     )
 
@@ -73,9 +71,7 @@ class Origin(TaxonomyItem):
 
     model_config = ConfigDict(
         json_schema_extra={
-            "examples": [
-                {"id": "en:france", "label": "France", "synonyms": ["french"]}
-            ]
+            "examples": [{"id": "en:france", "label": "France", "synonyms": ["french"]}]
         }
     )
 
@@ -112,9 +108,7 @@ class RecipeParseResponse(BaseModel):
 class LangRequest(BaseModel):
     """Request model for parse_text endpoint"""
 
-    model_config = ConfigDict(
-        json_schema_extra={"examples": [{"lang": "en"}]}
-    )
+    model_config = ConfigDict(json_schema_extra={"examples": [{"lang": "en"}]})
 
     lang: Annotated[str, Field(description="Language for the request (2 or 5 letter code)")]
 
@@ -181,9 +175,7 @@ class Label(TaxonomyItem):
 
     model_config = ConfigDict(
         json_schema_extra={
-            "examples": [
-                {"id": "en:eu-organic", "label": "EU Organic", "synonyms": ["bio"]}
-            ]
+            "examples": [{"id": "en:eu-organic", "label": "EU Organic", "synonyms": ["bio"]}]
         }
     )
 
@@ -219,9 +211,7 @@ class Ingredient(TaxonomyItem):
 
     model_config = ConfigDict(
         json_schema_extra={
-            "examples": [
-                {"id": "en:apple", "label": "Apple", "synonyms": ["apples"]}
-            ]
+            "examples": [{"id": "en:apple", "label": "Apple", "synonyms": ["apples"]}]
         }
     )
 
@@ -276,8 +266,9 @@ class ScoredIngredient(Ingredient):
                 {"id": "en:apple", "label": "Apple", "agribalyse_code": "10001"},
                 {"id": "en:wheat-flour", "label": "Wheat flour", "agribalyseCode": "10602"},
             ]
-        }
+        },
     )
+
 
 class SuggestScoredIngredientRequest(TaxonomyRequest):
     """Request model for the suggest-scored-ingredient endpoint."""
@@ -288,9 +279,10 @@ class SuggestScoredIngredientRequest(TaxonomyRequest):
     ]
 
     model_config = ConfigDict(
-        json_schema_extra={"examples": [{"lang": "en", "include_synonyms": False, "taxonomy_id": "en:meat"}]}
+        json_schema_extra={
+            "examples": [{"lang": "en", "include_synonyms": False, "taxonomy_id": "en:meat"}]
+        }
     )
-
 
 
 class SuggestScoredIngredientResponse(BaseModel):
@@ -322,11 +314,7 @@ class TaxonomyItem(CamelModel):
     # json_schema_extra is merged with the inherited CamelModel config
     # (alias_generator + populate_by_name are preserved).
     model_config = ConfigDict(
-        json_schema_extra={
-            "examples": [
-                {"id": "en:apple", "label": "Apple", "isInTaxonomy": True}
-            ]
-        }
+        json_schema_extra={"examples": [{"id": "en:apple", "label": "Apple", "isInTaxonomy": True}]}
     )
 
     id: Annotated[str, Field(description="Taxonomy identifier")]

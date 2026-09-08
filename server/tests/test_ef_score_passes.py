@@ -1,5 +1,4 @@
-"""Tests for the multi-pass EF score computation in :mod:`api.score`.
-"""
+"""Tests for the multi-pass EF score computation in :mod:`api.score`."""
 
 import pytest
 
@@ -66,8 +65,8 @@ def test_compute_ratios_scorable_denominator():
     apple: 100g * 0.3 = 30, pear: 300g * 0.5 = 150  -> ef 180 / 400 = 0.45
     """
     metrics = [
-        IngredientMetrics(id="i1", name="apple", weight=100, ef_score=0.3),
-        IngredientMetrics(id="i2", name="pear", weight=300, ef_score=0.5),
+        IngredientMetrics(id="i1", weight=100, ef_score=0.3),
+        IngredientMetrics(id="i2", weight=300, ef_score=0.5),
     ]
     score.compute_ratios(metrics)
     assert metrics[0].ratio == pytest.approx(100 / 400)
@@ -77,8 +76,8 @@ def test_compute_ratios_scorable_denominator():
 def test_compute_ratios_missing_keeps_none_ratio():
     """A missing ingredient keeps a None ratio"""
     metrics = [
-        IngredientMetrics(id="i1", name="apple", weight=100, ef_score=0.3),
-        IngredientMetrics(id="i2", name="water", weight=50, ef_score=None, missing=True),
+        IngredientMetrics(id="i1", weight=100, ef_score=0.3),
+        IngredientMetrics(id="i2", weight=50, ef_score=None, missing=True),
     ]
     score.compute_ratios(metrics)
     # scorable denominator = 100 (water excluded)
@@ -89,7 +88,7 @@ def test_compute_ratios_missing_keeps_none_ratio():
 def test_compute_ratios_zero_denominator_leaves_none():
     """When no ingredient is scorable, ratios stay None."""
     metrics = [
-        IngredientMetrics(id="i1", name="water", weight=100, ef_score=None, missing=True),
+        IngredientMetrics(id="i1", weight=100, ef_score=None, missing=True),
     ]
     score.compute_ratios(metrics)
     assert metrics[0].ratio is None
@@ -105,8 +104,8 @@ def test_compute_ratios_total_denominator_dilutes():
     apple ratio = 0.5, contribution = 0.15 -> recipe ef = 0.15 (diluted from 0.3).
     """
     metrics = [
-        IngredientMetrics(id="i1", name="apple", weight=100, ef_score=0.3),
-        IngredientMetrics(id="i2", name="water", weight=100, ef_score=None, missing=True),
+        IngredientMetrics(id="i1", weight=100, ef_score=0.3),
+        IngredientMetrics(id="i2", weight=100, ef_score=None, missing=True),
     ]
     score.compute_ratios(metrics, ratio_mode=AccountedWeights.ALL_WEIGHTS)
     assert metrics[0].ratio == pytest.approx(100 / 200)
@@ -119,12 +118,8 @@ def test_compute_ratios_total_denominator_dilutes():
 def test_ponderated_sum_sums_contributions():
     """The ponderated sum is the sum of per-ingredient contributions."""
     metrics = [
-        IngredientMetrics(
-            id="i1", name="apple", weight=100, ef_score=0.3, ratio=0.25, ef_contribution=0.075
-        ),
-        IngredientMetrics(
-            id="i2", name="pear", weight=300, ef_score=0.5, ratio=0.75, ef_contribution=0.375
-        ),
+        IngredientMetrics(id="i1", weight=100, ef_score=0.3, ratio=0.25),
+        IngredientMetrics(id="i2", weight=300, ef_score=0.5, ratio=0.75),
     ]
     assert score.ponderated_ef_sum(metrics) == pytest.approx(0.45)
 
@@ -132,7 +127,7 @@ def test_ponderated_sum_sums_contributions():
 def test_ponderated_sum_returns_none_when_all_missing():
     """No contribution yields None."""
     metrics = [
-        IngredientMetrics(id="i1", name="water", weight=100, ef_score=None, missing=True),
+        IngredientMetrics(id="i1", weight=100, ef_score=None, missing=True),
     ]
     assert score.ponderated_ef_sum(metrics) is None
 
@@ -168,11 +163,7 @@ async def test_recipe_ef_score_total_denominator_dilutes(agribalyse_index):
             accounted_weights=AccountedWeights.ALL_WEIGHTS,
         )
     # raw EF scores: scorable = 0.3 (only apple), total = 0.15 (apple diluted by water)
-    assert response_scorable.numeric_score == pytest.approx(
-        score.normalize_ef_score(0.3)
-    )
-    assert response_total.numeric_score == pytest.approx(
-        score.normalize_ef_score(0.15)
-    )
+    assert response_scorable.numeric_score == pytest.approx(score.normalize_ef_score(0.3))
+    assert response_total.numeric_score == pytest.approx(score.normalize_ef_score(0.15))
     assert response_scorable.missing_ingredient_ids == ["i_water"]
     assert response_total.missing_ingredient_ids == ["i_water"]
