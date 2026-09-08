@@ -117,27 +117,16 @@ def ponderated_ef_sum(
     return total if has_contribution else None
 
 
-async def recipe_ef_score(
-    recipe: types.RecipeInput,
-    accounted_weights: score_types.AccountedWeights = score_types.AccountedWeights.ONLY_SCORABLE,
-) -> tuple[Optional[float], list[str]]:
-    """Compute the EF score of a recipe, given its ingredients and their weights.
+def normalize_ef_score(ef_score: float) -> float:
+    """Normalize the EF score to a 0-100 scale.
 
-    ``accounted_weights`` controls the way we compute the ratio of each ingredient's weight
-    in the recipe in case there are ingredients with no known EF score.
-    See :class:`AccountedWeights`.
-
-    Returns a tuple of the EF score and the list of ingredient ids missing from
-    the computation. The missing list is derived from the metrics structure
-    (ingredients flagged missing) rather than accumulated separately, so the
-    metrics structure is the single source of truth. If no ingredients have an
-    EF score, the EF score is ``None``.
+    The normalization is based on the maximum EF score observed in the Agribalyse database.
     """
-    metrics = await gather_ef_metrics(recipe)
-    compute_ratios(metrics, accounted_weights)
-    ef_score = ponderated_ef_sum(metrics)
-    missing_ingredient_ids = [m.id for m in metrics if m.missing]
-    return (ef_score, missing_ingredient_ids)
+    # normalize the EF score to a 0-100 scale
+    numerator = math.log(10 * ef_score + 1)
+    divisor = math.log(2 + 1 / (100 * ef_score**4))
+    normalized_score = 100 - numerator / divisor * 20
+    return min(max(normalized_score, 0.0), 100.0)
 
 
 async def score_to_letter(score: float) -> str:
@@ -170,12 +159,12 @@ async def compute_green_score(
     """
     # TODO handle exceptions
     # compute the EF score for the recipe
-    ef_score, missing_ingredient_ids = await recipe_ef_score(recipe)
+    metrics = await gather_ef_metrics(recipe)
+    compute_ratios(metrics, accounted_weights)
+    ef_score = ponderated_ef_sum(metrics)
+    missing_ingredient_ids = [m.id for m in metrics if m.missing]
     if ef_score is not None:
-        # normalize the EF score to a 0-100 scale
-        numerator = math.log(10 * ef_score + 1)
-        divisor = math.log(2 + 1 / (100 * ef_score**4))
-        normalized_ef_score = 100 - numerator / divisor * 20
+        normalized_ef_score = normalize_ef_score(ef_score)
         # TODO account for labels, packaging, origins and seasonality in the green-score computation
         letter_grade = await score_to_letter(normalized_ef_score)
     else:

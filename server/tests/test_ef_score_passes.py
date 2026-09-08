@@ -137,7 +137,7 @@ def test_ponderated_sum_returns_none_when_all_missing():
     assert score.ponderated_ef_sum(metrics) is None
 
 
-# --- recipe_ef_score with accounted_weights ----------------------------------
+# --- compute_green_score with accounted_weights ------------------------------
 
 
 @pytest.mark.asyncio
@@ -154,21 +154,25 @@ async def test_recipe_ef_score_total_denominator_dilutes(agribalyse_index):
             "en:water": MockTaxonomyNode("en:water", properties={}),
         }
     )
+    recipe = [
+        build_ingredient_obj("i_apple", "apple", "en:apple", weight=100),
+        build_ingredient_obj("i_water", "water", "en:water", weight=100),
+    ]
     with patch_ingredients_taxonomy(taxonomy):
-        ef_scorable, missing = await score.recipe_ef_score(
-            [
-                build_ingredient_obj("i_apple", "apple", "en:apple", weight=100),
-                build_ingredient_obj("i_water", "water", "en:water", weight=100),
-            ],
+        response_scorable = await score.compute_green_score(
+            recipe,
             accounted_weights=AccountedWeights.ONLY_SCORABLE,
         )
-        ef_total, _ = await score.recipe_ef_score(
-            [
-                build_ingredient_obj("i_apple", "apple", "en:apple", weight=100),
-                build_ingredient_obj("i_water", "water", "en:water", weight=100),
-            ],
+        response_total = await score.compute_green_score(
+            recipe,
             accounted_weights=AccountedWeights.ALL_WEIGHTS,
         )
-    assert ef_scorable == pytest.approx(0.3)
-    assert ef_total == pytest.approx(0.15)
-    assert missing == ["i_water"]
+    # raw EF scores: scorable = 0.3 (only apple), total = 0.15 (apple diluted by water)
+    assert response_scorable.numeric_score == pytest.approx(
+        score.normalize_ef_score(0.3)
+    )
+    assert response_total.numeric_score == pytest.approx(
+        score.normalize_ef_score(0.15)
+    )
+    assert response_scorable.missing_ingredient_ids == ["i_water"]
+    assert response_total.missing_ingredient_ids == ["i_water"]
