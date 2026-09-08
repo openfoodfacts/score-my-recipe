@@ -3,6 +3,8 @@ from typing import Annotated, Any, Optional
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
+import api.score_types as score_types
+
 
 class OFFIngredient(BaseModel):
     """Ingredient model for Open Food Facts API"""
@@ -431,6 +433,14 @@ class GreenScoreRequest(CamelModel):
     )
 
     ingredients: Annotated[RecipeInput, Field(description="The ingredients of the recipe")]
+
+    accounted_weights: Annotated[
+        score_types.AccountedWeights,
+        Field(
+            default=score_types.AccountedWeights.ONLY_SCORABLE,
+            description=score_types.AccountedWeights.__doc__,
+        ),
+    ] = score_types.AccountedWeights.ONLY_SCORABLE
 
 
 class IngredientAgribalyse(CamelModel):

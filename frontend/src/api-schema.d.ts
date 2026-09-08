@@ -169,6 +169,15 @@ export type webhooks = Record<string, never>;
 export interface components {
 	schemas: {
 		/**
+		 * AccountedWeights
+		 * @description Accounted weights for the ponderated sum.
+		 *
+		 *     * scorable takes the ratio of each ingredient compared to the total weight of ingredients that have an EF score
+		 *     * total takes the ratio of each ingredient compared to the total weight of all ingredients, including unmatched ones
+		 * @enum {string}
+		 */
+		AccountedWeights: 'scorable' | 'total';
+		/**
 		 * GreenScoreRequest
 		 * @description Request body for the green-score computation endpoint.
 		 *
@@ -208,6 +217,14 @@ export interface components {
 			 * @description The ingredients of the recipe
 			 */
 			ingredients: components['schemas']['RecipeIngredientInput'][];
+			/**
+			 * @description Accounted weights for the ponderated sum.
+			 *
+			 *         * scorable takes the ratio of each ingredient compared to the total weight of ingredients that have an EF score
+			 *         * total takes the ratio of each ingredient compared to the total weight of all ingredients, including unmatched ones
+			 * @default scorable
+			 */
+			accountedWeights: components['schemas']['AccountedWeights'];
 		};
 		/**
 		 * GreenScoreResponse
