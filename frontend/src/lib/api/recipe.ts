@@ -133,7 +133,8 @@ export async function computeGreenScore(
 	signal?: AbortSignal
 ): Promise<GreenScoreResponse> {
 	const payload: GreenScoreRequest = {
-		ingredients: ingredients.filter(isIngredientNotEmpty).map(ingredientToGreenScoreInput)
+		ingredients: ingredients.filter(isIngredientNotEmpty).map(ingredientToGreenScoreInput),
+		accountedWeights: 'scorable'
 	};
 	const response = await fetch(`${API_BASE_URL}/v1/green-score`, {
 		method: 'POST',
