@@ -10,8 +10,8 @@ import pytest
 from api import score
 from api.score_types import IngredientMetrics
 from tests.helpers import (
-    MockTaxonomy,
-    MockTaxonomyNode,
+    create_taxonomy,
+    create_taxonomy_node,
     build_ingredient_obj,
     patch_ingredients_taxonomy,
     patch_labels_taxonomy,
@@ -61,11 +61,10 @@ def test_safe_zip_raises_on_id_mismatch():
 @pytest.mark.asyncio
 async def test_labels_bonus_full_includes_children():
     """Children of a listed label inherit its bonus, listed labels are present."""
-    organic = MockTaxonomyNode("en:eu-organic")
+    organic = create_taxonomy_node("en:eu-organic")
     # a child label that is not explicitly listed
-    child = MockTaxonomyNode("en:organic-child", parents=[organic])
-    organic._children = [child]
-    taxonomy = MockTaxonomy(
+    child = create_taxonomy_node("en:organic-child", parents=[organic])
+    taxonomy = create_taxonomy(
         {
             "en:eu-organic": organic,
             "en:organic-child": child,
@@ -81,11 +80,10 @@ async def test_labels_bonus_full_includes_children():
 @pytest.mark.asyncio
 async def test_labels_bonus_full_keeps_higher_explicit_bonus():
     """An explicit bonus higher than an inherited one is kept."""
-    parent = MockTaxonomyNode("en:eu-organic")  # 15
+    parent = create_taxonomy_node("en:eu-organic")  # 15
     # child explicitly listed with a higher bonus (20)
-    child = MockTaxonomyNode("en:demeter", parents=[parent])
-    parent._children = [child]
-    taxonomy = MockTaxonomy({"en:eu-organic": parent, "en:demeter": child})
+    child = create_taxonomy_node("en:demeter", parents=[parent])
+    taxonomy = create_taxonomy({"en:eu-organic": parent, "en:demeter": child})
     with patch_labels_taxonomy(taxonomy):
         bonuses = await score.labels_bonus_full()
     assert bonuses["en:demeter"] == 20
@@ -94,7 +92,7 @@ async def test_labels_bonus_full_keeps_higher_explicit_bonus():
 @pytest.mark.asyncio
 async def test_labels_bonus_full_warns_on_missing_label(caplog):
     """A label id absent from the taxonomy is skipped with a warning."""
-    taxonomy = MockTaxonomy({})
+    taxonomy = create_taxonomy({})
     with patch_labels_taxonomy(taxonomy):
         with caplog.at_level("WARNING", logger="api.score"):
             bonuses = await score.labels_bonus_full()
@@ -107,7 +105,7 @@ async def test_labels_bonus_full_warns_on_missing_label(caplog):
 @pytest.mark.asyncio
 async def test_labels_bonus_full_is_cached():
     """The bonus table is computed once and cached for subsequent calls."""
-    taxonomy = MockTaxonomy({"en:eu-organic": MockTaxonomyNode("en:eu-organic")})
+    taxonomy = create_taxonomy({"en:eu-organic": create_taxonomy_node("en:eu-organic")})
     with patch_labels_taxonomy(taxonomy) as mock_tax:
         first = await score.labels_bonus_full()
         # second call: the patched function must not be awaited again
@@ -123,10 +121,10 @@ async def test_labels_bonus_full_is_cached():
 @pytest.mark.asyncio
 async def test_gather_labels_bonus_sets_metric_bonus(agribalyse_index):
     """An ingredient with a known label gets its bonus on the metric."""
-    labels_taxonomy = MockTaxonomy({"en:eu-organic": MockTaxonomyNode("en:eu-organic")})
-    ingredients_taxonomy = MockTaxonomy(
+    labels_taxonomy = create_taxonomy({"en:eu-organic": create_taxonomy_node("en:eu-organic")})
+    ingredients_taxonomy = create_taxonomy(
         {
-            "en:apple": MockTaxonomyNode(
+            "en:apple": create_taxonomy_node(
                 "en:apple", properties={"agribalyse_food_code": {"en": "10001"}}
             )
         }
@@ -142,13 +140,13 @@ async def test_gather_labels_bonus_sets_metric_bonus(agribalyse_index):
 @pytest.mark.asyncio
 async def test_gather_labels_bonus_skips_missing_ingredient(agribalyse_index):
     """A missing ingredient is skipped even when it carries a label."""
-    labels_taxonomy = MockTaxonomy({"en:eu-organic": MockTaxonomyNode("en:eu-organic")})
-    ingredients_taxonomy = MockTaxonomy(
+    labels_taxonomy = create_taxonomy({"en:eu-organic": create_taxonomy_node("en:eu-organic")})
+    ingredients_taxonomy = create_taxonomy(
         {
-            "en:apple": MockTaxonomyNode(
+            "en:apple": create_taxonomy_node(
                 "en:apple", properties={"agribalyse_food_code": {"en": "10001"}}
             ),
-            "en:water": MockTaxonomyNode("en:water", properties={}),
+            "en:water": create_taxonomy_node("en:water", properties={}),
         }
     )
     recipe = [
@@ -168,10 +166,10 @@ async def test_gather_labels_bonus_skips_missing_ingredient(agribalyse_index):
 @pytest.mark.asyncio
 async def test_gather_labels_bonus_unknown_label_keeps_none(agribalyse_index):
     """A label not in the bonus table leaves the metric bonus at None."""
-    labels_taxonomy = MockTaxonomy({"en:eu-organic": MockTaxonomyNode("en:eu-organic")})
-    ingredients_taxonomy = MockTaxonomy(
+    labels_taxonomy = create_taxonomy({"en:eu-organic": create_taxonomy_node("en:eu-organic")})
+    ingredients_taxonomy = create_taxonomy(
         {
-            "en:apple": MockTaxonomyNode(
+            "en:apple": create_taxonomy_node(
                 "en:apple", properties={"agribalyse_food_code": {"en": "10001"}}
             )
         }
@@ -187,15 +185,15 @@ async def test_gather_labels_bonus_unknown_label_keeps_none(agribalyse_index):
 @pytest.mark.asyncio
 async def test_gather_labels_bonus_takes_max_bonus(agribalyse_index):
     """When several labels match, the highest bonus is kept."""
-    labels_taxonomy = MockTaxonomy(
+    labels_taxonomy = create_taxonomy(
         {
-            "en:eu-organic": MockTaxonomyNode("en:eu-organic"),  # 15
-            "en:demeter": MockTaxonomyNode("en:demeter"),  # 20
+            "en:eu-organic": create_taxonomy_node("en:eu-organic"),  # 15
+            "en:demeter": create_taxonomy_node("en:demeter"),  # 20
         }
     )
-    ingredients_taxonomy = MockTaxonomy(
+    ingredients_taxonomy = create_taxonomy(
         {
-            "en:apple": MockTaxonomyNode(
+            "en:apple": create_taxonomy_node(
                 "en:apple", properties={"agribalyse_food_code": {"en": "10001"}}
             )
         }
@@ -213,10 +211,10 @@ async def test_gather_labels_bonus_takes_max_bonus(agribalyse_index):
 @pytest.mark.asyncio
 async def test_gather_labels_bonus_ignores_ingredient_without_labels(agribalyse_index):
     """An ingredient with no labels is left untouched."""
-    labels_taxonomy = MockTaxonomy({"en:eu-organic": MockTaxonomyNode("en:eu-organic")})
-    ingredients_taxonomy = MockTaxonomy(
+    labels_taxonomy = create_taxonomy({"en:eu-organic": create_taxonomy_node("en:eu-organic")})
+    ingredients_taxonomy = create_taxonomy(
         {
-            "en:apple": MockTaxonomyNode(
+            "en:apple": create_taxonomy_node(
                 "en:apple", properties={"agribalyse_food_code": {"en": "10001"}}
             )
         }
@@ -268,10 +266,10 @@ async def test_compute_green_score_applies_labels_bonus(agribalyse_index):
     apple alone (ef 0.3) -> normalized ~76.38 (grade A). With an eu-organic
     label (bonus 15), numeric = 76.38 - 15 = 61.38 (grade B).
     """
-    labels_taxonomy = MockTaxonomy({"en:eu-organic": MockTaxonomyNode("en:eu-organic")})
-    ingredients_taxonomy = MockTaxonomy(
+    labels_taxonomy = create_taxonomy({"en:eu-organic": create_taxonomy_node("en:eu-organic")})
+    ingredients_taxonomy = create_taxonomy(
         {
-            "en:apple": MockTaxonomyNode(
+            "en:apple": create_taxonomy_node(
                 "en:apple", properties={"agribalyse_food_code": {"en": "10001"}}
             )
         }
@@ -289,10 +287,10 @@ async def test_compute_green_score_applies_labels_bonus(agribalyse_index):
 @pytest.mark.asyncio
 async def test_compute_green_score_no_label_keeps_ef_score(agribalyse_index):
     """Without any label, the labels bonus is 0 and the numeric score is unchanged."""
-    labels_taxonomy = MockTaxonomy({})
-    ingredients_taxonomy = MockTaxonomy(
+    labels_taxonomy = create_taxonomy({})
+    ingredients_taxonomy = create_taxonomy(
         {
-            "en:apple": MockTaxonomyNode(
+            "en:apple": create_taxonomy_node(
                 "en:apple", properties={"agribalyse_food_code": {"en": "10001"}}
             )
         }
@@ -309,8 +307,8 @@ async def test_compute_green_score_no_label_keeps_ef_score(agribalyse_index):
 @pytest.mark.asyncio
 async def test_compute_green_score_all_missing_labels_bonus_none(agribalyse_index):
     """When no ingredient is scorable, labels_bonus is None (not 0)."""
-    labels_taxonomy = MockTaxonomy({"en:eu-organic": MockTaxonomyNode("en:eu-organic")})
-    ingredients_taxonomy = MockTaxonomy({"en:water": MockTaxonomyNode("en:water", properties={})})
+    labels_taxonomy = create_taxonomy({"en:eu-organic": create_taxonomy_node("en:eu-organic")})
+    ingredients_taxonomy = create_taxonomy({"en:water": create_taxonomy_node("en:water", properties={})})
     recipe = [build_ingredient_obj("i1", "water", "en:water", labels=["en:eu-organic"])]
     with patch_ingredients_taxonomy(ingredients_taxonomy), patch_labels_taxonomy(labels_taxonomy):
         result = await score.compute_green_score(recipe)
@@ -328,13 +326,13 @@ async def test_compute_green_score_diluted_bonus(agribalyse_index):
     apple 100g (label, bonus 15) + water 100g (missing, no contribution).
     Only apple is scorable (ratio 1.0) so the bonus stays 15.
     """
-    labels_taxonomy = MockTaxonomy({"en:eu-organic": MockTaxonomyNode("en:eu-organic")})
-    ingredients_taxonomy = MockTaxonomy(
+    labels_taxonomy = create_taxonomy({"en:eu-organic": create_taxonomy_node("en:eu-organic")})
+    ingredients_taxonomy = create_taxonomy(
         {
-            "en:apple": MockTaxonomyNode(
+            "en:apple": create_taxonomy_node(
                 "en:apple", properties={"agribalyse_food_code": {"en": "10001"}}
             ),
-            "en:water": MockTaxonomyNode("en:water", properties={}),
+            "en:water": create_taxonomy_node("en:water", properties={}),
         }
     )
     recipe = [

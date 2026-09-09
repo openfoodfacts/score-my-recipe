@@ -4,8 +4,8 @@ import pytest
 
 from api import score
 from tests.helpers import (
-    MockTaxonomy,
-    MockTaxonomyNode,
+    create_taxonomy,
+    create_taxonomy_node,
     build_ingredient_obj,
     patch_ingredients_taxonomy,
 )
@@ -14,9 +14,9 @@ from tests.helpers import (
 @pytest.mark.asyncio
 async def test_single_ingredient_ef_score(agribalyse_index):
     """A single ingredient yields its own ef_score (0.3 for apple)."""
-    taxonomy = MockTaxonomy(
+    taxonomy = create_taxonomy(
         {
-            "en:apple": MockTaxonomyNode(
+            "en:apple": create_taxonomy_node(
                 "en:apple", properties={"agribalyse_food_code": {"en": "10001"}}
             )
         }
@@ -35,12 +35,12 @@ async def test_weighted_average(agribalyse_index):
 
     apple: 100g * 0.3 = 30, pear: 300g * 0.5 = 150  -> 180 / 400 = 0.45
     """
-    taxonomy = MockTaxonomy(
+    taxonomy = create_taxonomy(
         {
-            "en:apple": MockTaxonomyNode(
+            "en:apple": create_taxonomy_node(
                 "en:apple", properties={"agribalyse_food_code": {"en": "10001"}}
             ),
-            "en:pear": MockTaxonomyNode(
+            "en:pear": create_taxonomy_node(
                 "en:pear", properties={"agribalyse_food_code": {"en": "10002"}}
             ),
         }
@@ -59,12 +59,12 @@ async def test_weighted_average(agribalyse_index):
 @pytest.mark.asyncio
 async def test_missing_ingredient_excluded(agribalyse_index):
     """An ingredient with no Agribalyse match is excluded and reported missing."""
-    taxonomy = MockTaxonomy(
+    taxonomy = create_taxonomy(
         {
-            "en:apple": MockTaxonomyNode(
+            "en:apple": create_taxonomy_node(
                 "en:apple", properties={"agribalyse_food_code": {"en": "10001"}}
             ),
-            "en:water": MockTaxonomyNode("en:water", properties={}),
+            "en:water": create_taxonomy_node("en:water", properties={}),
         }
     )
     with patch_ingredients_taxonomy(taxonomy):
@@ -82,10 +82,10 @@ async def test_missing_ingredient_excluded(agribalyse_index):
 @pytest.mark.asyncio
 async def test_all_ingredients_missing_returns_none(agribalyse_index):
     """When no ingredient has an EF score, the numeric score is None and all ids are missing."""
-    taxonomy = MockTaxonomy(
+    taxonomy = create_taxonomy(
         {
-            "en:water": MockTaxonomyNode("en:water", properties={}),
-            "en:salt": MockTaxonomyNode("en:salt", properties={}),
+            "en:water": create_taxonomy_node("en:water", properties={}),
+            "en:salt": create_taxonomy_node("en:salt", properties={}),
         }
     )
     with patch_ingredients_taxonomy(taxonomy):
@@ -103,9 +103,9 @@ async def test_all_ingredients_missing_returns_none(agribalyse_index):
 @pytest.mark.asyncio
 async def test_non_positive_weight_raises(agribalyse_index):
     """A negative weight is invalid and raises a ValueError."""
-    taxonomy = MockTaxonomy(
+    taxonomy = create_taxonomy(
         {
-            "en:apple": MockTaxonomyNode(
+            "en:apple": create_taxonomy_node(
                 "en:apple", properties={"agribalyse_food_code": {"en": "10001"}}
             )
         }

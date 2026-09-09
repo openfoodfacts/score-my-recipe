@@ -5,8 +5,8 @@ import pytest
 from api import score
 from api.score_types import IngredientMetrics, AccountedWeights
 from tests.helpers import (
-    MockTaxonomy,
-    MockTaxonomyNode,
+    create_taxonomy,
+    create_taxonomy_node,
     build_ingredient_obj,
     patch_ingredients_taxonomy,
 )
@@ -18,12 +18,12 @@ from tests.helpers import (
 @pytest.mark.asyncio
 async def test_gather_marks_missing_ingredient(agribalyse_index):
     """An ingredient without an Agribalyse row is flagged missing, not dropped."""
-    taxonomy = MockTaxonomy(
+    taxonomy = create_taxonomy(
         {
-            "en:apple": MockTaxonomyNode(
+            "en:apple": create_taxonomy_node(
                 "en:apple", properties={"agribalyse_food_code": {"en": "10001"}}
             ),
-            "en:water": MockTaxonomyNode("en:water", properties={}),
+            "en:water": create_taxonomy_node("en:water", properties={}),
         }
     )
     with patch_ingredients_taxonomy(taxonomy):
@@ -45,9 +45,9 @@ async def test_gather_marks_missing_ingredient(agribalyse_index):
 @pytest.mark.asyncio
 async def test_gather_raises_on_negative_weight(agribalyse_index):
     """A negative weight is invalid and raises a ValueError in the gather pass."""
-    taxonomy = MockTaxonomy(
+    taxonomy = create_taxonomy(
         {
-            "en:apple": MockTaxonomyNode(
+            "en:apple": create_taxonomy_node(
                 "en:apple", properties={"agribalyse_food_code": {"en": "10001"}}
             )
         }
@@ -141,12 +141,12 @@ async def test_recipe_ef_score_total_denominator_dilutes(agribalyse_index):
 
     apple 100g (0.3), water 100g (missing) -> scorable ef = 0.3, total ef = 0.15.
     """
-    taxonomy = MockTaxonomy(
+    taxonomy = create_taxonomy(
         {
-            "en:apple": MockTaxonomyNode(
+            "en:apple": create_taxonomy_node(
                 "en:apple", properties={"agribalyse_food_code": {"en": "10001"}}
             ),
-            "en:water": MockTaxonomyNode("en:water", properties={}),
+            "en:water": create_taxonomy_node("en:water", properties={}),
         }
     )
     recipe = [

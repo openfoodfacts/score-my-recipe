@@ -1,11 +1,10 @@
 """Shared helpers and mocks for the green-score test suite.
-
-These mirror the structures exposed by `openfoodfacts.taxonomy` so the
-green-score logic can be exercised without hitting the OpenFoodFacts API.
 """
 
 from contextlib import contextmanager
 from unittest.mock import AsyncMock, patch
+
+from openfoodfacts.taxonomy import Taxonomy, TaxonomyNode
 
 from api import types
 
@@ -35,47 +34,53 @@ def patch_labels_taxonomy(taxonomy):
     score._LABELS_BONUS_FULL = saved_cache
 
 
-class MockTaxonomyNode:
-    """Mock taxonomy node mimicking ``openfoodfacts.taxonomy.TaxonomyNode``."""
+def create_taxonomy_node(
+    id: str,
+    properties: dict | None = None,
+    names: dict[str, str] | None = None,
+    synonyms: dict[str, list[str]] | None = None,
+    parents: list[TaxonomyNode] | None = None,
+    children: list[TaxonomyNode] | None = None,
+) -> TaxonomyNode:
+    """Build a real ``TaxonomyNode`` with a test-friendly constructor.
 
-    def __init__(
-        self,
-        id: str,
-        properties: dict | None = None,
-        parents: list | None = None,
-        children: list | None = None,
-    ):
-        self.id = id
-        self.properties = properties or {}
-        self._parents = parents or []
-        self._children = children or []
+    Wraps ``openfoodfacts.taxonomy.TaxonomyNode`` so that the parent/child
+    hierarchy methods (``get_parents_hierarchy``, ``get_children_hierarchy`` …)
+    used by the production code come from the library itself.
 
-    def get_parents_hierarchy(self):
-        return list(self._parents)
-
-    def get_children_hierarchy(self):
-        """Flatten the whole children sub-tree (deduplicated, DFS order)."""
-        result: list[MockTaxonomyNode] = []
-        for child in self._children:
-            if child not in result:
-                result.append(child)
-            for grandchild in child.get_children_hierarchy():
-                if grandchild not in result:
-                    result.append(grandchild)
-        return result
+    :param id: the node identifier (e.g. ``"en:apple"``)
+    :param properties: optional properties dict stored on the node
+    :param parents: optional direct parents; wired up via ``add_parents`` so
+        that the ``children`` back-reference is set automatically
+    :param children: optional direct children; each child gets ``self`` added
+        as a parent
+    """
+    node = TaxonomyNode(
+        identifier=id,
+        names=names or {},
+        synonyms=synonyms or None,
+        properties=properties or {},
+    )
+    if parents:
+        node.add_parents(parents)
+    if children:
+        for child in children:
+            child.add_parents([node])
+    return node
 
 
-class MockTaxonomy:
-    """Mock taxonomy mimicking ``openfoodfacts.taxonomy.Taxonomy``."""
+def create_taxonomy(nodes: list[TaxonomyNode] | dict[str, TaxonomyNode]) -> Taxonomy:
+    """Build a real ``Taxonomy`` pre-populated with ``nodes``.
 
-    def __init__(self, nodes: dict[str, MockTaxonomyNode]):
-        self._nodes = nodes
-
-    def __contains__(self, item: str):
-        return item in self._nodes
-
-    def __getitem__(self, item: str):
-        return self._nodes[item]
+    The returned object supports ``in``, ``[…]`` indexing and ``iter_nodes``
+    exactly like a taxonomy fetched from OpenFoodFacts.
+    """
+    taxonomy = Taxonomy()
+    if isinstance(nodes, list):
+        nodes = {node.id: node for node in nodes}
+    for key, node in nodes.items():
+        taxonomy.add(key, node)
+    return taxonomy
 
 
 def build_label_obj(id_: str, label: str | None = None) -> types.TaxonomyItem:
