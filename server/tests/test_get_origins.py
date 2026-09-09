@@ -1,5 +1,4 @@
 from unittest.mock import patch, AsyncMock
-from dataclasses import dataclass, field
 
 import pytest
 from fastapi.testclient import TestClient

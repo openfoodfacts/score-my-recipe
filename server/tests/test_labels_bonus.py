@@ -308,7 +308,9 @@ async def test_compute_green_score_no_label_keeps_ef_score(agribalyse_index):
 async def test_compute_green_score_all_missing_labels_bonus_none(agribalyse_index):
     """When no ingredient is scorable, labels_bonus is None (not 0)."""
     labels_taxonomy = create_taxonomy({"en:eu-organic": create_taxonomy_node("en:eu-organic")})
-    ingredients_taxonomy = create_taxonomy({"en:water": create_taxonomy_node("en:water", properties={})})
+    ingredients_taxonomy = create_taxonomy(
+        {"en:water": create_taxonomy_node("en:water", properties={})}
+    )
     recipe = [build_ingredient_obj("i1", "water", "en:water", labels=["en:eu-organic"])]
     with patch_ingredients_taxonomy(ingredients_taxonomy), patch_labels_taxonomy(labels_taxonomy):
         result = await score.compute_green_score(recipe)

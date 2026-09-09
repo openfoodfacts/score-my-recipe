@@ -1,5 +1,4 @@
-"""Shared helpers and mocks for the green-score test suite.
-"""
+"""Shared helpers and mocks for the green-score test suite."""
 
 from contextlib import contextmanager
 from unittest.mock import AsyncMock, patch
