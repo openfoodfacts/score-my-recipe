@@ -27,10 +27,12 @@ def patch_labels_taxonomy(taxonomy):
 
     saved_cache = score._LABELS_BONUS_FULL
     score._LABELS_BONUS_FULL = None
-    with patch("api.off.get_labels_taxonomy", new_callable=AsyncMock) as mock_tax:
-        mock_tax.return_value = taxonomy
-        yield mock_tax
-    score._LABELS_BONUS_FULL = saved_cache
+    try:
+        with patch("api.off.get_labels_taxonomy", new_callable=AsyncMock) as mock_tax:
+            mock_tax.return_value = taxonomy
+            yield mock_tax
+    finally:
+        score._LABELS_BONUS_FULL = saved_cache
 
 
 def create_taxonomy_node(
