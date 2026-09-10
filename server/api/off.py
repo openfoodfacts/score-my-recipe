@@ -13,10 +13,10 @@ USER_AGENT = "Score-my-recipe - openfoodfacts"
 
 def off_env_setting(off_env: OpenFoodFactsEnvironments) -> openfoodfacts.Environment:
     """Get the corresponding openfoodfacts.Environment for the given OpenFoodFactsEnvironments enum value."""
-    if off_env == OpenFoodFactsEnvironments.PROD:
-        return openfoodfacts.Environment.org
-    elif off_env == OpenFoodFactsEnvironments.STAGING:
+    if off_env == OpenFoodFactsEnvironments.STAGING:
         return openfoodfacts.Environment.net
+    else:
+        return openfoodfacts.Environment.org
 
 
 off_api = openfoodfacts.API(
