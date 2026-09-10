@@ -16,6 +16,8 @@ class OpenFoodFactsEnvironments(StrEnum):
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="SCORE_MY_RECIPE_")
 
+    data_dir: Annotated[Path, Field(description="Directory where data is stored")] = Path("./data")
+
     cache_dir: Annotated[Path, Field(description="Directory where cache is stored")] = Path(
         "./data/cache"
     )

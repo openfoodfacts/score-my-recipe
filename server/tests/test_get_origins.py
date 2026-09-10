@@ -51,7 +51,7 @@ def mock_countries_taxonomy():
     ]
     mocked_taxonomy = create_taxonomy(mock_nodes)
 
-    with patch("api.off.get_countries_taxonomy", new_callable=AsyncMock) as mock:
+    with patch("api.off.get_origins_taxonomy", new_callable=AsyncMock) as mock:
         mock.return_value = mocked_taxonomy
         yield mock
 

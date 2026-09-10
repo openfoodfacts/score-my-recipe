@@ -9,6 +9,8 @@ import openfoodfacts.taxonomy as taxonomy
 import api.agribalyse as agribalyse
 import api.off as off
 import api.score_types as score_types
+import api.score_data as score_data
+
 import api.types as types
 
 logger = logging.getLogger(__name__)
@@ -153,8 +155,8 @@ async def labels_bonus_full() -> dict[str, int]:
     global _LABELS_BONUS_FULL
     if _LABELS_BONUS_FULL is None:
         taxonomy = await off.get_labels_taxonomy()
-        labels_bonus_full = dict(score_types.LABELS_BONUS)
-        for label_id, bonus in score_types.LABELS_BONUS.items():
+        labels_bonus_full = dict(score_data.LABELS_BONUS)
+        for label_id, bonus in score_data.LABELS_BONUS.items():
             try:
                 node = taxonomy[label_id]
             except KeyError:
