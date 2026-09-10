@@ -277,10 +277,10 @@ async def test_compute_green_score_applies_labels_bonus(agribalyse_index):
     recipe = [build_ingredient_obj("i1", "apple", "en:apple", labels=["en:eu-organic"])]
     with patch_ingredients_taxonomy(ingredients_taxonomy), patch_labels_taxonomy(labels_taxonomy):
         result = await score.compute_green_score(recipe)
-    expected_normalized = score.normalize_ef_score(0.3)
-    assert result.global_ef_score == pytest.approx(expected_normalized)
+    expected_ef = 0.3
+    assert result.global_ef_score == pytest.approx(expected_ef)
     assert result.labels_bonus == pytest.approx(15)
-    assert result.numeric_score == pytest.approx(expected_normalized + 15)
+    assert result.numeric_score == pytest.approx(score.normalize_ef_score(expected_ef) + 15)
     assert result.letter_grade == "A+"
 
 
