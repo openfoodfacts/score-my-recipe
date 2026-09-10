@@ -13,5 +13,7 @@ services:
     restart: ${RESTART_POLICY:-unless-stopped}
     ports:
       - "${DOCKER_SERVER_EXPOSE:-127.0.0.1:8000}:8000"
+    environment:
+      SCORE_MY_RECIPE_OPENFOODFACTS_ENV: ${OPENFOODFACTS_ENV:-prod}
     volumes:
       - server_data:/app/data

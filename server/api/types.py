@@ -1,6 +1,6 @@
 from typing import Annotated, Any, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from pydantic.alias_generators import to_camel
 
 
@@ -15,6 +15,12 @@ class OFFIngredient(BaseModel):
     ecobalyse_code: Optional[str] = None
     ciqual_food_code: Optional[str] = None
     is_in_taxonomy: Optional[int] = None
+
+    @field_validator("quantity", mode="before")
+    def transform_id_to_str(cls, value) -> str:
+        """ensure that the quantity is always a string,
+        even if it is a number in the input"""
+        return str(value)
 
 
 class RecipeIngredient(BaseModel):
@@ -48,9 +54,7 @@ class TaxonomyItem(BaseModel):
 
     model_config = ConfigDict(
         json_schema_extra={
-            "examples": [
-                {"id": "en:apple", "label": "Apple", "synonyms": ["apples", "pommes"]}
-            ]
+            "examples": [{"id": "en:apple", "label": "Apple", "synonyms": ["apples", "pommes"]}]
         }
     )
 
@@ -71,9 +75,7 @@ class Origin(TaxonomyItem):
 
     model_config = ConfigDict(
         json_schema_extra={
-            "examples": [
-                {"id": "en:france", "label": "France", "synonyms": ["french"]}
-            ]
+            "examples": [{"id": "en:france", "label": "France", "synonyms": ["french"]}]
         }
     )
 
@@ -110,9 +112,7 @@ class RecipeParseResponse(BaseModel):
 class LangRequest(BaseModel):
     """Request model for parse_text endpoint"""
 
-    model_config = ConfigDict(
-        json_schema_extra={"examples": [{"lang": "en"}]}
-    )
+    model_config = ConfigDict(json_schema_extra={"examples": [{"lang": "en"}]})
 
     lang: Annotated[str, Field(description="Language for the request (2 or 5 letter code)")]
 
@@ -179,9 +179,7 @@ class Label(TaxonomyItem):
 
     model_config = ConfigDict(
         json_schema_extra={
-            "examples": [
-                {"id": "en:eu-organic", "label": "EU Organic", "synonyms": ["bio"]}
-            ]
+            "examples": [{"id": "en:eu-organic", "label": "EU Organic", "synonyms": ["bio"]}]
         }
     )
 
@@ -217,9 +215,7 @@ class Ingredient(TaxonomyItem):
 
     model_config = ConfigDict(
         json_schema_extra={
-            "examples": [
-                {"id": "en:apple", "label": "Apple", "synonyms": ["apples"]}
-            ]
+            "examples": [{"id": "en:apple", "label": "Apple", "synonyms": ["apples"]}]
         }
     )
 
@@ -320,11 +316,7 @@ class TaxonomyItem(CamelModel):
     # json_schema_extra is merged with the inherited CamelModel config
     # (alias_generator + populate_by_name are preserved).
     model_config = ConfigDict(
-        json_schema_extra={
-            "examples": [
-                {"id": "en:apple", "label": "Apple", "isInTaxonomy": True}
-            ]
-        }
+        json_schema_extra={"examples": [{"id": "en:apple", "label": "Apple", "isInTaxonomy": True}]}
     )
 
     id: Annotated[str, Field(description="Taxonomy identifier")]
