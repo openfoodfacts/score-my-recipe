@@ -236,8 +236,10 @@ async def compute_green_score(
         normalized_ef_score = normalize_ef_score(ef_score)
         # account for bonus / malus
         labels_bonus = global_labels_bonus(metrics)
-        numeric_score = normalized_ef_score - labels_bonus
-        # TODO account for labels, packaging, origins and seasonality in the green-score computation
+        # TODO account for packaging, origins and seasonality in the green-score computation
+        numeric_score = normalized_ef_score + labels_bonus
+        # normalize to 0-100 range
+        numeric_score = min(max(numeric_score, 0.0), 100.0)
         letter_grade = score_to_letter(numeric_score)
     else:
         normalized_ef_score = None

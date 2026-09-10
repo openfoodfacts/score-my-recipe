@@ -280,8 +280,8 @@ async def test_compute_green_score_applies_labels_bonus(agribalyse_index):
     expected_normalized = score.normalize_ef_score(0.3)
     assert result.global_ef_score == pytest.approx(expected_normalized)
     assert result.labels_bonus == pytest.approx(15)
-    assert result.numeric_score == pytest.approx(expected_normalized - 15)
-    assert result.letter_grade == "B"
+    assert result.numeric_score == pytest.approx(expected_normalized + 15)
+    assert result.letter_grade == "A+"
 
 
 @pytest.mark.asyncio
@@ -345,4 +345,4 @@ async def test_compute_green_score_diluted_bonus(agribalyse_index):
         result = await score.compute_green_score(recipe)
     assert result.labels_bonus == pytest.approx(15)
     expected_normalized = score.normalize_ef_score(0.3)
-    assert result.numeric_score == pytest.approx(expected_normalized - 15)
+    assert result.numeric_score == pytest.approx(expected_normalized + 15)
