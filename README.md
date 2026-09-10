@@ -10,7 +10,7 @@
 
 
 ## Known issues
-* Here's a list of known issues. Please coordinate with @alexgarel before you start working on one: https://docs.google.com/document/d/16B0Xj1VPdZa9xosYIspRAaw-lL7EGa284BFygcElEzQ/edit?tab=t.0
+* Please coordinate with @alexgarel (eventually on our [slack](https://slack.openfoodfacts.org)) and see [github project to see priorities](https://github.com/orgs/openfoodfacts/projects/167/) 
 * Feel free to report and document any issues we may have missed.
 
 ## Sponsors
