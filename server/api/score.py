@@ -247,7 +247,7 @@ async def compute_green_score(
         numeric_score = None
         letter_grade = None
     return types.GreenScoreResponse(
-        global_ef_score=normalized_ef_score,
+        global_ef_score=ef_score,
         labels_bonus=labels_bonus,
         numeric_score=numeric_score,
         letter_grade=letter_grade,
