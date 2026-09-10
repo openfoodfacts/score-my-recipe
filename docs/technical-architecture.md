@@ -1,6 +1,6 @@
 # Architecture notes
 
-The project first step aims at computing Green Score for recipe but, in the future, itI may also add more scores (Nutri-Score, Nova, etc.).
+The project first step aims at computing Green Score for recipes but, in the future, it may also add more scores (Nutri-Score, NOVA groups on ultra-processed foods, etc.).
 
 ## A frontend and an API
 
