@@ -144,31 +144,6 @@ def normalize_ef_score(ef_score: float) -> float:
     return min(max(normalized_score, 0.0), 100.0)
 
 
-# see https://docs.score-environnemental.com/methodologie-recette/bonus-malus-recette/systeme-de-production/labels
-LABELS_BONUS = {
-    "fr:nature-et-progres": 20,
-    "fr:bio-coherence": 20,
-    "en:demeter": 20,
-    "fr:bio-equitable": 20,
-    "en:eu-organic": 15,
-    "fr:ab-agriculture-biologique": 15,
-    # TODO: Needs verification.
-    # it's there:
-    # https://docs.score-environnemental.com/methodologie/produit/systeme-de-production/label
-    # but not there:
-    # https://docs.score-environnemental.com/methodologie-recette/bonus-malus-recette/systeme-de-production/labels
-    "en:sustainable-fishing-method": 15,
-    "fr:haute-valeur-environnementale": 10,
-    "en:utz-certified": 10,
-    "en:rainforest-alliance": 10,
-    "en:fairtrade-international": 10,
-    "fr:bleu-blanc-coeur": 10,
-    "fr:label-rouge": 10,
-    "en:sustainable-seafood-msc": 10,
-    "en:responsible-aquaculture-asc": 10,
-}
-
-
 # cache
 _LABELS_BONUS_FULL: Optional[dict[str, int]] = None
 
@@ -178,8 +153,8 @@ async def labels_bonus_full() -> dict[str, int]:
     global _LABELS_BONUS_FULL
     if _LABELS_BONUS_FULL is None:
         taxonomy = await off.get_labels_taxonomy()
-        labels_bonus_full = dict(LABELS_BONUS)
-        for label_id, bonus in LABELS_BONUS.items():
+        labels_bonus_full = dict(score_types.LABELS_BONUS)
+        for label_id, bonus in score_types.LABELS_BONUS.items():
             try:
                 node = taxonomy[label_id]
             except KeyError:

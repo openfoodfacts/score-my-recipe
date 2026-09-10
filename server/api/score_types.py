@@ -6,6 +6,31 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 
+# see https://docs.score-environnemental.com/methodologie-recette/bonus-malus-recette/systeme-de-production/labels
+LABELS_BONUS = {
+    "fr:nature-et-progres": 20,
+    "fr:bio-coherence": 20,
+    "en:demeter": 20,
+    "fr:bio-equitable": 20,
+    "en:eu-organic": 15,
+    "fr:ab-agriculture-biologique": 15,
+    # TODO: Needs verification.
+    # it's there:
+    # https://docs.score-environnemental.com/methodologie/produit/systeme-de-production/label
+    # but not there:
+    # https://docs.score-environnemental.com/methodologie-recette/bonus-malus-recette/systeme-de-production/labels
+    "en:sustainable-fishing-method": 15,
+    "fr:haute-valeur-environnementale": 10,
+    "en:utz-certified": 10,
+    "en:rainforest-alliance": 10,
+    "en:fairtrade-international": 10,
+    "fr:bleu-blanc-coeur": 10,
+    "fr:label-rouge": 10,
+    "en:sustainable-seafood-msc": 10,
+    "en:responsible-aquaculture-asc": 10,
+}
+
+
 class AccountedWeights(enum.StrEnum):
     """Accounted weights for the ponderated sum.
 

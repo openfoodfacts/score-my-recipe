@@ -7,7 +7,7 @@ import logging
 import api.agribalyse as agribalyse
 import api.off as off
 import api.types as types
-
+import api.score_types as score_types
 
 logger = logging.getLogger(__name__)
 
@@ -62,33 +62,8 @@ async def get_origins(lang: str, include_synonyms: bool = False) -> list[types.O
     return origins_list
 
 
-# transcription of https://docs.score-environnemental.com/methodologie/produit/systeme-de-production/label
-GREEN_SCORE_PRODUCTION_LABELS = {
-    20: [
-        "fr:nature-et-progres",
-        "fr:bio-coherence",
-        "en:demeter",
-    ],
-    15: [
-        "fr:ab-agriculture-biologique",
-        "en:eu-organic",
-        "en:sustainable-fishing-method",
-    ],
-    10: [
-        "fr:haute-valeur-environnementale",
-        "en:utz-certified",
-        "en:rainforest-alliance",
-        "en:fair-trade",
-        "fr:bleu-blanc-coeur",
-        # note: only for certain meat
-        "fr:label-rouge",
-        "en:responsible-aquaculture-asc",
-        "en:sustainable-seafood-msc",
-    ],
-}
-
 ALL_GREEN_SCORE_LABELS = set(
-    label for labels in GREEN_SCORE_PRODUCTION_LABELS.values() for label in labels
+    label for label in score_types.LABELS_BONUS.keys()
 )
 
 # local caching
