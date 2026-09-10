@@ -54,6 +54,8 @@ This is a mono repository with two components:
 
 ## Contributing Rules
 
+Read [architecture document](./docs/technical-architecture.md)
+
 ### Branches & Commits
 
 - Branch off `main`.
