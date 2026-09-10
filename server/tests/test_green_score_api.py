@@ -4,8 +4,8 @@ from fastapi.testclient import TestClient
 
 from api.api import app
 from tests.helpers import (
-    MockTaxonomy,
-    MockTaxonomyNode,
+    create_taxonomy,
+    create_taxonomy_node,
     build_ingredient_dict,
     patch_ingredients_taxonomy,
 )
@@ -15,9 +15,9 @@ client = TestClient(app)
 
 def test_api_accepts_camel_case_payload(agribalyse_index):
     """The endpoint accepts the frontend camelCase payload and returns a score."""
-    taxonomy = MockTaxonomy(
+    taxonomy = create_taxonomy(
         {
-            "en:apple": MockTaxonomyNode(
+            "en:apple": create_taxonomy_node(
                 "en:apple", properties={"agribalyse_food_code": {"en": "10001"}}
             )
         }
@@ -36,10 +36,12 @@ def test_api_accepts_camel_case_payload(agribalyse_index):
 
 def test_api_empty_recipe():
     """An empty ingredients list returns a null score with no missing ingredients."""
-    with patch_ingredients_taxonomy(MockTaxonomy({})):
+    with patch_ingredients_taxonomy(create_taxonomy({})):
         response = client.post("/v1/green-score", json={"ingredients": []})
     assert response.status_code == 200
     assert response.json() == {
+        "globalEfScore": None,
+        "labelsBonus": None,
         "numericScore": None,
         "letterGrade": None,
         "missingIngredientIds": [],

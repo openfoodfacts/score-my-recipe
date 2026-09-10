@@ -1088,5 +1088,187 @@
                 "Fishing method"
             ]
         }
+    },
+    "en:fairtrade-international": {
+        "name": {
+            "en": "Fairtrade International",
+            "ru": "\u0427\u0435\u0441\u0442\u043d\u0430\u044f \u0442\u043e\u0440\u0433\u043e\u0432\u043b\u044f",
+            "ca": "Fairtrade Internacional",
+            "bg": "Fairtrade International",
+            "xx": "Fairtrade International",
+            "it": "Commercio Equo Internazionale"
+        },
+        "children": [
+            "de:fairtrade-\u00f6sterreich",
+            "en:fairtrade-australia-and-new-zealand",
+            "en:fairtrade-belgium",
+            "en:fairtrade-canada",
+            "en:fairtrade-india",
+            "en:fairtrade-italia",
+            "en:fairtrade-korea",
+            "en:fairtrade-mark-ireland",
+            "en:fairtrade-norway",
+            "en:fairtrade-poland",
+            "en:fairtrade-sweden",
+            "en:fairtrade-taiwan",
+            "en:max-havelaar",
+            "en:max-havelaar-denmark",
+            "en:the-czech-fairtrade-association",
+            "en:the-fairtrade-foundation",
+            "en:transfair-germany",
+            "en:transfair-japan",
+            "en:transfair-minka-luxembourg",
+            "es:asociacion-del-sello-de-productos-de-comercio-justo"
+        ],
+        "parents": [
+            "en:fair-trade"
+        ],
+        "synonyms": {
+            "bg": [
+                "Fairtrade International",
+                "Fairtrade"
+            ],
+            "xx": [
+                "Fairtrade International",
+                "Fairtrade",
+                "FLO international",
+                "FLO"
+            ],
+            "it": [
+                "Commercio Equo Internazionale"
+            ],
+            "ca": [
+                "Fairtrade Internacional",
+                "FLO International"
+            ],
+            "en": [
+                "Fairtrade International",
+                "Fairtrade",
+                "FLO international",
+                "FLO"
+            ],
+            "ru": [
+                "\u0427\u0435\u0441\u0442\u043d\u0430\u044f \u0442\u043e\u0440\u0433\u043e\u0432\u043b\u044f"
+            ]
+        },
+        "wikipedia": {
+            "en": "https://en.wikipedia.org/wiki/Fairtrade_certification"
+        }
+    },
+    "en:fj-bio-130": {
+        "auth_address": {
+            "en": "PO Box 9693 Marion Square, 6141, Wellington, New Zealand"
+        },
+        "auth_name": {
+            "en": "Biogro New Zealand Limited"
+        },
+        "auth_url": {
+            "en": "http://www.biogro.co.nz"
+        },
+        "name": {
+            "en": "FJ-BIO-130"
+        },
+        "synonyms": {
+            "en": [
+                "FJ-BIO-130"
+            ]
+        },
+        "eu_groups": {
+            "en": "en:EU Group A: unprocessed plant products,en:EU Group D: processed agricultural products for use as food -*-,"
+        },
+        "country": {
+            "en": "en:Fiji"
+        },
+        "parents": [
+            "en:eu-organic"
+        ],
+        "exceptions": {
+            "en": "en: in-conversion products,en:wine"
+        }
+    },
+    "en:vitamin-b-source": {
+        "wikidata": {
+            "en": "Q183206"
+        },
+        "synonyms": {
+            "es": [
+                "Fuente de vitamina B"
+            ],
+            "en": [
+                "Vitamin B source",
+                "Source of vitamin B"
+            ],
+            "pl": [
+                "\u0179r\u00f3d\u0142o witaminy B"
+            ],
+            "ru": [
+                "\u0418\u0441\u0442\u043e\u0447\u043d\u0438\u043a \u0432\u0438\u0442\u0430\u043c\u0438\u043d\u0430 B"
+            ],
+            "de": [
+                "Vitamin B-Quelle"
+            ],
+            "it": [
+                "fonte di vitamina B"
+            ],
+            "he": [
+                "\u05de\u05e7\u05d5\u05e8 \u05dc\u05d5\u05d5\u05d9\u05d8\u05de\u05d9\u05df B"
+            ],
+            "hu": [
+                "B-vitaminforr\u00e1s"
+            ],
+            "fi": [
+                "B-vitamiinin l\u00e4hde"
+            ],
+            "hr": [
+                "izvor vitamina B"
+            ],
+            "pt": [
+                "Fonte de vitamina B"
+            ],
+            "nl": [
+                "Bron van Vitamine B"
+            ],
+            "fr": [
+                "Source de vitamine B"
+            ],
+            "sv": [
+                "K\u00e4lla till vitamin B"
+            ],
+            "bg": [
+                "\u0418\u0437\u0442\u043e\u0447\u043d\u0438\u043a \u043d\u0430 \u0432\u0438\u0442\u0430\u043c\u0438\u043d B"
+            ]
+        },
+        "name": {
+            "bg": "\u0418\u0437\u0442\u043e\u0447\u043d\u0438\u043a \u043d\u0430 \u0432\u0438\u0442\u0430\u043c\u0438\u043d B",
+            "sv": "K\u00e4lla till vitamin B",
+            "fr": "Source de vitamine B",
+            "pt": "Fonte de vitamina B",
+            "nl": "Bron van Vitamine B",
+            "hr": "izvor vitamina B",
+            "fi": "B-vitamiinin l\u00e4hde",
+            "hu": "B-vitaminforr\u00e1s",
+            "he": "\u05de\u05e7\u05d5\u05e8 \u05dc\u05d5\u05d5\u05d9\u05d8\u05de\u05d9\u05df B",
+            "de": "Vitamin B-Quelle",
+            "it": "fonte di vitamina B",
+            "en": "Vitamin B source",
+            "pl": "\u0179r\u00f3d\u0142o witaminy B",
+            "ru": "\u0418\u0441\u0442\u043e\u0447\u043d\u0438\u043a \u0432\u0438\u0442\u0430\u043c\u0438\u043d\u0430 B",
+            "es": "Fuente de vitamina B"
+        }
+    },
+    "fr:bio-equitable": {
+        "name": {
+            "fr": "Bio-\u00e9quitable"
+        },
+        "parents": [
+            "en:fair-trade",
+            "en:organic"
+        ],
+        "synonyms": {
+            "fr": [
+                "Bio-\u00e9quitable",
+                "bio\u00e9quitable"
+            ]
+        }
     }
 }

@@ -354,6 +354,15 @@
   },
   "components": {
     "schemas": {
+      "AccountedWeights": {
+        "type": "string",
+        "enum": [
+          "scorable",
+          "total"
+        ],
+        "title": "AccountedWeights",
+        "description": "Accounted weights for the ponderated sum.\n\n* scorable takes the ratio of each ingredient compared to the total weight of ingredients that have an EF score\n* total takes the ratio of each ingredient compared to the total weight of all ingredients, including unmatched ones"
+      },
       "GreenScoreRequest": {
         "properties": {
           "ingredients": {
@@ -363,6 +372,11 @@
             "type": "array",
             "title": "Ingredients",
             "description": "The ingredients of the recipe"
+          },
+          "accountedWeights": {
+            "$ref": "#/components/schemas/AccountedWeights",
+            "description": "Accounted weights for the ponderated sum.\n\n    * scorable takes the ratio of each ingredient compared to the total weight of ingredients that have an EF score\n    * total takes the ratio of each ingredient compared to the total weight of all ingredients, including unmatched ones\n    ",
+            "default": "scorable"
           }
         },
         "type": "object",
@@ -404,6 +418,30 @@
       },
       "GreenScoreResponse": {
         "properties": {
+          "globalEfScore": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Globalefscore",
+            "description": "The computed global EF score of the recipe, null if no ingredients have a score"
+          },
+          "labelsBonus": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Labelsbonus",
+            "description": "The bonus from ingredient labels, null if no ingredients have a score, 0 if no labels"
+          },
           "numericScore": {
             "anyOf": [
               {

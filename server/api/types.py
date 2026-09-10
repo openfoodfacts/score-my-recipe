@@ -3,6 +3,8 @@ from typing import Annotated, Any, Optional
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from pydantic.alias_generators import to_camel
 
+import api.score_types as score_types
+
 
 class OFFIngredient(BaseModel):
     """Ingredient model for Open Food Facts API"""
@@ -270,8 +272,9 @@ class ScoredIngredient(Ingredient):
                 {"id": "en:apple", "label": "Apple", "agribalyse_code": "10001"},
                 {"id": "en:wheat-flour", "label": "Wheat flour", "agribalyseCode": "10602"},
             ]
-        }
+        },
     )
+
 
 class SuggestScoredIngredientRequest(TaxonomyRequest):
     """Request model for the suggest-scored-ingredient endpoint."""
@@ -282,9 +285,10 @@ class SuggestScoredIngredientRequest(TaxonomyRequest):
     ]
 
     model_config = ConfigDict(
-        json_schema_extra={"examples": [{"lang": "en", "include_synonyms": False, "taxonomy_id": "en:meat"}]}
+        json_schema_extra={
+            "examples": [{"lang": "en", "include_synonyms": False, "taxonomy_id": "en:meat"}]
+        }
     )
-
 
 
 class SuggestScoredIngredientResponse(BaseModel):
@@ -424,6 +428,14 @@ class GreenScoreRequest(CamelModel):
 
     ingredients: Annotated[RecipeInput, Field(description="The ingredients of the recipe")]
 
+    accounted_weights: Annotated[
+        score_types.AccountedWeights,
+        Field(
+            default=score_types.AccountedWeights.ONLY_SCORABLE,
+            description=score_types.AccountedWeights.__doc__,
+        ),
+    ] = score_types.AccountedWeights.ONLY_SCORABLE
+
 
 class IngredientAgribalyse(CamelModel):
     """Per-ingredient result of the green-score computation.
@@ -481,6 +493,18 @@ class GreenScoreResponse(CamelModel):
         }
     )
 
+    global_ef_score: Annotated[
+        Optional[float],
+        Field(
+            description="The computed global EF score of the recipe, null if no ingredients have a score"
+        ),
+    ] = None
+    labels_bonus: Annotated[
+        Optional[float],
+        Field(
+            description="The bonus from ingredient labels, null if no ingredients have a score, 0 if no labels"
+        ),
+    ] = None
     numeric_score: Annotated[
         Optional[float],
         Field(
