@@ -13,9 +13,6 @@
 		error = null;
 
 		try {
-			// the recipe text is most likely written in the language of the
-			// interface, in the future it could be changed
-			// the API expects a 2-letter language code (eg. "fr")
 			const lang = getLocale().split('-')[0];
 			const result = await parseRecipeText(recipeText, lang);
 			const ingredients = apiIngredientsToIngredients(result.ingredients);
