@@ -42,7 +42,7 @@ LABELS_BONUS_INGREDIENTS_RESTRICTIONS = {
 
 
 @async_cache
-async def get_epi_bonuses():
+async def get_epi_modifiers():
     """return a dict mapping origins to EPI bonuses
 
     see https://docs.score-environnemental.com/methodologie-recette/bonus-malus-recette/systeme-de-production/origine/synthese

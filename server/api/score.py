@@ -223,6 +223,40 @@ async def gather_labels_bonus(
             metric.labels_bonus = max_bonus
 
 
+async def gather_epi_modifiers(recipe: types.RecipeInput, metrics: score_types.RecipeMetrics):
+    """Gather the EPI bonus/malus points from origins for the recipe.
+
+    If an ingredient has multiple origins, the minimum bonus is applied.
+    No origins is equivalent to world, that is the worst case.
+    """
+    epi_modifiers = await score_data.get_epi_modifiers()
+    for ingredient, metric in safe_zip_recipe_metrics(recipe, metrics):
+        if metric.missing:
+            continue
+        if not ingredient.origin:
+            metric.add_note("EPI modifier: no origin provided, defaulting to world")
+            modifier = epi_modifiers["en:world"]
+        elif ingredient.origin.id not in epi_modifiers:
+            metric.add_note("EPI modifier: EPI score for  origins not found, defaulting to world")
+            modifier = epi_modifiers["en:world"]
+        else:
+            modifier = epi_modifiers[ingredient.origin.id]
+        metric.epi_modifier = modifier
+
+
+def global_epi_modifier(metrics: score_types.RecipeMetrics) -> Optional[float]:
+    """Compute the global EPI modifier for the recipe.
+
+    The global modifier is the weighted average of the per-ingredient modifiers.
+    """
+    modifiers = [
+        m.epi_modifier * m.ratio
+        for m in metrics
+        if m.epi_modifier is not None and m.ratio is not None
+    ]
+    return sum(modifiers) if modifiers else None
+
+
 def global_labels_bonus(metrics: score_types.RecipeMetrics) -> float:
     """Compute the global labels bonus for the recipe.
 
@@ -269,25 +303,29 @@ async def compute_green_score(
     metrics = await gather_ef_metrics(recipe)
     compute_ratios(metrics, accounted_weights)
     await gather_labels_bonus(recipe, metrics)
+    await gather_epi_modifiers(recipe, metrics)
     ef_score = ponderated_ef_sum(metrics)
     missing_ingredient_ids = [m.id for m in metrics if m.missing]
     if ef_score is not None:
         normalized_ef_score = normalize_ef_score(ef_score)
         # account for bonus / malus
         labels_bonus = global_labels_bonus(metrics)
+        epi_modifier = global_epi_modifier(metrics)
         # TODO account for packaging, origins and seasonality in the green-score computation
-        numeric_score = normalized_ef_score + labels_bonus
+        numeric_score = normalized_ef_score + labels_bonus + (epi_modifier or 0.0)
         # normalize to 0-100 range
         numeric_score = min(max(numeric_score, 0.0), 100.0)
         letter_grade = score_to_letter(numeric_score)
     else:
         normalized_ef_score = None
         labels_bonus = None
+        epi_modifier = None
         numeric_score = None
         letter_grade = None
     return types.GreenScoreResponse(
         global_ef_score=ef_score,
         labels_bonus=labels_bonus,
+        epi_modifier=epi_modifier,
         numeric_score=numeric_score,
         letter_grade=letter_grade,
         missing_ingredient_ids=missing_ingredient_ids,

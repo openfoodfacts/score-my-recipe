@@ -442,6 +442,18 @@
             "title": "Labelsbonus",
             "description": "The bonus from ingredient labels, null if no ingredients have a score, 0 if no labels"
           },
+          "epiModifier": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Epimodifier",
+            "description": "The modifier from ingredient origin agricultural system (EPI), null if no ingredients have a score"
+          },
           "numericScore": {
             "anyOf": [
               {

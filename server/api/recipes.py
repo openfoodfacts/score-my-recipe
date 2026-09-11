@@ -54,13 +54,13 @@ async def get_origins(lang: str, include_synonyms: bool = False) -> list[types.O
     if lang not in _origins:
         origins_taxonomy = await off.get_origins_taxonomy()
         # only keep origins that have bonus/malus
-        epi_bonuses = await score_data.get_epi_bonuses()
-        origins = {origin for origin in origins_taxonomy.iter_nodes() if origin.id in epi_bonuses}
+        epi_modifiers = await score_data.get_epi_modifiers()
+        origins = {origin for origin in origins_taxonomy.iter_nodes() if origin.id in epi_modifiers}
         # add children
         for origin in list(origins):
             origins.update(origin.get_children_hierarchy())
         # verify all origins are included
-        missing_origins = set(epi_bonuses.keys()) - {origin.id for origin in origins}
+        missing_origins = set(epi_modifiers.keys()) - {origin.id for origin in origins}
         if missing_origins:
             # log a warning
             logger.warning(f"Missing origins in taxonomy: {missing_origins}")

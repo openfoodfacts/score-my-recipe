@@ -505,6 +505,12 @@ class GreenScoreResponse(CamelModel):
             description="The bonus from ingredient labels, null if no ingredients have a score, 0 if no labels"
         ),
     ] = None
+    epi_modifier: Annotated[
+        Optional[float],
+        Field(
+            description="The modifier from ingredient origin agricultural system (EPI), null if no ingredients have a score"
+        ),
+    ] = None
     numeric_score: Annotated[
         Optional[float],
         Field(

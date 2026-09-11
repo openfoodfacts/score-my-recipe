@@ -8,6 +8,10 @@ from openfoodfacts.taxonomy import Taxonomy, TaxonomyNode
 from api import types
 
 
+# usefull constant when computing scores without origins
+WORLD_EPI_MODIFIER = -3.0
+
+
 @contextmanager
 def patch_ingredients_taxonomy(taxonomy):
     """Patch ``api.off.get_ingredients_taxonomy`` to return ``taxonomy``."""

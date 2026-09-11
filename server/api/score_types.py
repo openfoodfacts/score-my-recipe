@@ -33,6 +33,10 @@ class IngredientMetrics(BaseModel):
         default=None,
         description="Bonus from ingredient labels",
     )
+    epi_modifier: Optional[float] = Field(
+        default=None,
+        description="Modifier from ingredient origin agricultural system (EPI)",
+    )
     ratio: Optional[float] = Field(
         default=None,
         description="Share of the ingredient weight in the chosen denominator "
