@@ -1,6 +1,10 @@
 """Data useful for green-score computation."""
 
 import csv
+import io
+
+from aiofile import async_open
+from asyncstdlib.functools import cache as async_cache
 
 import api.settings as settings
 
@@ -37,22 +41,17 @@ LABELS_BONUS_INGREDIENTS_RESTRICTIONS = {
 }
 
 
-# cache
-_EPI_BONUSES = None
-
-
-# see https://docs.score-environnemental.com/methodologie-recette/bonus-malus-recette/systeme-de-production/origine/synthese
-# NOTE: it's not the same as for products !
+@async_cache
 async def get_epi_bonuses():
-    """return a dict mapping origins to EPI bonuses"""
-    global _EPI_BONUSES
-    if _EPI_BONUSES is None:
-        fpath = settings.get_settings().data_dir / "greenscore-epi-bonuses.csv"
-        with open(fpath, "r", encoding="utf-8") as f:
-            reader = csv.DictReader(f, delimiter="\t")
-            _EPI_BONUSES = {
-                row["origin"].strip(): float(row["bonus"])
-                for row in reader
-                if row["origin"].strip()
-            }
-    return _EPI_BONUSES
+    """return a dict mapping origins to EPI bonuses
+
+    see https://docs.score-environnemental.com/methodologie-recette/bonus-malus-recette/systeme-de-production/origine/synthese
+
+    Note that it's not the same as for products !
+    """
+    fpath = settings.get_settings().data_dir / "greenscore-epi-bonuses.csv"
+    # async read, then use csv.DictReader (which does not support async)
+    async with async_open(fpath, "r", encoding="utf-8") as f:
+        content = await f.read()
+    reader = csv.DictReader(io.StringIO(content), delimiter="\t")
+    return {row["origin"].strip(): float(row["bonus"]) for row in reader if row["origin"].strip()}
