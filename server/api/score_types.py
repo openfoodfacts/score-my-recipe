@@ -42,6 +42,17 @@ class IngredientMetrics(BaseModel):
         default=False,
         description="True when the ingredient has no usable Agribalyse EF score",
     )
+    notes: Optional[list[str]] = Field(
+        default=None,
+        description="Optional notes about computation specifics to this ingredient",
+    )
+
+    def add_note(self, note: str) -> None:
+        """Add a note to the ingredient metrics."""
+        if self.notes is None:
+            self.notes = [note]
+        else:
+            self.notes.append(note)
 
 
 #: Type alias for a list of per-ingredient metrics

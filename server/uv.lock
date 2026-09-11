@@ -33,6 +33,15 @@ wheels = [
 ]
 
 [[package]]
+name = "asyncstdlib"
+version = "3.14.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/3a/66/7b76f2b48afc5c8b4648500a4ff9869f83528e3d601a19de51da18b5e8a5/asyncstdlib-3.14.0.tar.gz", hash = "sha256:f99396992a3bba7495d8cf6c832bfe8c8727f61213233d3569a5a9cbd1c04385", size = 51074 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/93/50/463443651ddb0ba66c289d5649369099ab72b4665888b337ed25ea622550/asyncstdlib-3.14.0-py3-none-any.whl", hash = "sha256:cad90c590ce357da6e70c56f0e2ad9e9baaf146a8fc2ede189879da57eb8bd87", size = 44255 },
+]
+
+[[package]]
 name = "certifi"
 version = "2026.5.20"
 source = { registry = "https://pypi.org/simple" }
@@ -531,6 +540,7 @@ name = "score-my-recipe"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "asyncstdlib" },
     { name = "fastapi" },
     { name = "openfoodfacts" },
     { name = "openpyxl" },
@@ -552,6 +562,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "asyncstdlib", specifier = ">=3.14.0" },
     { name = "fastapi", specifier = ">=0.136.1" },
     { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.28.0" },
     { name = "openfoodfacts", specifier = ">=5.1.0" },

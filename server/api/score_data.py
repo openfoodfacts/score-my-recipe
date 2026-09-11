@@ -4,6 +4,7 @@ import csv
 
 import api.settings as settings
 
+# A dict associating labels to their bonus in the green-score computation.
 # see https://docs.score-environnemental.com/methodologie-recette/bonus-malus-recette/systeme-de-production/labels
 LABELS_BONUS = {
     "fr:nature-et-progres": 20,
@@ -23,10 +24,18 @@ LABELS_BONUS = {
     "en:rainforest-alliance": 10,
     "en:fairtrade-international": 10,
     "fr:bleu-blanc-coeur": 10,
+    # this one is conditionned by the ingredient type, see LABELS_BONUS_INGREDIENTS_RESTRICTIONS
     "fr:label-rouge": 10,
     "en:sustainable-seafood-msc": 10,
     "en:responsible-aquaculture-asc": 10,
 }
+
+
+# A dict that restrict some labels bonus to specific ingredients types
+LABELS_BONUS_INGREDIENTS_RESTRICTIONS = {
+    "fr:label-rouge": ["en:beef", "en:veal-meat", "en:lamb-meat"],
+}
+
 
 # cache
 _EPI_BONUSES = None

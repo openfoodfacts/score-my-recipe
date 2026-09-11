@@ -5,6 +5,7 @@ import math
 from typing import Optional
 
 import openfoodfacts.taxonomy as taxonomy
+from asyncstdlib.functools import cache as async_cache
 
 import api.agribalyse as agribalyse
 import api.off as off
@@ -146,28 +147,48 @@ def normalize_ef_score(ef_score: float) -> float:
     return min(max(normalized_score, 0.0), 100.0)
 
 
-# cache
-_LABELS_BONUS_FULL: Optional[dict[str, int]] = None
-
-
+@async_cache
 async def labels_bonus_full() -> dict[str, int]:
     """Return the labels bonus dictionary, including all children of the listed labels."""
-    global _LABELS_BONUS_FULL
-    if _LABELS_BONUS_FULL is None:
-        taxonomy = await off.get_labels_taxonomy()
-        labels_bonus_full = dict(score_data.LABELS_BONUS)
-        for label_id, bonus in score_data.LABELS_BONUS.items():
+    taxonomy = await off.get_labels_taxonomy()
+    labels_bonus_full = dict(score_data.LABELS_BONUS)
+    for label_id, bonus in score_data.LABELS_BONUS.items():
+        try:
+            node = taxonomy[label_id]
+        except KeyError:
+            node = None
+        if not node:
+            logger.warning("Label %s not found in taxonomy", label_id)
+            continue
+        for child in node.get_children_hierarchy():
+            labels_bonus_full[child.id] = max(labels_bonus_full.get(child.id, -1), bonus)
+    return labels_bonus_full
+
+
+@async_cache
+async def labels_bonus_ingredients_restrictions_full() -> dict[str, list[str]]:
+    """Return the labels bonus restrictions dictionary, including all children of the listed labels."""
+    taxonomy = await off.get_ingredients_taxonomy()
+    restrictions_full: dict[str, list[str]] = {}
+    for label_id, ingredient_ids in score_data.LABELS_BONUS_INGREDIENTS_RESTRICTIONS.items():
+        if not ingredient_ids:
+            continue
+        label_restrictions = set(ingredient_ids)
+        for ingredient_id in ingredient_ids:
             try:
-                node = taxonomy[label_id]
+                node = taxonomy[ingredient_id]
             except KeyError:
                 node = None
             if not node:
-                logger.warning("Label %s not found in taxonomy", label_id)
+                logger.warning(
+                    "Ingredient %s, restricting label %s, not found in taxonomy",
+                    ingredient_id,
+                    label_id,
+                )
                 continue
-            for child in node.get_children_hierarchy():
-                labels_bonus_full[child.id] = max(labels_bonus_full.get(child.id, -1), bonus)
-        _LABELS_BONUS_FULL = labels_bonus_full
-    return _LABELS_BONUS_FULL
+            label_restrictions.update(child.id for child in node.get_children_hierarchy())
+        restrictions_full[label_id] = list(label_restrictions)
+    return restrictions_full
 
 
 async def gather_labels_bonus(
@@ -178,10 +199,26 @@ async def gather_labels_bonus(
     The bonus is the maximum of the bonuses of all ingredients.
     """
     labels_bonus = await labels_bonus_full()
+    labels_restrictions = await labels_bonus_ingredients_restrictions_full()
     for ingredient, metric in safe_zip_recipe_metrics(recipe, metrics):
         if metric.missing or not ingredient.labels:
             continue
-        max_bonus = max(labels_bonus.get(label.id, -1) for label in ingredient.labels)
+        # filter some labels based on the ingredient type, if needed
+        labels_to_apply = []
+        for label in ingredient.labels:
+            if label.id in labels_restrictions:
+                if (
+                    ingredient.codified_ingredient
+                    and ingredient.codified_ingredient.id not in labels_restrictions[label.id]
+                ):
+                    metric.add_note(
+                        f"Label {label.id} bonus does not apply to ingredient {ingredient.codified_ingredient.id}"
+                    )
+                    continue
+            labels_to_apply.append(label.id)
+        if not labels_to_apply:
+            continue
+        max_bonus = max(labels_bonus.get(label_id, -1) for label_id in labels_to_apply)
         if max_bonus > 0:
             metric.labels_bonus = max_bonus
 
