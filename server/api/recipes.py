@@ -7,7 +7,7 @@ import logging
 import api.agribalyse as agribalyse
 import api.off as off
 import api.types as types
-import api.score_types as score_types
+import api.score_data as score_data
 
 logger = logging.getLogger(__name__)
 
@@ -41,30 +41,42 @@ def two_letter_lang_code(lang: str) -> str:
     return lang.replace("_", "-").split("-")[0]
 
 
+# local caching
+_origins = dict()
+
+
 async def get_origins(lang: str, include_synonyms: bool = False) -> list[types.Origin]:
     """Get the list of origins available in the database
 
     Note: as the list is not too big, we let clients handle suggestions to users
     """
     lang = two_letter_lang_code(lang)
-    countries_taxonomy = await off.get_countries_taxonomy()
-    origins = countries_taxonomy.iter_nodes()
-    origins_list = [
+    if lang not in _origins:
+        origins_taxonomy = await off.get_origins_taxonomy()
+        # only keep origins that have bonus/malus
+        epi_modifiers = await score_data.get_epi_modifiers()
+        origins = {origin for origin in origins_taxonomy.iter_nodes() if origin.id in epi_modifiers}
+        # add children
+        for origin in list(origins):
+            origins.update(origin.get_children_hierarchy())
+        # verify all origins are included
+        missing_origins = set(epi_modifiers.keys()) - {origin.id for origin in origins}
+        if missing_origins:
+            # log a warning
+            logger.warning(f"Missing origins in taxonomy: {missing_origins}")
+        # sort by id for predictable order
+        origins_list = off.taxonomy_lang_label_and_synonyms(lang, origins)
+        origins_list.sort(key=lambda x: x[0])
+        _origins[lang] = origins_list
+    return [
         types.Origin(
             id=origin_id, label=origin_label, synonyms=origin_synonyms if include_synonyms else None
         )
-        for origin_id, origin_label, origin_synonyms in off.taxonomy_lang_label_and_synonyms(
-            lang, origins
-        )
+        for origin_id, origin_label, origin_synonyms in _origins[lang]
     ]
-    # sort by id for predictable order
-    origins_list.sort(key=lambda x: x.id)
-    return origins_list
 
 
-ALL_GREEN_SCORE_LABELS = set(
-    label for label in score_types.LABELS_BONUS.keys()
-)
+ALL_GREEN_SCORE_LABELS = set(label for label in score_data.LABELS_BONUS.keys())
 
 # local caching
 _labels = dict()

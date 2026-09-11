@@ -66,14 +66,14 @@ def taxonomy_lang_label_and_synonyms(
     return result
 
 
-async def get_countries_taxonomy() -> taxonomy.Taxonomy:
-    """Get the countries taxonomy from Open Food Facts API"""
-    countries_taxonomy = await asyncio.to_thread(
+async def get_origins_taxonomy() -> taxonomy.Taxonomy:
+    """Get the origins taxonomy from Open Food Facts API"""
+    origins_taxonomy = await asyncio.to_thread(
         taxonomy.get_taxonomy,
-        taxonomy.TaxonomyType.country,
+        taxonomy.TaxonomyType.origin,
         cache_dir=get_settings().cache_dir,
     )
-    return countries_taxonomy
+    return origins_taxonomy
 
 
 async def get_ingredients_taxonomy() -> taxonomy.Taxonomy:

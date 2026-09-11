@@ -8,6 +8,10 @@ from openfoodfacts.taxonomy import Taxonomy, TaxonomyNode
 from api import types
 
 
+# usefull constant when computing scores without origins
+WORLD_EPI_MODIFIER = -3.0
+
+
 @contextmanager
 def patch_ingredients_taxonomy(taxonomy):
     """Patch ``api.off.get_ingredients_taxonomy`` to return ``taxonomy``."""
@@ -25,14 +29,25 @@ def patch_labels_taxonomy(taxonomy):
     """
     import api.score as score
 
-    saved_cache = score._LABELS_BONUS_FULL
-    score._LABELS_BONUS_FULL = None
-    try:
-        with patch("api.off.get_labels_taxonomy", new_callable=AsyncMock) as mock_tax:
-            mock_tax.return_value = taxonomy
-            yield mock_tax
-    finally:
-        score._LABELS_BONUS_FULL = saved_cache
+    score.labels_bonus_full.cache_clear()
+    with patch("api.off.get_labels_taxonomy", new_callable=AsyncMock) as mock_tax:
+        mock_tax.return_value = taxonomy
+        yield mock_tax
+
+
+@contextmanager
+def patch_epi_modifiers(modifiers: dict[str, float]):
+    """Patch ``api.score_data.get_epi_modifiers`` to return ``modifiers``.
+
+    Also resets the ``get_epi_modifiers`` cache so each test rebuilds the
+    modifiers from the provided (mocked) mapping.
+    """
+    import api.score_data as score_data
+
+    score_data.get_epi_modifiers.cache_clear()
+    with patch("api.score_data.get_epi_modifiers", new_callable=AsyncMock) as mock_mods:
+        mock_mods.return_value = modifiers
+        yield mock_mods
 
 
 def create_taxonomy_node(
@@ -109,18 +124,28 @@ def build_ingredient_dict(
     }
 
 
+def build_origin_obj(origin_id: str, label: str | None = None) -> types.TaxonomyItem:
+    """Build a ``TaxonomyItem`` representing an ingredient origin."""
+    return types.TaxonomyItem(id=origin_id, label=label or origin_id, is_in_taxonomy=True)
+
+
 def build_ingredient_obj(
     id_: str,
     name: str,
     taxonomy_id: str,
     weight: float = 100.0,
     labels: list[str] | None = None,
+    origin: str | None = None,
 ) -> types.RecipeIngredientInput:
-    """Build a ``RecipeIngredientInput`` with a codified ingredient."""
+    """Build a ``RecipeIngredientInput`` with a codified ingredient.
+
+    :param origin: optional origin taxonomy id (e.g. ``"en:france"``)
+    """
     return types.RecipeIngredientInput(
         id=id_,
         name=name,
         weight=weight,
         codified_ingredient=types.TaxonomyItem(id=taxonomy_id, label=name, is_in_taxonomy=True),
         labels=[build_label_obj(lid) for lid in (labels or [])],
+        origin=build_origin_obj(origin) if origin else None,
     )
