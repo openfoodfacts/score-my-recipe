@@ -38,22 +38,25 @@ export type IngredientType = TaxonomyItem;
  * Represents a single ingredient in a recipe
  */
 export interface Ingredient {
-	/** Unique identifier for the ingredient */
-	id: string;
-	/** Display name of the ingredient */
-	name: string;
-	/** Weight in grams (null if not specified) */
-	weight: number | null;
-	/** Codified ingredient from taxonomy */
-	codifiedIngredient: IngredientType | null;
-	/** List of labels (e.g., organic, fair-trade) */
-	labels: Label[];
-	/** Whether the ingredient is seasonal */
-	seasonality: boolean;
-	/** Origin countries/regions */
-	origin: Origin | null;
+    /** Unique identifier for the ingredient */
+    id: string;
+    /** Display name of the ingredient */
+    name: string;
+    /** Weight in grams (null if not specified) */
+    weight: number | null;
+    /** Codified ingredient from taxonomy */
+    codifiedIngredient: IngredientType | null;
+    /** List of labels (e.g., organic, fair-trade) */
+    labels: Label[];
+    /** Whether the ingredient is seasonal */
+    seasonality: boolean;
+    /** Origin countries/regions */
+    origin: Origin | null;
+    /** Quantity entered by user */
+    quantity?: number | null; 
+    /** Unit entered by user (g, kg, ml, cl, l, unit) */
+    unit?: string;
 }
-
 /**
  * Generate a unique ID for ingredients
  * @returns A unique string identifier
@@ -113,5 +116,5 @@ export function isIngredientNotEmpty(ingredient: Ingredient): boolean {
  * @returns A string uniquely identifying the ingredient's relevant content.
  */
 export function ingredientSignature(ingredient: Ingredient): string {
-	return `${ingredient.id}:${ingredient.name}:${ingredient.weight ?? ''}:${ingredient.codifiedIngredient?.id ?? ''}:${ingredient.seasonality}:${ingredient.origin?.id ?? ''}:${ingredient.labels.map((l) => l.id).join(',')}`;
+    return `${ingredient.id}:${ingredient.name}:${ingredient.quantity ?? ''}:${ingredient.unit ?? ''}:${ingredient.weight ?? ''}:${ingredient.codifiedIngredient?.id ?? ''}:${ingredient.seasonality}:${ingredient.origin?.id ?? ''}:${ingredient.labels.map((l) => l.id).join(',')}`;
 }
