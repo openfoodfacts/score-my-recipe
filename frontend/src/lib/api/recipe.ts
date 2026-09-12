@@ -89,27 +89,34 @@ export async function parseRecipeText(text: string, lang: string): Promise<Recip
  * @returns An `Ingredient` ready to be displayed in an `IngredientLine`.
  */
 export function apiIngredientToIngredient(apiIngredient: RecipeIngredient): Ingredient {
-	const taxonomyItem: IngredientType = {
-		id: apiIngredient.taxonomy_id ?? apiIngredient.codified_ingredient,
-		label: apiIngredient.codified_ingredient,
-		isInTaxonomy: apiIngredient.is_in_taxonomy
-	};
-	// Parse raw quantity/unit from API response (using type assertion until api-schema is updated)
-	const rawQuantity = (apiIngredient as { quantity?: string | number | null }).quantity;
-	const { quantity, unit } = parseQuantityAndUnit(rawQuantity);
-	return {
-		id: generateIngredientId(),
-		name: apiIngredient.codified_ingredient,
-		quantity: quantity, // New field
-		unit: unit || 'g',   // New field
-		weight: apiIngredient.quantity_g ?? null,
-		codifiedIngredient: taxonomyItem,
-		labels: [],
-		seasonality: false,
-		origin: null
-	};
-}
+    const taxonomyItem: IngredientType = {
+        id: apiIngredient.taxonomy_id ?? apiIngredient.codified_ingredient,
+        label: apiIngredient.codified_ingredient,
+        isInTaxonomy: apiIngredient.is_in_taxonomy
+    };
 
+    // Safely extract raw quantity & unit from API response using type assertion
+    const apiWithUnit = apiIngredient as { quantity?: string | number | null; unit?: string };
+    const rawQuantity = apiWithUnit.quantity;
+    const rawUnit = apiWithUnit.unit;
+
+    // Fallback parsing if unit is embedded in quantity text, otherwise use direct values
+    const parsed = parseQuantityAndUnit(rawQuantity);
+    const finalQuantity = parsed.quantity;
+    const finalUnit = rawUnit || parsed.unit || 'g';
+
+    return {
+        id: generateIngredientId(),
+        name: apiIngredient.codified_ingredient,
+        quantity: finalQuantity,
+        unit: finalUnit,
+        weight: apiIngredient.quantity_g ?? null,
+        codifiedIngredient: taxonomyItem,
+        labels: [],
+        seasonality: false,
+        origin: null
+    };
+}
 /**
  * Convert a list of API `RecipeIngredient` into frontend `Ingredient` objects.
  *
@@ -131,22 +138,26 @@ export function apiIngredientsToIngredients(apiIngredients: RecipeIngredient[]):
  * @returns The ingredient payload ready to be sent to the backend.
  */
 export function ingredientToGreenScoreInput(
-	ingredient: Ingredient
+    ingredient: Ingredient
 ): components['schemas']['RecipeIngredientInput'] {
-	const codifiedIngredient: IngredientType = ingredient.codifiedIngredient ?? {
-		id: ingredient.name,
-		label: ingredient.name,
-		isInTaxonomy: false
-	};
-	return {
-		id: ingredient.id,
-		name: ingredient.name,
-		weight: ingredient.weight ?? 0,
-		codifiedIngredient,
-		labels: ingredient.labels,
-		seasonality: ingredient.seasonality,
-		origin: ingredient.origin
-	};
+    const codifiedIngredient: IngredientType = ingredient.codifiedIngredient ?? {
+        id: ingredient.name,
+        label: ingredient.name,
+        isInTaxonomy: false
+    };
+
+    return {
+        id: ingredient.id,
+        name: ingredient.name,
+        weight: ingredient.weight ?? 0,
+        codifiedIngredient,
+        labels: ingredient.labels,
+        seasonality: ingredient.seasonality,
+        origin: ingredient.origin,
+        // Bypass strict OpenAPI schema checks until backend schema is updated
+        quantity: ingredient.quantity ?? null,
+        unit: ingredient.unit ?? 'g'
+    } as components['schemas']['RecipeIngredientInput'] & { quantity?: number | null; unit?: string };
 }
 
 /**
