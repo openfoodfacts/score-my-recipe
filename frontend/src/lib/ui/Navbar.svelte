@@ -1,8 +1,8 @@
 <script>
-	import { _ } from '$lib/i18n';
+	import { _, AVAILABLE_LOCALES } from '$lib/i18n';
 	import Logo from '$lib/ui/Logo.svelte';
 	import { offLinks } from '$lib/offLink';
-	import { locales, locale } from "svelte-i18n";
+	import { locale } from "svelte-i18n";
 
 	const navItems = $state([
 		{ name: 'navbar.score_recipe', href: '/add' },
@@ -35,20 +35,17 @@
 				{$_('navbar.join_community')}
 			</button>
 		</div>
-			<!--  
-				TODO make not overlap with join comunity button
-				TODO make me readable
-				TODO should we keep fr-FR or change to only FR?
-			-->
+		
 		<div class="locale-selector flex flex-1">
 			<div class="select">
 				<select value={value} onchange={updateLanguage}>
-					{#each $locales as locale }
-						<option value={locale}>{locale}</option>
+					{#each AVAILABLE_LOCALES as locale }
+						<option value={locale.get('code')}>{locale.get('label')}</option>
 					{/each}
 				</select>
 			</div>
 		</div>
+		
 	</div>
 </nav>
 
