@@ -1,15 +1,16 @@
 <script lang="ts">
-	import { _, getLocale, AVAILABLE_LOCALES} from '$lib/i18n';
+	import { _, AVAILABLE_LOCALES} from '$lib/i18n';
+	import { locale } from "svelte-i18n";
 	import { goto } from '$app/navigation';
 	import { parseRecipeText, apiIngredientsToIngredients } from '$lib/api/recipe';
+
 
 	let recipeText = $state('');
 	let isLoading = $state(false);
 	let error = $state<string | null>(null);
 
-	let { value } = $props();
-	let parse_lang = getLocale().split('-')[0];
-
+	let parse_lang = $state<string>($locale.split('-')[0]);
+	
 	function updateLanguage(event: string) {
 		parse_lang = event.target.value;
 	}
@@ -60,16 +61,16 @@
 				bind:value={recipeText}
 				class="textarea textarea-bordered min-h-64 w-full text-base"
 				placeholder={$_('add.recipe_placeholder', {
-					// TODO translate default
 					default: 'Entrez votre recette ici...\n\nExemple:\n200g de farine\n3 œufs\n100g de sucre'
 				})}
 				required
 			></textarea>
 		</div>
 
+		<!-- TODO make a a reciclable component I am the same as navbar I only change on the option value and update language logic. -->
 		<div class="locale-selector flex flex-1">
 			<div class="select">
-				<select value={value} onchange={updateLanguage}>
+				<select value={parse_lang} onchange={updateLanguage}>
 					{#each AVAILABLE_LOCALES as locale }
 						<option value={locale.get('languageCode')}>{locale.get('label')}</option>
 					{/each}
@@ -82,7 +83,7 @@
 				<span class="loading loading-spinner"></span>
 				{$_('add.loading', { default: 'Calcul en cours...' })}
 			{:else}
-				{$_('add.score_button', { default: 'Score recipe' })}
+				{$_('add.score_button', { default: 'Noter la recette' })}
 			{/if}
 		</button>
 	</form>

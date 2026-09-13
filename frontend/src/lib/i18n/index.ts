@@ -7,7 +7,7 @@
  *
  * It also exports functions from svelte-i18n, like the translate function (aka `_`)
  */
-import { init, register, getLocaleFromNavigator, isLoading } from 'svelte-i18n';
+import { init, register, getLocaleFromNavigator, isLoading, locale} from 'svelte-i18n';
 import { browser } from '$app/environment';
 import countries from './countries.json';
 
@@ -38,11 +38,6 @@ countries.forEach((locale) => {
 	});
 });
 
-init({
-	fallbackLocale: FALLBACK_LOCALE,
-	initialLocale: getLocale()
-});
-
 /**
  * getLocale to use to display the page
  * @returns {String} locale code (eg. "en-US")
@@ -57,6 +52,11 @@ export function getBrowserLocale() {
 	const navLang = getLocaleFromNavigator();
 	return navLang || FALLBACK_LOCALE;
 }
+
+init({
+	fallbackLocale: FALLBACK_LOCALE,
+	initialLocale: getLocale()
+});
 
 export { isLoading, AVAILABLE_LOCALES};
 export * from 'svelte-i18n';
