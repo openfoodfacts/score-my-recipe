@@ -1,5 +1,4 @@
 from unittest.mock import patch, AsyncMock
-from dataclasses import dataclass, field
 
 import pytest
 from fastapi.testclient import TestClient
@@ -8,49 +7,35 @@ from api.api import app
 from api import recipes
 from api import types
 
+from tests.helpers import (
+    create_taxonomy,
+    create_taxonomy_node,
+)
+
 
 client = TestClient(app)
-
-
-@dataclass
-class MockTaxonomyNode:
-    """Mock taxonomy node for testing"""
-
-    id: str
-    names: dict
-    synonyms: dict = field(default_factory=dict)
-
-
-class MockTaxonomy:
-    """Mock taxonomy that mimics openfoodfacts.taxonomy.Taxonomy"""
-
-    def __init__(self, nodes: list[MockTaxonomyNode]):
-        self._nodes = nodes
-
-    def iter_nodes(self):
-        return iter(self._nodes)
 
 
 @pytest.fixture
 def mock_countries_taxonomy():
     """Mock the OpenFoodFacts countries taxonomy with 4 countries"""
     mock_nodes = [
-        MockTaxonomyNode(
+        create_taxonomy_node(
             id="en:france",
             names={"en": "France", "fr": "France", "xx": "France"},
             synonyms={"en": ["French Republic"], "fr": ["République française"]},
         ),
-        MockTaxonomyNode(
+        create_taxonomy_node(
             id="en:italy",
             names={"en": "Italy", "it": "Italia", "fr": "Italie", "xx": "Italy"},
             synonyms={"en": ["Italian Republic"], "fr": ["République italienne"]},
         ),
-        MockTaxonomyNode(
+        create_taxonomy_node(
             id="en:spain",
             names={"en": "Spain", "es": "España", "fr": "Espagne", "xx": "Spain"},
             synonyms={"en": ["Kingdom of Spain"], "fr": ["Royaume d'Espagne"]},
         ),
-        MockTaxonomyNode(
+        create_taxonomy_node(
             id="en:germany",
             names={
                 "en": "Germany",
@@ -64,10 +49,10 @@ def mock_countries_taxonomy():
             },
         ),
     ]
-    mock_taxonomy = MockTaxonomy(mock_nodes)
+    mocked_taxonomy = create_taxonomy(mock_nodes)
 
     with patch("api.off.get_countries_taxonomy", new_callable=AsyncMock) as mock:
-        mock.return_value = mock_taxonomy
+        mock.return_value = mocked_taxonomy
         yield mock
 
 

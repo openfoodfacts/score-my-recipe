@@ -31,4 +31,4 @@ LETTER_CASES = [
 @pytest.mark.asyncio
 async def test_score_to_letter_thresholds(score_value, expected):
     """Each score value maps to its expected letter grade."""
-    assert await score.score_to_letter(score_value) == expected
+    assert score.score_to_letter(score_value) == expected

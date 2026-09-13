@@ -8,8 +8,8 @@ import pytest
 
 from api import score
 from tests.helpers import (
-    MockTaxonomy,
-    MockTaxonomyNode,
+    create_taxonomy,
+    create_taxonomy_node,
     build_ingredient_obj,
     patch_ingredients_taxonomy,
 )
@@ -18,9 +18,9 @@ from tests.helpers import (
 @pytest.mark.asyncio
 async def test_matches_agribalyse_code(agribalyse_index):
     """An ingredient whose node has an agribalyse_code matches the first column."""
-    taxonomy = MockTaxonomy(
+    taxonomy = create_taxonomy(
         {
-            "en:apple": MockTaxonomyNode(
+            "en:apple": create_taxonomy_node(
                 "en:apple", properties={"agribalyse_food_code": {"en": "10001"}}
             )
         }
@@ -38,9 +38,9 @@ async def test_matches_agribalyse_code(agribalyse_index):
 @pytest.mark.asyncio
 async def test_falls_back_to_ciqual_column(agribalyse_index):
     """A ciqual_* property matches the second column (ciqual_code)."""
-    taxonomy = MockTaxonomy(
+    taxonomy = create_taxonomy(
         {
-            "en:carrot": MockTaxonomyNode(
+            "en:carrot": create_taxonomy_node(
                 "en:carrot", properties={"ciqual_food_code": {"en": "30000"}}
             )
         }
@@ -58,10 +58,10 @@ async def test_falls_back_to_ciqual_column(agribalyse_index):
 @pytest.mark.asyncio
 async def test_searches_parents(agribalyse_index):
     """A missing property on the node is found on its parent."""
-    parent = MockTaxonomyNode(
+    parent = create_taxonomy_node(
         "en:fruit", properties={"agribalyse_proxy_food_code": {"en": "10002"}}
     )
-    taxonomy = MockTaxonomy({"en:pear": MockTaxonomyNode("en:pear", parents=[parent])})
+    taxonomy = create_taxonomy({"en:pear": create_taxonomy_node("en:pear", parents=[parent])})
     with patch_ingredients_taxonomy(taxonomy):
         result = await score.match_ingredients_to_agribalyse(
             [build_ingredient_obj("i1", "pear", "en:pear")]
@@ -73,9 +73,9 @@ async def test_searches_parents(agribalyse_index):
 @pytest.mark.asyncio
 async def test_priority_order(agribalyse_index):
     """agribalyse_code takes priority over ciqual_code even if both are present."""
-    taxonomy = MockTaxonomy(
+    taxonomy = create_taxonomy(
         {
-            "en:apple": MockTaxonomyNode(
+            "en:apple": create_taxonomy_node(
                 "en:apple",
                 properties={
                     "agribalyse_food_code": {"en": "10001"},
@@ -94,7 +94,7 @@ async def test_priority_order(agribalyse_index):
 @pytest.mark.asyncio
 async def test_no_match(agribalyse_index):
     """An ingredient with no usable code returns a null Agribalyse row."""
-    taxonomy = MockTaxonomy({"en:water": MockTaxonomyNode("en:water", properties={})})
+    taxonomy = create_taxonomy({"en:water": create_taxonomy_node("en:water", properties={})})
     with patch_ingredients_taxonomy(taxonomy):
         result = await score.match_ingredients_to_agribalyse(
             [build_ingredient_obj("i1", "water", "en:water")]
@@ -107,7 +107,7 @@ async def test_no_match(agribalyse_index):
 @pytest.mark.asyncio
 async def test_unknown_taxonomy_id(agribalyse_index):
     """An ingredient whose codified id is not in the taxonomy yields no Agribalyse row."""
-    with patch_ingredients_taxonomy(MockTaxonomy({})):
+    with patch_ingredients_taxonomy(create_taxonomy({})):
         result = await score.match_ingredients_to_agribalyse(
             [build_ingredient_obj("i1", "salt", "en:salt")]
         )
@@ -118,12 +118,12 @@ async def test_unknown_taxonomy_id(agribalyse_index):
 @pytest.mark.asyncio
 async def test_all_ingredients_returned(agribalyse_index):
     """Every ingredient is matched (regression test for an early-return bug)."""
-    taxonomy = MockTaxonomy(
+    taxonomy = create_taxonomy(
         {
-            "en:apple": MockTaxonomyNode(
+            "en:apple": create_taxonomy_node(
                 "en:apple", properties={"agribalyse_food_code": {"en": "10001"}}
             ),
-            "en:pear": MockTaxonomyNode(
+            "en:pear": create_taxonomy_node(
                 "en:pear", properties={"agribalyse_food_code": {"en": "10002"}}
             ),
         }

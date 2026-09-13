@@ -1,7 +1,9 @@
 from typing import Annotated, Any, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from pydantic.alias_generators import to_camel
+
+import api.score_types as score_types
 
 
 class OFFIngredient(BaseModel):
@@ -15,6 +17,12 @@ class OFFIngredient(BaseModel):
     ecobalyse_code: Optional[str] = None
     ciqual_food_code: Optional[str] = None
     is_in_taxonomy: Optional[int] = None
+
+    @field_validator("quantity", mode="before")
+    def transform_id_to_str(cls, value) -> str:
+        """ensure that the quantity is always a string,
+        even if it is a number in the input"""
+        return str(value)
 
 
 class RecipeIngredient(BaseModel):
@@ -48,9 +56,7 @@ class TaxonomyItem(BaseModel):
 
     model_config = ConfigDict(
         json_schema_extra={
-            "examples": [
-                {"id": "en:apple", "label": "Apple", "synonyms": ["apples", "pommes"]}
-            ]
+            "examples": [{"id": "en:apple", "label": "Apple", "synonyms": ["apples", "pommes"]}]
         }
     )
 
@@ -71,9 +77,7 @@ class Origin(TaxonomyItem):
 
     model_config = ConfigDict(
         json_schema_extra={
-            "examples": [
-                {"id": "en:france", "label": "France", "synonyms": ["french"]}
-            ]
+            "examples": [{"id": "en:france", "label": "France", "synonyms": ["french"]}]
         }
     )
 
@@ -110,9 +114,7 @@ class RecipeParseResponse(BaseModel):
 class LangRequest(BaseModel):
     """Request model for parse_text endpoint"""
 
-    model_config = ConfigDict(
-        json_schema_extra={"examples": [{"lang": "en"}]}
-    )
+    model_config = ConfigDict(json_schema_extra={"examples": [{"lang": "en"}]})
 
     lang: Annotated[str, Field(description="Language for the request (2 or 5 letter code)")]
 
@@ -179,9 +181,7 @@ class Label(TaxonomyItem):
 
     model_config = ConfigDict(
         json_schema_extra={
-            "examples": [
-                {"id": "en:eu-organic", "label": "EU Organic", "synonyms": ["bio"]}
-            ]
+            "examples": [{"id": "en:eu-organic", "label": "EU Organic", "synonyms": ["bio"]}]
         }
     )
 
@@ -217,9 +217,7 @@ class Ingredient(TaxonomyItem):
 
     model_config = ConfigDict(
         json_schema_extra={
-            "examples": [
-                {"id": "en:apple", "label": "Apple", "synonyms": ["apples"]}
-            ]
+            "examples": [{"id": "en:apple", "label": "Apple", "synonyms": ["apples"]}]
         }
     )
 
@@ -274,8 +272,9 @@ class ScoredIngredient(Ingredient):
                 {"id": "en:apple", "label": "Apple", "agribalyse_code": "10001"},
                 {"id": "en:wheat-flour", "label": "Wheat flour", "agribalyseCode": "10602"},
             ]
-        }
+        },
     )
+
 
 class SuggestScoredIngredientRequest(TaxonomyRequest):
     """Request model for the suggest-scored-ingredient endpoint."""
@@ -286,9 +285,10 @@ class SuggestScoredIngredientRequest(TaxonomyRequest):
     ]
 
     model_config = ConfigDict(
-        json_schema_extra={"examples": [{"lang": "en", "include_synonyms": False, "taxonomy_id": "en:meat"}]}
+        json_schema_extra={
+            "examples": [{"lang": "en", "include_synonyms": False, "taxonomy_id": "en:meat"}]
+        }
     )
-
 
 
 class SuggestScoredIngredientResponse(BaseModel):
@@ -320,11 +320,7 @@ class TaxonomyItem(CamelModel):
     # json_schema_extra is merged with the inherited CamelModel config
     # (alias_generator + populate_by_name are preserved).
     model_config = ConfigDict(
-        json_schema_extra={
-            "examples": [
-                {"id": "en:apple", "label": "Apple", "isInTaxonomy": True}
-            ]
-        }
+        json_schema_extra={"examples": [{"id": "en:apple", "label": "Apple", "isInTaxonomy": True}]}
     )
 
     id: Annotated[str, Field(description="Taxonomy identifier")]
@@ -432,6 +428,14 @@ class GreenScoreRequest(CamelModel):
 
     ingredients: Annotated[RecipeInput, Field(description="The ingredients of the recipe")]
 
+    accounted_weights: Annotated[
+        score_types.AccountedWeights,
+        Field(
+            default=score_types.AccountedWeights.ONLY_SCORABLE,
+            description=score_types.AccountedWeights.__doc__,
+        ),
+    ] = score_types.AccountedWeights.ONLY_SCORABLE
+
 
 class IngredientAgribalyse(CamelModel):
     """Per-ingredient result of the green-score computation.
@@ -489,6 +493,18 @@ class GreenScoreResponse(CamelModel):
         }
     )
 
+    global_ef_score: Annotated[
+        Optional[float],
+        Field(
+            description="The computed global EF score of the recipe, null if no ingredients have a score"
+        ),
+    ] = None
+    labels_bonus: Annotated[
+        Optional[float],
+        Field(
+            description="The bonus from ingredient labels, null if no ingredients have a score, 0 if no labels"
+        ),
+    ] = None
     numeric_score: Annotated[
         Optional[float],
         Field(
