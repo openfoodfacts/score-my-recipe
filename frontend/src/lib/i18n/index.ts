@@ -23,8 +23,9 @@ countries.forEach(
 		const country_local : Map<string, string> = new Map();
 		country_local.set('label', country['label']);
 		country_local.set('code', generateCountryCode(country));
+		country_local.set('languageCode', country['languageCode']);
 		AVAILABLE_LOCALES.push(country_local);
-	}	
+	}
 );
 
 const FALLBACK_LOCALE = 'en-US';

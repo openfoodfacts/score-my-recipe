@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { _, getLocale } from '$lib/i18n';
+	import { _, getLocale, AVAILABLE_LOCALES} from '$lib/i18n';
 	import { goto } from '$app/navigation';
 	import { parseRecipeText, apiIngredientsToIngredients } from '$lib/api/recipe';
 
@@ -7,17 +7,20 @@
 	let isLoading = $state(false);
 	let error = $state<string | null>(null);
 
+	let { value } = $props();
+	let parse_lang = getLocale().split('-')[0];
+
+	function updateLanguage(event: string) {
+		parse_lang = event.target.value;
+	}
+
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
 		isLoading = true;
 		error = null;
 
 		try {
-			// the recipe text is most likely written in the language of the
-			// interface, in the future it could be changed
-			// the API expects a 2-letter language code (eg. "fr")
-			const lang = getLocale().split('-')[0];
-			const result = await parseRecipeText(recipeText, lang);
+			const result = await parseRecipeText(recipeText, parse_lang);
 			const ingredients = apiIngredientsToIngredients(result.ingredients);
 			await goto('/score', { state: { ingredients } });
 		} catch (e) {
@@ -57,10 +60,21 @@
 				bind:value={recipeText}
 				class="textarea textarea-bordered min-h-64 w-full text-base"
 				placeholder={$_('add.recipe_placeholder', {
+					// TODO translate default
 					default: 'Entrez votre recette ici...\n\nExemple:\n200g de farine\n3 œufs\n100g de sucre'
 				})}
 				required
 			></textarea>
+		</div>
+
+		<div class="locale-selector flex flex-1">
+			<div class="select">
+				<select value={value} onchange={updateLanguage}>
+					{#each AVAILABLE_LOCALES as locale }
+						<option value={locale.get('languageCode')}>{locale.get('label')}</option>
+					{/each}
+				</select>
+			</div>
 		</div>
 
 		<button type="submit" class="btn btn-primary btn-lg" disabled={isLoading}>
