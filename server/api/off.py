@@ -33,8 +33,13 @@ async def parse_text(text: str, lang: str) -> list[OFFIngredient]:
     # ```
     # TODO: change openfoodfacts package to be able to use async ?
     ingredients_data = await asyncio.to_thread(off_api.product.parse_ingredients, text, lang)
+    # TODO workaround en 3 eggs is failing, it passes when it interpretes quantity as string
+    def __workaround_quantity(ingredient):
+        if 'quantity' in ingredient:
+            ingredient['quantity'] = f'{ingredient.get('quantity')}'
+        return ingredient
 
-    return [OFFIngredient(**ingredient) for ingredient in ingredients_data]
+    return [OFFIngredient(**__workaround_quantity(ingredient)) for ingredient in ingredients_data ]
 
 
 def taxonomy_lang_label_and_synonyms(
