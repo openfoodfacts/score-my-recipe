@@ -39,7 +39,7 @@ async def test_get_labels_returns_only_green_score_relevant_labels(mock_labels_t
     expected_labels = {
         "en:demeter",
         "en:eu-organic",
-        "en:fair-trade",
+        "en:fairtrade-international",
         "en:rainforest-alliance",
         "en:responsible-aquaculture-asc",
         "en:sustainable-fishing-method",
@@ -47,10 +47,12 @@ async def test_get_labels_returns_only_green_score_relevant_labels(mock_labels_t
         "en:utz-certified",
         "fr:ab-agriculture-biologique",
         "fr:bio-coherence",
+        "fr:bio-equitable",
         "fr:bleu-blanc-coeur",
         "fr:haute-valeur-environnementale",
         "fr:label-rouge",
         "fr:nature-et-progres",
+        "en:fj-bio-130",
     }
     assert label_ids == expected_labels
 
@@ -64,7 +66,7 @@ async def test_get_labels_uses_correct_language_labels(mock_labels_taxonomy):
     fr_labels = label_list_to_dict(result_fr)
     assert en_labels["en:demeter"] == "Demeter"
     assert en_labels["en:eu-organic"] == "EU Organic"
-    assert en_labels["en:fair-trade"] == "Fair trade"
+    assert en_labels["en:fairtrade-international"] == "Fairtrade International"
     assert fr_labels["fr:nature-et-progres"] == "Nature et Progrès"
     assert fr_labels["fr:bio-coherence"] == "Bio-Cohérence"
     assert fr_labels["fr:haute-valeur-environnementale"] == "Haute Valeur Environnementale"
@@ -100,8 +102,8 @@ async def test_get_labels_includes_synonyms_when_requested(mock_labels_taxonomy)
     synonyms_by_id = {label.id: label.synonyms for label in result}
     # en:demeter has a single english synonym 'Demeter'
     assert synonyms_by_id["en:demeter"] == ["Demeter"]
-    # en:fair-trade english synonyms
-    assert synonyms_by_id["en:fair-trade"] == ["Fair trade", "Fairtrade"]
+    # en:fairtrade-international english synonyms
+    assert synonyms_by_id["en:fairtrade-international"] == ["Fairtrade International", "Fairtrade", "FLO international", "FLO", ]
 
 
 @pytest.mark.asyncio
