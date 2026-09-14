@@ -1,12 +1,12 @@
 # Architecture notes
 
-The project first step aims at computing Green Score for recipes but, in the future, it may also add more scores (Nutri-Score, NOVA groups on ultra-processed foods, etc.).
+The project's initial goal is to compute the Green-Score for recipes. In the future, it may support additional scores (Nutri-Score, NOVA groups for ultra-processed foods, etc.).
 
 ## A frontend and an API
 
 We want to provide a frontend for the general public to use the tool.
-But we also want to provide an API so that re-users might integrate score computations to their own tool.
-As we want a wide adoption, we really want the API to contain every bit needed to make their integration easy (whatever the technology they use).
+We also want to provide an API so consumers can integrate score computations into their own tools.
+To encourage broad adoption, the API should provide everything consumers need for straightforward integration, regardless of the technology they use.
 
 This means **Any business logic must go to the API**.
 That is any logic around recipe parsing, ingredients handling, completion, warnings, etc. and of course the score computation.
@@ -16,11 +16,11 @@ The frontend should only care about presentation and interaction logic.
 
 Of course we follow FastAPI and Svelte best practice in general.
 
-Always use pydantic objects to specify the API logic especially return methods.
-We should be able to generate a good OpenAPI specification and documentation from it,
-and use it to auto-generate the JS wrapper
-(potential integrator will also benefit from this OpenAPI).
+Use Pydantic models to define API request and response schemas, especially response bodies.
+This keeps the generated OpenAPI specification and documentation accurate,
+allows us to auto-generate JavaScript bindings,
+and helps potential integrators consume the API.
 
-Try to keep the svelte file small and dealing with one main argument.
-- Don't hesitate to create small svelte components 
-- Split logic in lib/ (types / ui / api)
+Keep Svelte files small and focused on one main responsibility.
+- Extract small Svelte components as needed.
+- Split logic into `frontend/src/lib/` (`types/`, `ui/`, and `api/`).
