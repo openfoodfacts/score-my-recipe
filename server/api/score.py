@@ -226,7 +226,6 @@ async def gather_labels_bonus(
 async def gather_epi_modifiers(recipe: types.RecipeInput, metrics: score_types.RecipeMetrics):
     """Gather the EPI bonus/malus points from origins for the recipe.
 
-    If an ingredient has multiple origins, the minimum bonus is applied.
     No origins is equivalent to world, that is the worst case.
     """
     epi_modifiers = await score_data.get_epi_modifiers()

@@ -8,7 +8,7 @@ from openfoodfacts.taxonomy import Taxonomy, TaxonomyNode
 from api import types
 
 
-# usefull constant when computing scores without origins
+# useful constant when computing scores without origins
 WORLD_EPI_MODIFIER = -3.0
 
 
@@ -35,6 +35,24 @@ def patch_labels_taxonomy(taxonomy):
             yield mock_tax
     finally:
         score.labels_bonus_full.cache_clear()
+
+
+@contextmanager
+def patch_origins_taxonomy(taxonomy):
+    """Patch ``api.off.get_origins_taxonomy`` to return ``taxonomy``.
+
+    Also resets the ``get_epi_modifiers`` cache so each test rebuilds the
+    modifiers table using the provided (mocked) taxonomy.
+    """
+    import api.score_data as score_data
+
+    score_data.get_epi_modifiers.cache_clear()
+    try:
+        with patch("api.off.get_origins_taxonomy", new_callable=AsyncMock) as mock_tax:
+            mock_tax.return_value = taxonomy
+            yield mock_tax
+    finally:
+        score_data.get_epi_modifiers.cache_clear()
 
 
 @contextmanager

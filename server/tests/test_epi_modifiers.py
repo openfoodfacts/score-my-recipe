@@ -4,6 +4,10 @@ Covers ``get_epi_modifiers``, ``gather_epi_modifiers``, ``global_epi_modifier``
 and the integration of these modifiers in ``compute_green_score``.
 """
 
+import csv
+import io
+from unittest.mock import patch
+
 import pytest
 
 from api import score, score_data
@@ -15,6 +19,7 @@ from tests.helpers import (
     create_taxonomy_node,
     patch_ingredients_taxonomy,
     patch_labels_taxonomy,
+    patch_origins_taxonomy,
     patch_epi_modifiers,
 )
 
@@ -32,6 +37,15 @@ SAMPLE_EPI_MODIFIERS = {
 }
 
 
+def _raw_csv_origins() -> set[str]:
+    """Return the set of origin ids present in the real EPI bonuses CSV."""
+    fpath = score_data.settings.get_settings().data_dir / "greenscore-epi-bonuses.csv"
+    with open(fpath, "r", encoding="utf-8") as f:
+        content = f.read()
+    reader = csv.DictReader(io.StringIO(content), delimiter="\t")
+    return {row["origin"].strip() for row in reader if row["origin"].strip()}
+
+
 # --- get_epi_modifiers -----------------------------------------------------
 
 
@@ -45,6 +59,60 @@ async def test_get_epi_modifiers_loads_real_csv():
     assert any(v > 0 for v in modifiers.values())
     # all bonuses are numbers
     assert all(isinstance(v, float) for v in modifiers.values())
+
+
+@pytest.mark.asyncio
+async def test_get_epi_modifiers_contains_children_entries():
+    """Origins from the CSV are expanded with their taxonomy children.
+
+    Each child inherits its parent's bonus (worst case when several parents
+    apply). For instance ``en:nova-scotia`` and ``en:quebec`` are children of
+    ``en:canada`` (bonus 1) in the real origins taxonomy, so they must be
+    present with the same bonus.
+    """
+    modifiers = await score_data.get_epi_modifiers()
+    # the result holds strictly more entries than the raw CSV origins,
+    # because children are added on top of the file entries
+    raw_origins = _raw_csv_origins()
+    assert len(modifiers) > len(raw_origins)
+    # known children of en:canada (bonus 1.0) must be present and inherit it
+    assert "en:canada" in modifiers
+    assert modifiers["en:canada"] == 1.0
+    assert modifiers["en:nova-scotia"] == 1.0
+    assert modifiers["en:quebec"] == 1.0
+    # every raw CSV origin is still present (children are additions, not replacements)
+    assert raw_origins <= set(modifiers.keys())
+
+
+@pytest.mark.asyncio
+async def test_get_epi_modifiers_children_take_worst_parent(agribalyse_index, tmp_path):
+    """A child shared by several parents keeps the worst (lowest) modifier.
+
+    Builds a tiny origins taxonomy where ``en:child`` has two parents:
+    ``en:parent-good`` (+2) and ``en:parent-bad`` (-2). The child must end up
+    with the worst modifier (-2).
+    """
+    child = create_taxonomy_node("en:child")
+    good_parent = create_taxonomy_node("en:parent-good", children=[child])
+    bad_parent = create_taxonomy_node("en:parent-bad", children=[child])
+    origins_taxonomy = create_taxonomy([good_parent, bad_parent, child])
+    # only the parents are in the CSV; the child must be inferred
+    csv_path = tmp_path / "greenscore-epi-bonuses.csv"
+    csv_path.write_text(
+        "original_name\tbonus\torigin\n"
+        "Good\t2\ten:parent-good\n"
+        "Bad\t-2\ten:parent-bad\n",
+        encoding="utf-8",
+    )
+    with patch.object(score_data.settings, "get_settings") as mock_settings, patch_origins_taxonomy(
+        origins_taxonomy
+    ):
+        mock_settings.return_value.data_dir = tmp_path
+        score_data.get_epi_modifiers.cache_clear()
+        modifiers = await score_data.get_epi_modifiers()
+    assert modifiers["en:parent-good"] == 2.0
+    assert modifiers["en:parent-bad"] == -2.0
+    assert modifiers["en:child"] == -2.0
 
 
 @pytest.mark.asyncio

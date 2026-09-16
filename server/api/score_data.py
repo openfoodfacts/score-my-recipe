@@ -2,11 +2,15 @@
 
 import csv
 import io
+import logging
 
 from aiofile import async_open
 from asyncstdlib.functools import cache as async_cache
 
 import api.settings as settings
+from api import off
+
+logger = logging.getLogger(__name__)
 
 # A dict associating labels to their bonus in the green-score computation.
 # see https://docs.score-environnemental.com/methodologie-recette/bonus-malus-recette/systeme-de-production/labels
@@ -54,4 +58,21 @@ async def get_epi_modifiers():
     async with async_open(fpath, "r", encoding="utf-8") as f:
         content = await f.read()
     reader = csv.DictReader(io.StringIO(content), delimiter="\t")
-    return {row["origin"].strip(): float(row["bonus"]) for row in reader if row["origin"].strip()}
+    scores = {row["origin"].strip(): float(row["bonus"]) for row in reader if row["origin"].strip()}
+    # add children
+    origins_taxonomy = await off.get_origins_taxonomy()
+    for origin, modifier in list(scores.items()):
+        # origin is a taxonomy id, get its children
+        try:
+            origin_node = origins_taxonomy[origin]
+        except KeyError:
+            logger.warning(f"Origin {origin} found in epi modifiers csv but not found in taxonomy")
+            origin_node = None
+        if origin_node:
+            for child in origin_node.get_children_hierarchy():
+                # take worst modifier
+                if child.id not in scores:
+                    scores[child.id] = modifier
+                else:
+                    scores[child.id] = min(scores[child.id], modifier)
+    return scores
