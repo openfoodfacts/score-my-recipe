@@ -28,11 +28,13 @@ def patch_labels_taxonomy(taxonomy):
     table from the provided (mocked) taxonomy.
     """
     import api.score as score
-
     score.labels_bonus_full.cache_clear()
-    with patch("api.off.get_labels_taxonomy", new_callable=AsyncMock) as mock_tax:
-        mock_tax.return_value = taxonomy
-        yield mock_tax
+    try:
+        with patch("api.off.get_labels_taxonomy", new_callable=AsyncMock) as mock_tax:
+            mock_tax.return_value = taxonomy
+            yield mock_tax
+    finally:
+        score.labels_bonus_full.cache_clear()
 
 
 @contextmanager
@@ -45,9 +47,12 @@ def patch_epi_modifiers(modifiers: dict[str, float]):
     import api.score_data as score_data
 
     score_data.get_epi_modifiers.cache_clear()
-    with patch("api.score_data.get_epi_modifiers", new_callable=AsyncMock) as mock_mods:
-        mock_mods.return_value = modifiers
-        yield mock_mods
+    try:
+        with patch("api.score_data.get_epi_modifiers", new_callable=AsyncMock) as mock_mods:
+            mock_mods.return_value = modifiers
+            yield mock_mods
+    finally:
+        score_data.get_epi_modifiers.cache_clear()
 
 
 def create_taxonomy_node(
