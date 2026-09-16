@@ -29,7 +29,7 @@ off_api = openfoodfacts.API(
 async def parse_text(text: str, lang: str) -> list[OFFIngredient]:
     """Parse a text and return a list of ingredients"""
     # TODO: handle RuntimeError case
-    # useful example:
+    # useful example if you want to test the parsing API with curl:
     # ```bash
     # curl -X PATCH "https://world.openfoodfacts.net/api/v3/product/test" \
     #     -H "User-Agent: test parsing" \
@@ -40,7 +40,7 @@ async def parse_text(text: str, lang: str) -> list[OFFIngredient]:
     #         "cc": "fr",
     #         "fields": "ingredients",
     #         "product": {
-    #         "ingredients_text_fr": "patates (2kg), tomates (1kg), persil"
+    #         "ingredients_text_fr": "patates bio et vegan de france (2kg), tomates (argentine et pérou) (1kg), persil"
     #         }
     #     }'
     # ```
