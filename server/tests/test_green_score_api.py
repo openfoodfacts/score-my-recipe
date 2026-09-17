@@ -43,6 +43,7 @@ def test_api_empty_recipe():
         "globalEfScore": None,
         "labelsBonus": None,
         "epiModifier": None,
+        "distancesModifier": None,
         "numericScore": None,
         "letterGrade": None,
         "missingIngredientIds": [],

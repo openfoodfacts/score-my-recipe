@@ -393,6 +393,8 @@ class GreenScoreRequest(CamelModel):
         json_schema_extra={
             "examples": [
                 {
+                    "country": "FR",
+                    "accountedWeights": "scorable",
                     "ingredients": [
                         {
                             "id": "i1",
@@ -420,13 +422,22 @@ class GreenScoreRequest(CamelModel):
                             "seasonality": False,
                             "origin": None,
                         },
-                    ]
+                    ],
                 }
             ]
         }
     )
 
     ingredients: Annotated[RecipeInput, Field(description="The ingredients of the recipe")]
+
+    country: Annotated[
+        Optional[str],
+        Field(
+            default=None,
+            description="Country code (ISO 3166-1 alpha-2) to compute the distance modifier for the recipe."
+            "If not provided, the distance will always be world",
+        ),
+    ] = None
 
     accounted_weights: Annotated[
         score_types.AccountedWeights,
@@ -435,6 +446,18 @@ class GreenScoreRequest(CamelModel):
             description=score_types.AccountedWeights.__doc__,
         ),
     ] = score_types.AccountedWeights.ONLY_SCORABLE
+
+    @field_validator("country", mode="before")
+    def upper_country_code(cls, value: Optional[str]) -> Optional[str]:
+        """Ensure the country code is uppercase (ISO 3166-1 alpha-2)
+
+        And is a 2-letter code if provided. If not, return None.
+        """
+        if value is None:
+            return None
+        if len(value) != 2:
+            raise ValueError(f"Country code must be 2 letters, got {value}")
+        return value.upper()
 
 
 class IngredientAgribalyse(CamelModel):
@@ -509,6 +532,12 @@ class GreenScoreResponse(CamelModel):
         Optional[float],
         Field(
             description="The modifier from ingredient origin agricultural system (EPI), null if no ingredients have a score"
+        ),
+    ] = None
+    distances_modifier: Annotated[
+        Optional[float],
+        Field(
+            description="The modifier from ingredient origin distance, null if no ingredients have a score"
         ),
     ] = None
     numeric_score: Annotated[

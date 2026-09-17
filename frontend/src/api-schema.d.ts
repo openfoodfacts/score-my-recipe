@@ -183,6 +183,8 @@ export interface components {
 		 *
 		 *     It is a thin wrapper around a list of ingredients
 		 * @example {
+		 *       "accountedWeights": "scorable",
+		 *       "country": "FR",
 		 *       "ingredients": [
 		 *         {
 		 *           "codifiedIngredient": {
@@ -218,6 +220,11 @@ export interface components {
 			 */
 			ingredients: components['schemas']['RecipeIngredientInput'][];
 			/**
+			 * Country
+			 * @description Country code (ISO 3166-1 alpha-2) to compute the distance modifier for the recipe.If not provided, the distance will always be world
+			 */
+			country?: string | null;
+			/**
 			 * @description Accounted weights for the ponderated sum.
 			 *
 			 *         * scorable takes the ratio of each ingredient compared to the total weight of ingredients that have an EF score
@@ -251,6 +258,11 @@ export interface components {
 			 * @description The modifier from ingredient origin agricultural system (EPI), null if no ingredients have a score
 			 */
 			epiModifier?: number | null;
+			/**
+			 * Distancesmodifier
+			 * @description The modifier from ingredient origin distance, null if no ingredients have a score
+			 */
+			distancesModifier?: number | null;
 			/**
 			 * Numericscore
 			 * @description The computed green-score of the recipe, null if no ingredients have a score

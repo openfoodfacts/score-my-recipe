@@ -1,10 +1,12 @@
 """Calls to openfoodfacts API"""
 
-from typing import Iterable
+from typing import Iterable, Optional
 import asyncio
 
+from asyncstdlib.functools import cache as async_cache
 import openfoodfacts
 import openfoodfacts.taxonomy as taxonomy
+
 from api.types import OFFIngredient
 from api.settings import OpenFoodFactsEnvironments, get_settings
 
@@ -94,3 +96,57 @@ async def get_labels_taxonomy() -> taxonomy.Taxonomy:
         cache_dir=get_settings().cache_dir,
     )
     return labels_taxonomy
+
+
+def _node_chain(node: taxonomy.TaxonomyNode) -> list[taxonomy.TaxonomyNode]:
+    """Return the node followed by all its parents (closest first)."""
+    return [node, *node.get_parents_hierarchy()]
+
+
+def _property_value(node: taxonomy.TaxonomyNode, prop: str) -> Optional[str]:
+    """Read a code property from a taxonomy node.
+
+    Taxonomy properties are stored as language -> value dicts (e.g.
+    `{"en": "25525"}`); we return the value, preferring English then any.
+    """
+    raw = node.properties.get(prop)
+    if raw is None:
+        return None
+    if isinstance(raw, dict):
+        value = raw.get("en") or next(iter(raw.values()), None)
+        return str(value) if value is not None else None
+    return str(raw)
+
+
+@async_cache
+async def origins_by_country_code() -> dict[str, str]:
+    """Get a dict mapping 2-letter country codes to the corresponding origin id
+
+    We also add children
+    """
+    origins_taxonomy = await get_origins_taxonomy()
+    values = [
+        (origin, _property_value(origin, "country_code_2"))
+        for origin in origins_taxonomy.iter_nodes()
+    ]
+    country_to_origins = {
+        country_code.upper(): origin for origin, country_code in values if country_code
+    }
+    return {country_code: origin.id for country_code, origin in country_to_origins.items()}
+
+
+@async_cache
+async def origin_to_country_origin() -> dict[str, str]:
+    """Get a dict mapping origin id to the corresponding country origin id"""
+    country_origins = await origins_by_country_code()
+    result = {origin_id: origin_id for origin_id in country_origins.values()}
+    # add children
+    origins_taxonomy = await get_origins_taxonomy()
+    for origin_id in list(result.keys()):
+        try:
+            origin_node = origins_taxonomy[origin_id]
+        except KeyError:
+            continue
+        for child in origin_node.get_children_hierarchy():
+            result[child.id] = origin_id
+    return result

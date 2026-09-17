@@ -243,17 +243,42 @@ async def gather_epi_modifiers(recipe: types.RecipeInput, metrics: score_types.R
         metric.epi_modifier = modifier
 
 
-def global_epi_modifier(metrics: score_types.RecipeMetrics) -> Optional[float]:
-    """Compute the global EPI modifier for the recipe.
+async def gather_distances_modifiers(
+    recipe: types.RecipeInput, metrics: score_types.RecipeMetrics, country: Optional[str] = None
+):
+    """Gather the distance bonus/malus points from origins for the recipe.
 
-    The global modifier is the weighted average of the per-ingredient modifiers.
+    No origins is equivalent to world, that is the worst case.
+    No country means world for every ingredient
     """
-    modifiers = [
-        m.epi_modifier * m.ratio
-        for m in metrics
-        if m.epi_modifier is not None and m.ratio is not None
-    ]
-    return sum(modifiers) if modifiers else None
+    origins_by_country = await off.origins_by_country_code()
+    origin_to_country_origin = await off.origin_to_country_origin()
+    country_id = origins_by_country.get(country.upper()) if country else None
+    distances_modifiers = await score_data.get_distances_modifiers()
+    for ingredient, metric in safe_zip_recipe_metrics(recipe, metrics):
+        if metric.missing:
+            continue
+        elif not country_id:
+            metric.add_note(
+                "Distance modifier: no country provided for recipe, defaulting to world"
+            )
+            modifier = score_data.DEFAULT_DISTANCE_MODIFIER
+        elif not ingredient.origin or not ingredient.origin.id:
+            metric.add_note("Distance modifier: no origin provided, defaulting to world")
+            modifier = score_data.DEFAULT_DISTANCE_MODIFIER
+        else:
+            country_origin_id = origin_to_country_origin.get(ingredient.origin.id)
+            if (
+                country_origin_id is None
+                or (country_id, country_origin_id) not in distances_modifiers
+            ):
+                metric.add_note(
+                    "Distance modifier: distance score for origins not found, defaulting to world"
+                )
+                modifier = score_data.DEFAULT_DISTANCE_MODIFIER
+            else:
+                modifier = distances_modifiers[(country_id, country_origin_id)]
+        metric.distance_modifier = modifier
 
 
 def global_labels_bonus(metrics: score_types.RecipeMetrics) -> float:
@@ -267,6 +292,32 @@ def global_labels_bonus(metrics: score_types.RecipeMetrics) -> float:
         if m.labels_bonus is not None and m.ratio is not None
     ]
     return sum(bonuses) if bonuses else 0.0
+
+
+def global_epi_modifier(metrics: score_types.RecipeMetrics) -> Optional[float]:
+    """Compute the global EPI modifier for the recipe.
+
+    The global modifier is the weighted average of the per-ingredient modifiers.
+    """
+    modifiers = [
+        m.epi_modifier * m.ratio
+        for m in metrics
+        if m.epi_modifier is not None and m.ratio is not None
+    ]
+    return sum(modifiers) if modifiers else None
+
+
+def global_distance_modifier(metrics: score_types.RecipeMetrics) -> Optional[float]:
+    """Compute the global distance modifier for the recipe.
+
+    The global modifier is the weighted average of the per-ingredient modifiers.
+    """
+    modifiers = [
+        m.distance_modifier * m.ratio
+        for m in metrics
+        if m.distance_modifier is not None and m.ratio is not None
+    ]
+    return sum(modifiers) if modifiers else None
 
 
 def score_to_letter(score: float) -> str:
@@ -289,6 +340,7 @@ def score_to_letter(score: float) -> str:
 
 async def compute_green_score(
     recipe: types.RecipeInput,
+    country: Optional[str] = None,
     accounted_weights: score_types.AccountedWeights = score_types.AccountedWeights.ONLY_SCORABLE,
 ) -> types.GreenScoreResponse:
     """Compute (for now: gather Agribalyse data for) the green-score of a recipe.
@@ -303,6 +355,7 @@ async def compute_green_score(
     compute_ratios(metrics, accounted_weights)
     await gather_labels_bonus(recipe, metrics)
     await gather_epi_modifiers(recipe, metrics)
+    await gather_distances_modifiers(recipe, metrics, country)
     ef_score = ponderated_ef_sum(metrics)
     missing_ingredient_ids = [m.id for m in metrics if m.missing]
     if ef_score is not None:
@@ -310,8 +363,11 @@ async def compute_green_score(
         # account for bonus / malus
         labels_bonus = global_labels_bonus(metrics)
         epi_modifier = global_epi_modifier(metrics)
+        distances_modifier = global_distance_modifier(metrics)
         # TODO account for packaging, origins and seasonality in the green-score computation
-        numeric_score = normalized_ef_score + labels_bonus + (epi_modifier or 0.0)
+        numeric_score = (
+            normalized_ef_score + labels_bonus + (epi_modifier or 0.0) + (distances_modifier or 0.0)
+        )
         # normalize to 0-100 range
         numeric_score = min(max(numeric_score, 0.0), 100.0)
         letter_grade = score_to_letter(numeric_score)
@@ -319,12 +375,14 @@ async def compute_green_score(
         normalized_ef_score = None
         labels_bonus = None
         epi_modifier = None
+        distances_modifier = None
         numeric_score = None
         letter_grade = None
     return types.GreenScoreResponse(
         global_ef_score=ef_score,
         labels_bonus=labels_bonus,
         epi_modifier=epi_modifier,
+        distances_modifier=distances_modifier,
         numeric_score=numeric_score,
         letter_grade=letter_grade,
         missing_ingredient_ids=missing_ingredient_ids,

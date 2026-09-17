@@ -373,6 +373,18 @@
             "title": "Ingredients",
             "description": "The ingredients of the recipe"
           },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country",
+            "description": "Country code (ISO 3166-1 alpha-2) to compute the distance modifier for the recipe.If not provided, the distance will always be world"
+          },
           "accountedWeights": {
             "$ref": "#/components/schemas/AccountedWeights",
             "description": "Accounted weights for the ponderated sum.\n\n    * scorable takes the ratio of each ingredient compared to the total weight of ingredients that have an EF score\n    * total takes the ratio of each ingredient compared to the total weight of all ingredients, including unmatched ones\n    ",
@@ -387,6 +399,8 @@
         "description": "Request body for the green-score computation endpoint.\n\nIt is a thin wrapper around a list of ingredients",
         "examples": [
           {
+            "accountedWeights": "scorable",
+            "country": "FR",
             "ingredients": [
               {
                 "codifiedIngredient": {
@@ -453,6 +467,18 @@
             ],
             "title": "Epimodifier",
             "description": "The modifier from ingredient origin agricultural system (EPI), null if no ingredients have a score"
+          },
+          "distancesModifier": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distancesmodifier",
+            "description": "The modifier from ingredient origin distance, null if no ingredients have a score"
           },
           "numericScore": {
             "anyOf": [

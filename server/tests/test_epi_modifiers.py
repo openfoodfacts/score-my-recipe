@@ -10,9 +10,11 @@ from unittest.mock import patch
 
 import pytest
 
+from api.score_data import DEFAULT_DISTANCE_MODIFIER
 from api import score, score_data
 from api.score_types import IngredientMetrics
 from tests.helpers import (
+    FRANCE_DISTANCE_MODIFIER,
     WORLD_EPI_MODIFIER,
     build_ingredient_obj,
     create_taxonomy,
@@ -29,6 +31,7 @@ from tests.helpers import (
 FRANCE_EPI_MODIFIER = 3.0
 GERMANY_EPI_MODIFIER = 2.0
 ARGENTINA_EPI_MODIFIER = -2.0
+ARGENTINA_DISTANCE_MODIFIER = -7.0
 SAMPLE_EPI_MODIFIERS = {
     "en:world": WORLD_EPI_MODIFIER,
     "en:france": FRANCE_EPI_MODIFIER,
@@ -99,13 +102,12 @@ async def test_get_epi_modifiers_children_take_worst_parent(agribalyse_index, tm
     # only the parents are in the CSV; the child must be inferred
     csv_path = tmp_path / "greenscore-epi-bonuses.csv"
     csv_path.write_text(
-        "original_name\tbonus\torigin\n"
-        "Good\t2\ten:parent-good\n"
-        "Bad\t-2\ten:parent-bad\n",
+        "original_name\tbonus\torigin\nGood\t2\ten:parent-good\nBad\t-2\ten:parent-bad\n",
         encoding="utf-8",
     )
-    with patch.object(score_data.settings, "get_settings") as mock_settings, patch_origins_taxonomy(
-        origins_taxonomy
+    with (
+        patch.object(score_data.settings, "get_settings") as mock_settings,
+        patch_origins_taxonomy(origins_taxonomy),
     ):
         mock_settings.return_value.data_dir = tmp_path
         score_data.get_epi_modifiers.cache_clear()
@@ -215,7 +217,9 @@ def test_global_epi_modifier_weighted_average():
         IngredientMetrics(id="i1", weight=100, epi_modifier=FRANCE_EPI_MODIFIER, ratio=0.25),
         IngredientMetrics(id="i2", weight=300, epi_modifier=ARGENTINA_EPI_MODIFIER, ratio=0.75),
     ]
-    assert score.global_epi_modifier(metrics) == pytest.approx(FRANCE_EPI_MODIFIER * 0.25 + ARGENTINA_EPI_MODIFIER * 0.75)
+    assert score.global_epi_modifier(metrics) == pytest.approx(
+        FRANCE_EPI_MODIFIER * 0.25 + ARGENTINA_EPI_MODIFIER * 0.75
+    )
 
 
 def test_global_epi_modifier_none_when_no_modifiers():
@@ -257,11 +261,13 @@ async def test_compute_green_score_applies_epi_modifier(agribalyse_index):
         patch_labels_taxonomy(labels_taxonomy),
         patch_epi_modifiers(SAMPLE_EPI_MODIFIERS),
     ):
-        result = await score.compute_green_score(recipe)
+        result = await score.compute_green_score(recipe, country="FR")
     expected_ef = 0.3
     assert result.global_ef_score == pytest.approx(expected_ef)
     assert result.epi_modifier == pytest.approx(FRANCE_EPI_MODIFIER)
-    assert result.numeric_score == pytest.approx(score.normalize_ef_score(expected_ef) + FRANCE_EPI_MODIFIER)
+    assert result.numeric_score == pytest.approx(
+        score.normalize_ef_score(expected_ef) + FRANCE_EPI_MODIFIER + FRANCE_DISTANCE_MODIFIER
+    )
 
 
 @pytest.mark.asyncio
@@ -281,9 +287,11 @@ async def test_compute_green_score_no_origin_uses_world(agribalyse_index):
         patch_labels_taxonomy(labels_taxonomy),
         patch_epi_modifiers(SAMPLE_EPI_MODIFIERS),
     ):
-        result = await score.compute_green_score(recipe)
+        result = await score.compute_green_score(recipe, country="FR")
     assert result.epi_modifier == pytest.approx(WORLD_EPI_MODIFIER)
-    assert result.numeric_score == pytest.approx(score.normalize_ef_score(0.3) + WORLD_EPI_MODIFIER)
+    assert result.numeric_score == pytest.approx(
+        score.normalize_ef_score(0.3) + WORLD_EPI_MODIFIER + DEFAULT_DISTANCE_MODIFIER
+    )
 
 
 @pytest.mark.asyncio
@@ -297,7 +305,7 @@ async def test_compute_green_score_all_missing_epi_modifier_none(agribalyse_inde
         patch_labels_taxonomy(labels_taxonomy),
         patch_epi_modifiers(SAMPLE_EPI_MODIFIERS),
     ):
-        result = await score.compute_green_score(recipe)
+        result = await score.compute_green_score(recipe, country="FR")
     assert result.global_ef_score is None
     assert result.epi_modifier is None
     assert result.numeric_score is None
@@ -331,12 +339,15 @@ async def test_compute_green_score_epi_weighted_by_ratio(agribalyse_index):
         patch_labels_taxonomy(labels_taxonomy),
         patch_epi_modifiers(SAMPLE_EPI_MODIFIERS),
     ):
-        result = await score.compute_green_score(recipe)
+        result = await score.compute_green_score(recipe, country="FR")
     # ratios: apple 0.25, pear 0.75
     expected_epi = FRANCE_EPI_MODIFIER * 0.25 + ARGENTINA_EPI_MODIFIER * 0.75
     assert result.epi_modifier == pytest.approx(expected_epi)
     # numeric = normalized weighted ef + 0 (labels) + epi
     expected_ef = 0.3 * 0.25 + 0.5 * 0.75
     assert result.numeric_score == pytest.approx(
-        score.normalize_ef_score(expected_ef) + expected_epi
+        score.normalize_ef_score(expected_ef)
+        + expected_epi
+        + FRANCE_DISTANCE_MODIFIER * 0.25
+        + ARGENTINA_DISTANCE_MODIFIER * 0.75
     )
