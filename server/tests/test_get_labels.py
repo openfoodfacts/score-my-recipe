@@ -103,7 +103,12 @@ async def test_get_labels_includes_synonyms_when_requested(mock_labels_taxonomy)
     # en:demeter has a single english synonym 'Demeter'
     assert synonyms_by_id["en:demeter"] == ["Demeter"]
     # en:fairtrade-international english synonyms
-    assert synonyms_by_id["en:fairtrade-international"] == ["Fairtrade International", "Fairtrade", "FLO international", "FLO", ]
+    assert synonyms_by_id["en:fairtrade-international"] == [
+        "Fairtrade International",
+        "Fairtrade",
+        "FLO international",
+        "FLO",
+    ]
 
 
 @pytest.mark.asyncio

@@ -1,34 +1,9 @@
-"""Per-ingredient metrics gathered during green-score computation."""
+"""Types useful for green-score computation."""
 
 import enum
 from typing import Optional
 
 from pydantic import BaseModel, Field
-
-
-# see https://docs.score-environnemental.com/methodologie-recette/bonus-malus-recette/systeme-de-production/labels
-LABELS_BONUS = {
-    "fr:nature-et-progres": 20,
-    "fr:bio-coherence": 20,
-    "en:demeter": 20,
-    "fr:bio-equitable": 20,
-    "en:eu-organic": 15,
-    "fr:ab-agriculture-biologique": 15,
-    # TODO: Needs verification.
-    # it's there:
-    # https://docs.score-environnemental.com/methodologie/produit/systeme-de-production/label
-    # but not there:
-    # https://docs.score-environnemental.com/methodologie-recette/bonus-malus-recette/systeme-de-production/labels
-    "en:sustainable-fishing-method": 15,
-    "fr:haute-valeur-environnementale": 10,
-    "en:utz-certified": 10,
-    "en:rainforest-alliance": 10,
-    "en:fairtrade-international": 10,
-    "fr:bleu-blanc-coeur": 10,
-    "fr:label-rouge": 10,
-    "en:sustainable-seafood-msc": 10,
-    "en:responsible-aquaculture-asc": 10,
-}
 
 
 class AccountedWeights(enum.StrEnum):
@@ -58,6 +33,10 @@ class IngredientMetrics(BaseModel):
         default=None,
         description="Bonus from ingredient labels",
     )
+    epi_modifier: Optional[float] = Field(
+        default=None,
+        description="Modifier from ingredient origin agricultural system (EPI)",
+    )
     ratio: Optional[float] = Field(
         default=None,
         description="Share of the ingredient weight in the chosen denominator "
@@ -67,6 +46,17 @@ class IngredientMetrics(BaseModel):
         default=False,
         description="True when the ingredient has no usable Agribalyse EF score",
     )
+    notes: Optional[list[str]] = Field(
+        default=None,
+        description="Optional notes about computation specifics to this ingredient",
+    )
+
+    def add_note(self, note: str) -> None:
+        """Add a note to the ingredient metrics."""
+        if self.notes is None:
+            self.notes = [note]
+        else:
+            self.notes.append(note)
 
 
 #: Type alias for a list of per-ingredient metrics

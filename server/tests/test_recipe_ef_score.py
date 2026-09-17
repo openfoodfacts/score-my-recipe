@@ -4,6 +4,7 @@ import pytest
 
 from api import score
 from tests.helpers import (
+    WORLD_EPI_MODIFIER,
     create_taxonomy,
     create_taxonomy_node,
     build_ingredient_obj,
@@ -25,7 +26,9 @@ async def test_single_ingredient_ef_score(agribalyse_index):
         response = await score.compute_green_score(
             [build_ingredient_obj("i1", "apple", "en:apple")]
         )
-    assert response.numeric_score == pytest.approx(score.normalize_ef_score(0.3))
+    assert response.numeric_score == pytest.approx(
+        score.normalize_ef_score(0.3) + WORLD_EPI_MODIFIER
+    )
     assert response.missing_ingredient_ids == []
 
 
@@ -52,7 +55,9 @@ async def test_weighted_average(agribalyse_index):
                 build_ingredient_obj("i2", "pear", "en:pear", weight=300),
             ]
         )
-    assert response.numeric_score == pytest.approx(score.normalize_ef_score(0.45))
+    assert response.numeric_score == pytest.approx(
+        score.normalize_ef_score(0.45) + WORLD_EPI_MODIFIER
+    )
     assert response.missing_ingredient_ids == []
 
 
@@ -74,8 +79,10 @@ async def test_missing_ingredient_excluded(agribalyse_index):
                 build_ingredient_obj("i_water", "water", "en:water", weight=100),
             ]
         )
-    # Only apple contributes -> raw ef = 0.3 * 100 / 100
-    assert response.numeric_score == pytest.approx(score.normalize_ef_score(0.3))
+    # Only apple contributes -> raw ef = 0.3
+    assert response.numeric_score == pytest.approx(
+        score.normalize_ef_score(0.3) + WORLD_EPI_MODIFIER
+    )
     assert response.missing_ingredient_ids == ["i_water"]
 
 

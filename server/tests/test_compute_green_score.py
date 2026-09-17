@@ -5,6 +5,7 @@ import pytest
 from api import score
 from api import types
 from tests.helpers import (
+    WORLD_EPI_MODIFIER,
     create_taxonomy,
     create_taxonomy_node,
     build_ingredient_obj,
@@ -28,8 +29,8 @@ async def test_score_for_single_ingredient(agribalyse_index):
                 ingredients=[build_ingredient_obj("i1", "apple", "en:apple")]
             ).ingredients
         )
-    assert result.numeric_score == pytest.approx(76.381296, rel=1e-4)
-    assert result.letter_grade == "A"
+    assert result.numeric_score == pytest.approx(76.381296 + WORLD_EPI_MODIFIER, rel=1e-4)
+    assert result.letter_grade == "B"
     assert result.missing_ingredient_ids == []
 
 
@@ -55,7 +56,7 @@ async def test_score_weighted_mix(agribalyse_index):
                 ]
             ).ingredients
         )
-    assert result.numeric_score == pytest.approx(57.813704, rel=1e-4)
+    assert result.numeric_score == pytest.approx(57.813704 + WORLD_EPI_MODIFIER, rel=1e-4)
     assert result.letter_grade == "C"
     assert result.missing_ingredient_ids == []
 
@@ -80,8 +81,8 @@ async def test_missing_ingredients_reported(agribalyse_index):
                 ]
             ).ingredients
         )
-    assert result.numeric_score == pytest.approx(76.381296, rel=1e-4)
-    assert result.letter_grade == "A"
+    assert result.numeric_score == pytest.approx(76.381296 + WORLD_EPI_MODIFIER, rel=1e-4)
+    assert result.letter_grade == "B"
     assert result.missing_ingredient_ids == ["i_water"]
 
 

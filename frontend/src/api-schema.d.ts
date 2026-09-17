@@ -247,6 +247,11 @@ export interface components {
 			 */
 			labelsBonus?: number | null;
 			/**
+			 * Epimodifier
+			 * @description The modifier from ingredient origin agricultural system (EPI), null if no ingredients have a score
+			 */
+			epiModifier?: number | null;
+			/**
 			 * Numericscore
 			 * @description The computed green-score of the recipe, null if no ingredients have a score
 			 */

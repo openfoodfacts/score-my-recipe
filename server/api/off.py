@@ -29,7 +29,7 @@ off_api = openfoodfacts.API(
 async def parse_text(text: str, lang: str) -> list[OFFIngredient]:
     """Parse a text and return a list of ingredients"""
     # TODO: handle RuntimeError case
-    # useful example:
+    # useful example if you want to test the parsing API with curl:
     # ```bash
     # curl -X PATCH "https://world.openfoodfacts.net/api/v3/product/test" \
     #     -H "User-Agent: test parsing" \
@@ -40,7 +40,7 @@ async def parse_text(text: str, lang: str) -> list[OFFIngredient]:
     #         "cc": "fr",
     #         "fields": "ingredients",
     #         "product": {
-    #         "ingredients_text_fr": "patates (2kg), tomates (1kg), persil"
+    #         "ingredients_text_fr": "patates bio et vegan de france (2kg), tomates (argentine et pérou) (1kg), persil"
     #         }
     #     }'
     # ```
@@ -66,14 +66,14 @@ def taxonomy_lang_label_and_synonyms(
     return result
 
 
-async def get_countries_taxonomy() -> taxonomy.Taxonomy:
-    """Get the countries taxonomy from Open Food Facts API"""
-    countries_taxonomy = await asyncio.to_thread(
+async def get_origins_taxonomy() -> taxonomy.Taxonomy:
+    """Get the origins taxonomy from Open Food Facts API"""
+    origins_taxonomy = await asyncio.to_thread(
         taxonomy.get_taxonomy,
-        taxonomy.TaxonomyType.country,
+        taxonomy.TaxonomyType.origin,
         cache_dir=get_settings().cache_dir,
     )
-    return countries_taxonomy
+    return origins_taxonomy
 
 
 async def get_ingredients_taxonomy() -> taxonomy.Taxonomy:

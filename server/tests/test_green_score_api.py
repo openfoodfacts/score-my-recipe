@@ -30,7 +30,7 @@ def test_api_accepts_camel_case_payload(agribalyse_index):
     assert response.status_code == 200
     body = response.json()
     assert body["numericScore"] is not None
-    assert body["letterGrade"] == "A"
+    assert body["letterGrade"] == "B"
     assert body["missingIngredientIds"] == []
 
 
@@ -42,6 +42,7 @@ def test_api_empty_recipe():
     assert response.json() == {
         "globalEfScore": None,
         "labelsBonus": None,
+        "epiModifier": None,
         "numericScore": None,
         "letterGrade": None,
         "missingIngredientIds": [],

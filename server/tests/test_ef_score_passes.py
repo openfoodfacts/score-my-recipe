@@ -5,6 +5,7 @@ import pytest
 from api import score
 from api.score_types import IngredientMetrics, AccountedWeights
 from tests.helpers import (
+    WORLD_EPI_MODIFIER,
     create_taxonomy,
     create_taxonomy_node,
     build_ingredient_obj,
@@ -163,7 +164,11 @@ async def test_recipe_ef_score_total_denominator_dilutes(agribalyse_index):
             accounted_weights=AccountedWeights.ALL_WEIGHTS,
         )
     # raw EF scores: scorable = 0.3 (only apple), total = 0.15 (apple diluted by water)
-    assert response_scorable.numeric_score == pytest.approx(score.normalize_ef_score(0.3))
-    assert response_total.numeric_score == pytest.approx(score.normalize_ef_score(0.15))
+    assert response_scorable.numeric_score == pytest.approx(
+        score.normalize_ef_score(0.3) + WORLD_EPI_MODIFIER
+    )
+    assert response_total.numeric_score == pytest.approx(
+        score.normalize_ef_score(0.15) + WORLD_EPI_MODIFIER * 0.5
+    )
     assert response_scorable.missing_ingredient_ids == ["i_water"]
     assert response_total.missing_ingredient_ids == ["i_water"]

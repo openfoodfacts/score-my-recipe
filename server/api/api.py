@@ -109,4 +109,6 @@ async def suggest_scored_ingredient(
 @app.post("/v1/green-score")
 async def green_score(request: types.GreenScoreRequest) -> types.GreenScoreResponse:
     """Compute the green-score of a recipe given as a list of ingredients."""
-    return await score.compute_green_score(request.ingredients, accounted_weights=request.accounted_weights)
+    return await score.compute_green_score(
+        request.ingredients, accounted_weights=request.accounted_weights
+    )

@@ -10,6 +10,7 @@ import pytest
 from api import score
 from api.score_types import IngredientMetrics
 from tests.helpers import (
+    WORLD_EPI_MODIFIER,
     create_taxonomy,
     create_taxonomy_node,
     build_ingredient_obj,
@@ -280,8 +281,10 @@ async def test_compute_green_score_applies_labels_bonus(agribalyse_index):
     expected_ef = 0.3
     assert result.global_ef_score == pytest.approx(expected_ef)
     assert result.labels_bonus == pytest.approx(15)
-    assert result.numeric_score == pytest.approx(score.normalize_ef_score(expected_ef) + 15)
-    assert result.letter_grade == "A+"
+    assert result.numeric_score == pytest.approx(
+        score.normalize_ef_score(expected_ef) + 15 + WORLD_EPI_MODIFIER
+    )
+    assert result.letter_grade == "A"
 
 
 @pytest.mark.asyncio
@@ -300,8 +303,8 @@ async def test_compute_green_score_no_label_keeps_ef_score(agribalyse_index):
         result = await score.compute_green_score(recipe)
     expected_normalized = score.normalize_ef_score(0.3)
     assert result.labels_bonus == pytest.approx(0.0)
-    assert result.numeric_score == pytest.approx(expected_normalized)
-    assert result.letter_grade == "A"
+    assert result.numeric_score == pytest.approx(expected_normalized + WORLD_EPI_MODIFIER)
+    assert result.letter_grade == "B"
 
 
 @pytest.mark.asyncio
@@ -345,4 +348,4 @@ async def test_compute_green_score_diluted_bonus(agribalyse_index):
         result = await score.compute_green_score(recipe)
     assert result.labels_bonus == pytest.approx(15)
     expected_normalized = score.normalize_ef_score(0.3)
-    assert result.numeric_score == pytest.approx(expected_normalized + 15)
+    assert result.numeric_score == pytest.approx(expected_normalized + 15 + WORLD_EPI_MODIFIER)
