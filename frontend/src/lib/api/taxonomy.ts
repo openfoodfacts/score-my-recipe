@@ -13,6 +13,8 @@ import { env } from '$env/dynamic/public';
 type Label = components['schemas']['Label'];
 type Origin = components['schemas']['Origin'];
 type Ingredient = components['schemas']['Ingredient'];
+type Country = components['schemas']['Country'];
+type CountriesResponse = components['schemas']['CountriesResponse'];
 
 const API_BASE_URL = env.PUBLIC_RECIPE_API_URL ?? '';
 
@@ -299,4 +301,27 @@ export async function getCountriesTaxonomy(includeSynonyms = true): Promise<Taxo
 		isInTaxonomy: true,
 		synonyms: origin.synonyms ?? []
 	}));
+}
+
+/**
+ * Fetch the list of countries relevant for the green-score computation.
+ *
+ * Only countries with a usable ISO 3166-1 alpha-2 country code are returned,
+ * since the green-score `country` parameter expects such a code. Countries
+ * without a code cannot influence the distance modifier and would mislead the
+ * user if offered as a choice.
+ *
+ * @param lang - The language code for the country labels (e.g. `"en"`).
+ * @returns The list of countries (with a non-null country code) from the backend.
+ * @throws {Error} If the backend responds with a non-2xx status code.
+ */
+export async function getCountries(lang: string): Promise<Country[]> {
+	const response = await fetch(`${API_BASE_URL}/v1/countries?lang=${encodeURIComponent(lang)}`);
+
+	if (!response.ok) {
+		throw new Error(`Error ${response.status}: ${response.statusText}`);
+	}
+
+	const data = (await response.json()) as CountriesResponse;
+	return data.countries.filter((country) => country.country_code != null);
 }

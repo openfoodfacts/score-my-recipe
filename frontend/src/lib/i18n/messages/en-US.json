@@ -63,6 +63,9 @@
 		"ignored_weight": "of total weight",
 		"no_score": "No score available. Add ingredients with weights to compute the score.",
 		"compute_score": "Compute score",
+		"country": "Country",
+		"country_placeholder": "Select your country",
+		"country_load_error": "Could not load countries",
 		"ingredient_not_accounted": "Not accounted",
 		"ingredient_not_accounted_tooltip": "We could not find a correspondence in our impact database for this ingredient"
 	},

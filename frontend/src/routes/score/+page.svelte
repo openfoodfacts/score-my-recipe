@@ -15,6 +15,7 @@
 	import { page } from '$app/state';
 	import RecipeRowEditor from '$lib/ui/RecipeRowEditor.svelte';
 	import ScoreDisplay from '$lib/ui/ScoreDisplay.svelte';
+	import CountrySelect from '$lib/ui/CountrySelect.svelte';
 	import { createEmptyIngredient } from '$lib/types/ingredient';
 	import { addEmptyIngredientIfNeeded, countNonEmptyIngredients } from '$lib/types/ingredientsList';
 	import type { IngredientsList } from '$lib/types/ingredientsList';
@@ -43,6 +44,10 @@
 	// Recipe state - starts with one empty ingredient line, or with parsed ingredients from /add
 	let ingredients = $state<IngredientsList>(getInitialIngredients());
 
+	// Country the recipe is being cooked in (ISO 3166-1 alpha-2 code, or null).
+	// Used to compute the distance modifier in the green-score.
+	let country = $state<string | null>(null);
+
 	// --- Green-score state -------------------------------------------------
 	// The latest computed score response (null until computed or while loading).
 	let greenScore = $state<GreenScoreResponse | null>(null);
@@ -54,10 +59,13 @@
 	const SCORE_INACTIVITY_DELAY = 3000;
 
 	/**
-	 * Signature of the ingredients' relevant fields, used to detect changes and
-	 * reset the inactivity timer.
+	 * Signature of the ingredients' relevant fields plus the selected country,
+	 * used to detect changes and reset the inactivity timer. The country is
+	 * included because it influences the distance modifier (and thus the score).
 	 */
-	let ingredientsSignature = $derived(ingredients.map(ingredientSignature).join('|'));
+	let ingredientsSignature = $derived(
+		`${ingredients.map(ingredientSignature).join('|')}@${country ?? ''}`
+	);
 
 	/**
 	 * Total weight (in grams) of the non-empty ingredients sent to the backend.
@@ -113,7 +121,10 @@
 		isScoreLoading = true;
 		scoreError = null;
 		try {
-			greenScore = await computeGreenScore(ingredients, requestController.signal);
+			greenScore = await computeGreenScore(ingredients, {
+				country: country ?? undefined,
+				signal: requestController.signal
+			});
 		} catch (e) {
 			if (e instanceof DOMException && e.name === 'AbortError') return;
 			scoreError = e instanceof Error ? e.message : 'An error occurred';
@@ -153,7 +164,8 @@
 	<RecipeRowEditor bind:ingredients {missingIngredientIds} />
 
 	<!-- Actions -->
-	<div class="mt-6 flex items-center gap-4">
+	<div class="mt-6 flex flex-wrap items-end gap-4">
+		<CountrySelect bind:value={country} />
 		<button
 			class="btn btn-primary"
 			onclick={fetchGreenScore}
