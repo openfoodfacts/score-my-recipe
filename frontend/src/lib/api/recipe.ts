@@ -24,6 +24,21 @@ export type GreenScoreRequest = components['schemas']['GreenScoreRequest'];
 /** Response schema for the green-score computation endpoint. */
 export type GreenScoreResponse = components['schemas']['GreenScoreResponse'];
 
+/** Request body schema for the Ecobalyse endpoint. */
+export type EcobalyseRequest = components['schemas']['EcobalyseRequest'];
+
+/** Response schema for the Ecobalyse endpoint. */
+export type EcobalyseScoreResponse = components['schemas']['EcobalyseScoreResponse'];
+
+/** Recipe-level parameters for Ecobalyse simulation. */
+export type RecipeEcobalyseParameters = components['schemas']['RecipeEcobalyseParameters'];
+
+/** Request body schema for the unified scores endpoint. */
+export type UnifiedScoresRequest = components['schemas']['UnifiedScoresRequest'];
+
+/** Response schema for the unified scores endpoint. */
+export type UnifiedScoresResponse = components['schemas']['UnifiedScoresResponse'];
+
 /** Single origin schema from the `get_origins` endpoint. */
 export type Origin = components['schemas']['Origin'];
 
@@ -148,6 +163,71 @@ export async function computeGreenScore(
 	}
 
 	return (await response.json()) as GreenScoreResponse;
+}
+
+/**
+ * Compute the Coût Environnemental of a recipe via the Ecobalyse endpoint.
+ *
+ * @param ingredients - The current list of ingredients in the editor.
+ * @param parameters - Optional recipe-level parameters (distribution, preparation, servings).
+ * @param signal - Optional AbortSignal to cancel inflight requests.
+ * @returns The Ecobalyse score response from the backend.
+ * @throws {Error} If the backend responds with a non-2xx status code.
+ */
+export async function computeEcobalyseScore(
+	ingredients: IngredientsList,
+	parameters?: RecipeEcobalyseParameters,
+	signal?: AbortSignal
+): Promise<EcobalyseScoreResponse> {
+	const payload: EcobalyseRequest = {
+		ingredients: ingredients.filter(isIngredientNotEmpty).map(ingredientToGreenScoreInput),
+		parameters
+	};
+	const response = await fetch(`${API_BASE_URL}/v1/ecobalyse`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(payload),
+		signal
+	});
+
+	if (!response.ok) {
+		throw new Error(`Error ${response.status}: ${response.statusText}`);
+	}
+
+	return (await response.json()) as EcobalyseScoreResponse;
+}
+
+/**
+ * Compute all supported scoring methodologies (Green-Score and Ecobalyse) concurrently.
+ *
+ * @param ingredients - The current list of ingredients in the editor.
+ * @param parameters - Optional recipe-level parameters.
+ * @param signal - Optional AbortSignal.
+ * @returns The consolidated scores response.
+ * @throws {Error} If the backend responds with a non-2xx status code.
+ */
+export async function computeAllScores(
+	ingredients: IngredientsList,
+	parameters?: RecipeEcobalyseParameters,
+	signal?: AbortSignal
+): Promise<UnifiedScoresResponse> {
+	const payload: UnifiedScoresRequest = {
+		ingredients: ingredients.filter(isIngredientNotEmpty).map(ingredientToGreenScoreInput),
+		accountedWeights: 'scorable',
+		parameters
+	};
+	const response = await fetch(`${API_BASE_URL}/v1/scores`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(payload),
+		signal
+	});
+
+	if (!response.ok) {
+		throw new Error(`Error ${response.status}: ${response.statusText}`);
+	}
+
+	return (await response.json()) as UnifiedScoresResponse;
 }
 
 /**

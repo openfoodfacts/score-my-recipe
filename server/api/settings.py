@@ -31,6 +31,31 @@ class Settings(BaseSettings):
         Field(description="Environment to use for OpenFoodFacts API (prod or staging)"),
     ] = OpenFoodFactsEnvironments.PROD
 
+    ecobalyse_base_url: Annotated[
+        str,
+        Field(
+            description="Base URL for the Ecobalyse API (official hosted or self-hosted instance)"
+        ),
+    ] = "https://ecobalyse.beta.gouv.fr/api"
+
+    ecobalyse_api_token: Annotated[
+        str | None,
+        Field(
+            description="API token for Ecobalyse API (required for hosted API, optional for self-hosted)"
+        ),
+    ] = None
+
+    ecobalyse_timeout_seconds: Annotated[
+        float, Field(description="HTTP timeout for requests to Ecobalyse in seconds")
+    ] = 8.0
+
+    ecobalyse_mock_fallback: Annotated[
+        bool,
+        Field(
+            description="Whether to fall back to a mock computation when Ecobalyse is unreachable (useful in sandboxes/offline tests)"
+        ),
+    ] = False
+
 
 _settings: Settings | None = None
 

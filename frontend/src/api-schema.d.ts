@@ -164,6 +164,46 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	'/v1/ecobalyse': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Ecobalyse Score
+		 * @description Compute the Coût Environnemental of a recipe via Ecobalyse (food2 engine).
+		 */
+		post: operations['ecobalyse_score_v1_ecobalyse_post'];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/v1/scores': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Compute Unified Scores
+		 * @description Compute all supported scores (Green-Score and Ecobalyse) concurrently.
+		 */
+		post: operations['compute_unified_scores_v1_scores_post'];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -177,6 +217,71 @@ export interface components {
 		 * @enum {string}
 		 */
 		AccountedWeights: 'scorable' | 'total';
+		/**
+		 * EcobalyseRequest
+		 * @description Request body for the Ecobalyse / Coût Environnemental score endpoint.
+		 */
+		EcobalyseRequest: {
+			/**
+			 * Ingredients
+			 * @description The ingredients of the recipe
+			 */
+			ingredients: components['schemas']['RecipeIngredientInput'][];
+			/** @description Optional recipe-level parameters (cooking, storage, servings) */
+			parameters?: components['schemas']['RecipeEcobalyseParameters'] | null;
+		};
+		/**
+		 * EcobalyseScoreResponse
+		 * @description Response model for the Ecobalyse / Coût Environnemental endpoint.
+		 */
+		EcobalyseScoreResponse: {
+			/**
+			 * Environmentalcost
+			 * @description Total environmental cost of the recipe in impact points (Pts d'impact)
+			 */
+			environmentalCost?: number | null;
+			/**
+			 * Environmentalcostperkg
+			 * @description Environmental cost normalized per kilogram (Pts / kg)
+			 */
+			environmentalCostPerKg?: number | null;
+			/**
+			 * Environmentalcostperserving
+			 * @description Environmental cost normalized per serving (Pts / portion)
+			 */
+			environmentalCostPerServing?: number | null;
+			/**
+			 * Impacts
+			 * @description Detailed sub-indicators (climate, biodiversity, water, etc.)
+			 */
+			impacts?: {
+				[key: string]: number;
+			} | null;
+			/**
+			 * Complements
+			 * @description Agroecological complements / bonus-malus details
+			 */
+			complements?: {
+				[key: string]: unknown;
+			} | null;
+			/**
+			 * Missingingredientids
+			 * @description List of ingredient ids that could not be matched to an Ecobalyse process
+			 * @default []
+			 */
+			missingIngredientIds: string[];
+			/**
+			 * Weburl
+			 * @description URL to view this simulation in the Ecobalyse web simulator
+			 */
+			webUrl?: string | null;
+			/**
+			 * Warnings
+			 * @description Warnings or notices regarding the computation
+			 * @default []
+			 */
+			warnings: string[];
+		};
 		/**
 		 * GreenScoreRequest
 		 * @description Request body for the green-score computation endpoint.
@@ -424,6 +529,29 @@ export interface components {
 			origins: components['schemas']['Origin'][];
 		};
 		/**
+		 * RecipeEcobalyseParameters
+		 * @description Optional recipe-level parameters for Ecobalyse food2 simulation.
+		 */
+		RecipeEcobalyseParameters: {
+			/**
+			 * Distribution
+			 * @description Distribution storage mode ('ambient', 'fresh', or 'frozen')
+			 * @default ambient
+			 */
+			distribution: string | null;
+			/**
+			 * Preparation
+			 * @description Techniques of preparation at consumption stage (e.g. 'frying', 'oven', 'pan-cooking')
+			 */
+			preparation?: string[] | null;
+			/**
+			 * Servings
+			 * @description Number of portions/servings the recipe yields
+			 * @default 1
+			 */
+			servings: number;
+		};
+		/**
 		 * RecipeIngredient
 		 * @description Ingredient model for Score My Recipe API
 		 * @example {
@@ -621,6 +749,37 @@ export interface components {
 			 * @description Whether the item comes from the taxonomy (true) or is custom
 			 */
 			isInTaxonomy: boolean;
+		};
+		/**
+		 * UnifiedScoresRequest
+		 * @description Request body for computing multiple scoring methodologies at once.
+		 */
+		UnifiedScoresRequest: {
+			/**
+			 * Ingredients
+			 * @description The ingredients of the recipe
+			 */
+			ingredients: components['schemas']['RecipeIngredientInput'][];
+			/**
+			 * @description Accounted weights for the ponderated sum.
+			 *
+			 *         * scorable takes the ratio of each ingredient compared to the total weight of ingredients that have an EF score
+			 *         * total takes the ratio of each ingredient compared to the total weight of all ingredients, including unmatched ones
+			 * @default scorable
+			 */
+			accountedWeights: components['schemas']['AccountedWeights'];
+			/** @description Optional Ecobalyse recipe parameters */
+			parameters?: components['schemas']['RecipeEcobalyseParameters'] | null;
+		};
+		/**
+		 * UnifiedScoresResponse
+		 * @description Response model containing results for all computed scoring methodologies.
+		 */
+		UnifiedScoresResponse: {
+			/** @description Green-Score result */
+			greenScore: components['schemas']['GreenScoreResponse'];
+			/** @description Ecobalyse Coût Environnemental result, null if computation failed/unavailable */
+			ecobalyse?: components['schemas']['EcobalyseScoreResponse'] | null;
 		};
 		/** ValidationError */
 		ValidationError: {
@@ -879,6 +1038,72 @@ export interface operations {
 				};
 				content: {
 					'application/json': components['schemas']['GreenScoreResponse'];
+				};
+			};
+			/** @description Validation Error */
+			422: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					'application/json': components['schemas']['HTTPValidationError'];
+				};
+			};
+		};
+	};
+	ecobalyse_score_v1_ecobalyse_post: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				'application/json': components['schemas']['EcobalyseRequest'];
+			};
+		};
+		responses: {
+			/** @description Successful Response */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					'application/json': components['schemas']['EcobalyseScoreResponse'];
+				};
+			};
+			/** @description Validation Error */
+			422: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					'application/json': components['schemas']['HTTPValidationError'];
+				};
+			};
+		};
+	};
+	compute_unified_scores_v1_scores_post: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				'application/json': components['schemas']['UnifiedScoresRequest'];
+			};
+		};
+		responses: {
+			/** @description Successful Response */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					'application/json': components['schemas']['UnifiedScoresResponse'];
 				};
 			};
 			/** @description Validation Error */

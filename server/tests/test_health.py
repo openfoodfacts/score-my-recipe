@@ -12,4 +12,6 @@ def test_health_returns_200():
 
 def test_health_returns_ok_status():
     response = client.get("/v1/health")
-    assert response.json() == {"status": "ok"}
+    data = response.json()
+    assert data["status"] == "ok"
+    assert "ecobalyse" in data

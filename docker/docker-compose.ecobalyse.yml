@@ -1,0 +1,26 @@
+# Docker Compose override to run a local Ecobalyse instance alongside Score My Recipe
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker/docker-compose.ecobalyse.yml up
+#
+# Or with just:
+#   just ecobalyse-up
+
+services:
+  ecobalyse:
+    image: ghcr.io/mtes-mct/ecobalyse:latest
+    restart: ${RESTART_POLICY:-unless-stopped}
+    ports:
+      - "${ECOBALYSE_PORT:-8001}:8001"
+    environment:
+      - ENABLE_FOOD_SECTION=True
+      - ENABLE_FOOD2_SECTION=True
+      - NODE_ENV=production
+      - RATELIMIT_MAX_RPM=50000
+
+  recipe_server:
+    environment:
+      - SCORE_MY_RECIPE_ECOBALYSE_BASE_URL=http://ecobalyse:8001/api
+    depends_on:
+      ecobalyse:
+        condition: service_started

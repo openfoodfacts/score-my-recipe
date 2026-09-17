@@ -5,13 +5,16 @@ Note: the business logic is in api/recipes.py,
 this file should only handle the HTTP specific parts.
 """
 
+import asyncio
 from typing import Annotated
 
 from fastapi import FastAPI, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 
+from api.ecobalyse_client import get_ecobalyse_client
 import api.recipes as recipes
 import api.score as score
+import api.score_ecobalyse as score_ecobalyse
 import api.types as types
 
 app = FastAPI(
@@ -46,7 +49,11 @@ async def root() -> dict:
 
 @app.get("/v1/health")
 async def health() -> dict:
-    return {"status": "ok"}
+    ecobalyse_status = await get_ecobalyse_client().check_health()
+    return {
+        "status": "ok",
+        "ecobalyse": ecobalyse_status,
+    }
 
 
 @app.post("/v1/parse_text")
@@ -111,4 +118,40 @@ async def green_score(request: types.GreenScoreRequest) -> types.GreenScoreRespo
     """Compute the green-score of a recipe given as a list of ingredients."""
     return await score.compute_green_score(
         request.ingredients, accounted_weights=request.accounted_weights
+    )
+
+
+@app.post("/v1/ecobalyse")
+async def ecobalyse_score(request: types.EcobalyseRequest) -> types.EcobalyseScoreResponse:
+    """Compute the Coût Environnemental of a recipe via Ecobalyse (food2 engine)."""
+    return await score_ecobalyse.compute_ecobalyse_score(request.ingredients, request.parameters)
+
+
+@app.post("/v1/scores")
+async def compute_unified_scores(
+    request: types.UnifiedScoresRequest,
+) -> types.UnifiedScoresResponse:
+    """Compute all supported scores (Green-Score and Ecobalyse) concurrently."""
+    green_score_task = score.compute_green_score(
+        request.ingredients, accounted_weights=request.accounted_weights
+    )
+    ecobalyse_task = score_ecobalyse.compute_ecobalyse_score(
+        request.ingredients, request.parameters
+    )
+
+    results = await asyncio.gather(green_score_task, ecobalyse_task, return_exceptions=True)
+
+    green_res = results[0]
+    ecobalyse_res = results[1]
+
+    if isinstance(green_res, BaseException):
+        raise green_res
+
+    ecobalyse_score_val: types.EcobalyseScoreResponse | None = None
+    if isinstance(ecobalyse_res, types.EcobalyseScoreResponse):
+        ecobalyse_score_val = ecobalyse_res
+
+    return types.UnifiedScoresResponse(
+        green_score=green_res,
+        ecobalyse=ecobalyse_score_val,
     )
