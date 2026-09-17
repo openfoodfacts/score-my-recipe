@@ -212,6 +212,43 @@ class LabelsResponse(BaseModel):
     labels: list[Label]
 
 
+class Country(TaxonomyItem):
+    """Country model for Score My Recipe API"""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [{"id": "en:france", "label": "France", "synonyms": ["french"]}]
+
+        }
+    )
+
+
+class CountriesRequest(TaxonomyRequest):
+    model_config = ConfigDict(
+        json_schema_extra={"examples": [{"lang": "en", "include_synonyms": False}]}
+    )
+    pass
+
+
+class CountriesResponse(BaseModel):
+    """Response model for get_countries endpoint"""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "countries": [
+                        {"id": "en:france", "label": "France"},
+                        {"id": "en:spain", "label": "Spain"},
+                    ]
+                }
+            ]
+        }
+    )
+
+    countries: list[Country]
+
+
 class Ingredient(TaxonomyItem):
     """Ingredient model for Score My Recipe API"""
 

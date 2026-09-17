@@ -98,6 +98,14 @@ async def get_labels_taxonomy() -> taxonomy.Taxonomy:
     return labels_taxonomy
 
 
+async def get_countries_taxonomy() -> taxonomy.Taxonomy:
+    """Get the countries taxonomy from Open Food Facts API"""
+    countries_taxonomy = await asyncio.to_thread(
+        taxonomy.get_taxonomy, taxonomy.TaxonomyType.country, cache_dir=get_settings().cache_dir
+    )
+    return countries_taxonomy
+
+
 def _node_chain(node: taxonomy.TaxonomyNode) -> list[taxonomy.TaxonomyNode]:
     """Return the node followed by all its parents (closest first)."""
     return [node, *node.get_parents_hierarchy()]

@@ -113,6 +113,39 @@ async def get_labels(lang: str, include_synonyms: bool = False) -> list[types.La
 
 
 # local caching
+_countries = dict()
+
+
+async def get_countries(lang: str, include_synonyms: bool = False) -> list[types.Country]:
+    """Get the list of countries relevant for green-score computation
+
+    The list is filtered to only include labels that impact the green-score
+    """
+    lang = two_letter_lang_code(lang)
+    if lang not in _countries:
+        countries_taxonomy = await off.get_countries_taxonomy()
+        all_countries = countries_taxonomy.iter_nodes()
+        origins_by_country_code = await off.origins_by_country_code()
+        country_ids = set(origins_by_country_code.values())
+        filtered_countries = {country for country in all_countries if country.id in country_ids}
+        # verify all green score countries are included
+        missing_countries = country_ids - {country.id for country in filtered_countries}
+        if missing_countries:
+            # log a warning
+            logger.warning(f"Missing green-score relevant countries in taxonomy: {missing_countries}")
+        countries_list = off.taxonomy_lang_label_and_synonyms(lang, filtered_countries)
+        # sort by id for predictable order
+        countries_list.sort(key=lambda x: x[0])
+        _countries[lang] = countries_list
+    return [
+        types.Country(
+            id=country_id, label=country_label, synonyms=country_synonyms if include_synonyms else None
+        )
+        for country_id, country_label, country_synonyms in _countries[lang]
+    ]
+
+
+# local caching
 _ingredients = dict()
 
 
