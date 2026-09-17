@@ -89,7 +89,6 @@ async def get_countries(
     return types.CountriesResponse(countries=countries)
 
 
-
 @app.get("/v1/ingredients", response_model_exclude_none=True)
 async def get_ingredients(
     filter_query: Annotated[types.IngredientsRequest, Query()], response: Response

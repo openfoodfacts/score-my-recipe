@@ -218,7 +218,6 @@ class Country(TaxonomyItem):
     model_config = ConfigDict(
         json_schema_extra={
             "examples": [{"id": "en:france", "label": "France", "synonyms": ["french"]}]
-
         }
     )
 
