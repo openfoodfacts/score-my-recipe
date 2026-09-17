@@ -221,6 +221,14 @@ class Country(TaxonomyItem):
         }
     )
 
+    country_code: Annotated[
+        Optional[str],
+        Field(
+            default=None,
+            description="ISO 3166-1 alpha-2 country code",
+        ),
+    ]
+
 
 class CountriesRequest(TaxonomyRequest):
     model_config = ConfigDict(

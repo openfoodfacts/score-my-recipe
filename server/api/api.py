@@ -120,5 +120,5 @@ async def suggest_scored_ingredient(
 async def green_score(request: types.GreenScoreRequest) -> types.GreenScoreResponse:
     """Compute the green-score of a recipe given as a list of ingredients."""
     return await score.compute_green_score(
-        request.ingredients, accounted_weights=request.accounted_weights
+        request.ingredients, accounted_weights=request.accounted_weights, country=request.country,
     )

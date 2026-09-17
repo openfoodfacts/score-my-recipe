@@ -52,7 +52,7 @@ async def parse_text(text: str, lang: str) -> list[OFFIngredient]:
 
 
 def taxonomy_lang_label_and_synonyms(
-    lang: str, entries: Iterable[taxonomy.TaxonomyNode]
+    lang: str, entries: Iterable[taxonomy.TaxonomyNode], *properties: str,
 ) -> list[tuple[str, str, list[str]]]:
     """Get the list of (id, label, synonyms) for a given language from a list of
     taxonomy entries.
@@ -64,7 +64,8 @@ def taxonomy_lang_label_and_synonyms(
     for entry in entries:
         label = entry.names.get(lang, entry.names.get("xx", entry.names.get("en", entry.id)))
         synonyms = entry.synonyms.get(lang, entry.synonyms.get("xx", entry.synonyms.get("en", [])))
-        result.append((entry.id, label, synonyms))
+        property_values = [_property_value(entry, prop) for prop in properties]
+        result.append((entry.id, label, synonyms, *property_values))
     return result
 
 

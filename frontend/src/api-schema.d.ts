@@ -100,6 +100,26 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	'/v1/countries': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get Countries
+		 * @description Get the list of countries relevant for green-score computation
+		 */
+		get: operations['get_countries_v1_countries_get'];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	'/v1/ingredients': {
 		parameters: {
 			query?: never;
@@ -177,6 +197,59 @@ export interface components {
 		 * @enum {string}
 		 */
 		AccountedWeights: 'scorable' | 'total';
+		/**
+		 * CountriesResponse
+		 * @description Response model for get_countries endpoint
+		 * @example {
+		 *       "countries": [
+		 *         {
+		 *           "id": "en:france",
+		 *           "label": "France"
+		 *         },
+		 *         {
+		 *           "id": "en:spain",
+		 *           "label": "Spain"
+		 *         }
+		 *       ]
+		 *     }
+		 */
+		CountriesResponse: {
+			/** Countries */
+			countries: components['schemas']['Country'][];
+		};
+		/**
+		 * Country
+		 * @description Country model for Score My Recipe API
+		 * @example {
+		 *       "id": "en:france",
+		 *       "label": "France",
+		 *       "synonyms": [
+		 *         "french"
+		 *       ]
+		 *     }
+		 */
+		Country: {
+			/**
+			 * Id
+			 * @description Taxonomy id of the item
+			 */
+			id: string;
+			/**
+			 * Label
+			 * @description Name of the item
+			 */
+			label: string;
+			/**
+			 * Synonyms
+			 * @description Synonyms in the requested language. Only present in the response when include_synonyms is true.
+			 */
+			synonyms?: string[] | null;
+			/**
+			 * Country Code
+			 * @description ISO 3166-1 alpha-2 country code
+			 */
+			country_code?: string | null;
+		};
 		/**
 		 * GreenScoreRequest
 		 * @description Request body for the green-score computation endpoint.
@@ -788,6 +861,40 @@ export interface operations {
 				};
 				content: {
 					'application/json': components['schemas']['LabelsResponse'];
+				};
+			};
+			/** @description Validation Error */
+			422: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					'application/json': components['schemas']['HTTPValidationError'];
+				};
+			};
+		};
+	};
+	get_countries_v1_countries_get: {
+		parameters: {
+			query: {
+				/** @description Language for the request (2 or 5 letter code) */
+				lang: string;
+				/** @description If true, include the synonyms of each item in the response. */
+				include_synonyms?: boolean;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Successful Response */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					'application/json': components['schemas']['CountriesResponse'];
 				};
 			};
 			/** @description Validation Error */

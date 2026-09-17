@@ -135,7 +135,7 @@ async def get_countries(lang: str, include_synonyms: bool = False) -> list[types
             logger.warning(
                 f"Missing green-score relevant countries in taxonomy: {missing_countries}"
             )
-        countries_list = off.taxonomy_lang_label_and_synonyms(lang, filtered_countries)
+        countries_list = off.taxonomy_lang_label_and_synonyms(lang, filtered_countries, "country_code_2")
         # sort by id for predictable order
         countries_list.sort(key=lambda x: x[0])
         _countries[lang] = countries_list
@@ -144,8 +144,9 @@ async def get_countries(lang: str, include_synonyms: bool = False) -> list[types
             id=country_id,
             label=country_label,
             synonyms=country_synonyms if include_synonyms else None,
+            country_code=country_code_2.upper() if country_code_2 else None,
         )
-        for country_id, country_label, country_synonyms in _countries[lang]
+        for country_id, country_label, country_synonyms, country_code_2 in _countries[lang]
     ]
 
 
