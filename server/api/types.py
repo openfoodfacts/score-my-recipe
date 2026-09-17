@@ -529,3 +529,130 @@ class GreenScoreResponse(CamelModel):
             description="List of ingredient ids that were missing from the Agribalyse computation"
         ),
     ] = []
+
+
+# --- Ecobalyse / Coût Environnemental models --------------------------------
+
+
+class RecipeEcobalyseParameters(CamelModel):
+    """Optional recipe-level parameters for Ecobalyse food2 simulation."""
+
+    distribution: Annotated[
+        Optional[str],
+        Field(
+            default="ambient",
+            description="Distribution storage mode ('ambient', 'fresh', or 'frozen')",
+        ),
+    ] = "ambient"
+    preparation: Annotated[
+        Optional[list[str]],
+        Field(
+            default=None,
+            description="Techniques of preparation at consumption stage (e.g. 'frying', 'oven', 'pan-cooking')",
+        ),
+    ] = None
+    servings: Annotated[
+        float,
+        Field(
+            default=1.0,
+            ge=0.1,
+            description="Number of portions/servings the recipe yields",
+        ),
+    ] = 1.0
+
+
+class EcobalyseRequest(CamelModel):
+    """Request body for the Ecobalyse / Coût Environnemental score endpoint."""
+
+    ingredients: Annotated[RecipeInput, Field(description="The ingredients of the recipe")]
+    parameters: Annotated[
+        Optional[RecipeEcobalyseParameters],
+        Field(
+            default=None,
+            description="Optional recipe-level parameters (cooking, storage, servings)",
+        ),
+    ] = None
+
+
+class EcobalyseImpacts(CamelModel):
+    """Environmental impact breakdown indicators from Ecobalyse (PEF indicators)."""
+
+    cch: Annotated[Optional[float], Field(description="Climate change (kg CO2 eq)")] = None
+    bvi: Annotated[Optional[float], Field(description="Local biodiversity (BVI)")] = None
+    wtu: Annotated[Optional[float], Field(description="Water use (m³)")] = None
+    ldu: Annotated[Optional[float], Field(description="Land use (pt)")] = None
+    acd: Annotated[Optional[float], Field(description="Acidification (mol H+ eq)")] = None
+    fwe: Annotated[Optional[float], Field(description="Freshwater eutrophication (kg P eq)")] = None
+    swe: Annotated[Optional[float], Field(description="Marine eutrophication (kg N eq)")] = None
+    tre: Annotated[Optional[float], Field(description="Terrestrial eutrophication (mol N eq)")] = (
+        None
+    )
+    ecs: Annotated[Optional[float], Field(description="Overall environmental impact points")] = None
+
+
+class EcobalyseScoreResponse(CamelModel):
+    """Response model for the Ecobalyse / Coût Environnemental endpoint."""
+
+    environmental_cost: Annotated[
+        Optional[float],
+        Field(description="Total environmental cost of the recipe in impact points (Pts d'impact)"),
+    ] = None
+    environmental_cost_per_kg: Annotated[
+        Optional[float],
+        Field(description="Environmental cost normalized per kilogram (Pts / kg)"),
+    ] = None
+    environmental_cost_per_serving: Annotated[
+        Optional[float],
+        Field(description="Environmental cost normalized per serving (Pts / portion)"),
+    ] = None
+    impacts: Annotated[
+        Optional[dict[str, float]],
+        Field(description="Detailed sub-indicators (climate, biodiversity, water, etc.)"),
+    ] = None
+    complements: Annotated[
+        Optional[dict[str, Any]],
+        Field(description="Agroecological complements / bonus-malus details"),
+    ] = None
+    missing_ingredient_ids: Annotated[
+        list[str],
+        Field(
+            description="List of ingredient ids that could not be matched to an Ecobalyse process"
+        ),
+    ] = []
+    web_url: Annotated[
+        Optional[str],
+        Field(description="URL to view this simulation in the Ecobalyse web simulator"),
+    ] = None
+    warnings: Annotated[
+        list[str],
+        Field(description="Warnings or notices regarding the computation"),
+    ] = []
+
+
+class UnifiedScoresRequest(CamelModel):
+    """Request body for computing multiple scoring methodologies at once."""
+
+    ingredients: Annotated[RecipeInput, Field(description="The ingredients of the recipe")]
+    accounted_weights: Annotated[
+        score_types.AccountedWeights,
+        Field(
+            default=score_types.AccountedWeights.ONLY_SCORABLE,
+            description=score_types.AccountedWeights.__doc__,
+        ),
+    ] = score_types.AccountedWeights.ONLY_SCORABLE
+    parameters: Annotated[
+        Optional[RecipeEcobalyseParameters],
+        Field(default=None, description="Optional Ecobalyse recipe parameters"),
+    ] = None
+
+
+class UnifiedScoresResponse(CamelModel):
+    """Response model containing results for all computed scoring methodologies."""
+
+    green_score: Annotated[GreenScoreResponse, Field(description="Green-Score result")]
+    ecobalyse: Annotated[
+        Optional[EcobalyseScoreResponse],
+        Field(
+            description="Ecobalyse Coût Environnemental result, null if computation failed/unavailable"
+        ),
+    ] = None

@@ -42,6 +42,20 @@ create_external_volumes:
     docker volume create --name $COMPOSE_PROJECT_NAME-server_data || true
 
 # ===========================================
+# ECOBALYSE (SELF-HOSTED)
+# ===========================================
+
+# Start a local Ecobalyse instance via Docker
+[group('ecobalyse')]
+ecobalyse-up:
+    docker compose -f docker-compose.yml -f docker/docker-compose.ecobalyse.yml up -d ecobalyse
+
+# Stop the local Ecobalyse instance
+[group('ecobalyse')]
+ecobalyse-down:
+    docker compose -f docker-compose.yml -f docker/docker-compose.ecobalyse.yml down ecobalyse
+
+# ===========================================
 # DEVELOPMENT
 # ===========================================
 

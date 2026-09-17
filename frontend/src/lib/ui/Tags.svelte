@@ -335,51 +335,102 @@
 >
 	<!-- each value of the tag (multi valued) -->
 	{#each tags as tag, index (tag.id)}
-		<div class="badge badge-ghost flex h-min items-center py-2" transition:fade={{ duration: 100 }}>
-			{#if editingIndex === index}
-				<!-- Existing tag editing input with autocomplete dropdown -->
-				<div class="dropdown">
-					<input
-						type="text"
-						class="input w-full min-w-0 border bg-transparent outline-none"
-						bind:value={editingValue}
-						onkeydown={(e) => handleEditKeydown(e, index)}
-						onblur={() => {
-							setTimeout(() => {
-								if (editingIndex === index) saveEdit(index);
-							}, 150);
-						}}
-						use:focus
-					/>
-					{@render autocompleteDropdown()}
-				</div>
-			{:else}
-				<!-- Tag already added, visible as a label -->
-				<span
-					class="cursor-pointer truncate"
-					ondblclick={() => startEditing(index, tag)}
-					title="Double-click to edit"
-					role="button"
-					tabindex="0"
-					onkeydown={(e) => {
-						if (e.key === 'Enter' || e.key === ' ') {
-							e.preventDefault();
-							startEditing(index, tag);
-						}
-					}}
-				>
-					{tag.label}
-				</span>
-			{/if}
-			<!-- Remove tag button -->
-			<button
-				class="hover:bg-base-300 ml-1 cursor-pointer p-1 leading-0"
-				onclick={() => removeTag(tag)}
-				aria-label={`Remove tag "${tag.label}"`}
+		{#if single}
+			<div
+				class="border-base-200 bg-base-100 flex h-full min-h-12 w-full items-center rounded-md border px-3"
+				transition:fade={{ duration: 100 }}
 			>
-				<IconMdiClose class="h-4 w-4" />
-			</button>
-		</div>
+				{#if editingIndex === index}
+					<div class="dropdown w-full">
+						<input
+							type="text"
+							class="w-full bg-transparent outline-none focus:outline-none"
+							bind:value={editingValue}
+							onkeydown={(e) => handleEditKeydown(e, index)}
+							onblur={() => {
+								setTimeout(() => {
+									if (editingIndex === index) saveEdit(index);
+								}, 150);
+							}}
+							use:focus
+						/>
+						{@render autocompleteDropdown()}
+					</div>
+				{:else}
+					<span
+						class="grow cursor-pointer truncate"
+						ondblclick={() => startEditing(index, tag)}
+						title="Double-click to edit"
+						role="button"
+						tabindex="0"
+						onkeydown={(e) => {
+							if (e.key === 'Enter' || e.key === ' ') {
+								e.preventDefault();
+								startEditing(index, tag);
+							}
+						}}
+					>
+						{tag.label}
+					</span>
+					<button
+						class="hover:bg-base-300 text-base-content/50 ml-1 cursor-pointer rounded-md p-1"
+						onclick={() => startEditing(index, tag)}
+						aria-label={`Edit tag "${tag.label}"`}
+					>
+						✎
+					</button>
+				{/if}
+			</div>
+		{:else}
+			<div
+				class="badge badge-ghost flex h-min items-center py-2"
+				transition:fade={{ duration: 100 }}
+			>
+				{#if editingIndex === index}
+					<!-- Existing tag editing input with autocomplete dropdown -->
+					<div class="dropdown">
+						<input
+							type="text"
+							class="input w-full min-w-0 border bg-transparent outline-none"
+							bind:value={editingValue}
+							onkeydown={(e) => handleEditKeydown(e, index)}
+							onblur={() => {
+								setTimeout(() => {
+									if (editingIndex === index) saveEdit(index);
+								}, 150);
+							}}
+							use:focus
+						/>
+						{@render autocompleteDropdown()}
+					</div>
+				{:else}
+					<!-- Tag already added, visible as a label -->
+					<span
+						class="cursor-pointer truncate"
+						ondblclick={() => startEditing(index, tag)}
+						title="Double-click to edit"
+						role="button"
+						tabindex="0"
+						onkeydown={(e) => {
+							if (e.key === 'Enter' || e.key === ' ') {
+								e.preventDefault();
+								startEditing(index, tag);
+							}
+						}}
+					>
+						{tag.label}
+					</span>
+				{/if}
+				<!-- Remove tag button -->
+				<button
+					class="hover:bg-base-300 ml-1 cursor-pointer p-1 leading-0"
+					onclick={() => removeTag(tag)}
+					aria-label={`Remove tag "${tag.label}"`}
+				>
+					<IconMdiClose class="h-4 w-4" />
+				</button>
+			</div>
+		{/if}
 	{/each}
 
 	<!-- add a tag -->

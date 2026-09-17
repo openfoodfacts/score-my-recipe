@@ -2,19 +2,21 @@
   Recipe Editor Page
 
   Main page for creating and editing recipes.
-  Holds the shared state (ingredients + green-score) and orchestrates the
-  computation. The row edition logic lives in `RecipeRowEditor` and the score
-  display (logo + limitations) lives in `ScoreDisplay`.
+  Holds the shared state (ingredients + environmental scores) and orchestrates the
+  computation. The row edition logic lives in `RecipeRowEditor` and the dual score
+  display (Green-Score & Ecobalyse) lives in `ScoreDisplay`.
 
   Features:
   - Dynamic ingredient lines (adds new line when typing in the last empty line)
-  - Computes the green-score automatically after a delay of inactivity or on demand
+  - Computes Green-Score and Coût Environnemental (Ecobalyse food2) automatically
+  - Configurable preparation techniques and distribution modes
 -->
 <script lang="ts">
 	import { _ } from '$lib/i18n';
 	import { page } from '$app/state';
 	import RecipeRowEditor from '$lib/ui/RecipeRowEditor.svelte';
 	import ScoreDisplay from '$lib/ui/ScoreDisplay.svelte';
+	import RecipeParameters from '$lib/ui/RecipeParameters.svelte';
 	import { createEmptyIngredient } from '$lib/types/ingredient';
 	import { addEmptyIngredientIfNeeded, countNonEmptyIngredients } from '$lib/types/ingredientsList';
 	import type { IngredientsList } from '$lib/types/ingredientsList';
@@ -23,7 +25,12 @@
 		ingredientSignature,
 		type Ingredient
 	} from '$lib/types/ingredient';
-	import { computeGreenScore, type GreenScoreResponse } from '$lib/api/recipe';
+	import {
+		computeAllScores,
+		type GreenScoreResponse,
+		type EcobalyseScoreResponse,
+		type RecipeEcobalyseParameters
+	} from '$lib/api/recipe';
 
 	/**
 	 * Initial ingredients coming from the `/add` page (passed via `goto` state).
@@ -43,14 +50,24 @@
 	// Recipe state - starts with one empty ingredient line, or with parsed ingredients from /add
 	let ingredients = $state<IngredientsList>(getInitialIngredients());
 
-	// --- Green-score state -------------------------------------------------
-	// The latest computed score response (null until computed or while loading).
+	// Recipe-level parameters for Ecobalyse food2
+	let recipeParameters = $state<RecipeEcobalyseParameters>({
+		distribution: 'ambient',
+		preparation: [],
+		servings: 1
+	});
+
+	// Active score methodology tab
+	let activeMethod = $state<'green-score' | 'ecobalyse'>('green-score');
+
+	// --- Scoring state -----------------------------------------------------
 	let greenScore = $state<GreenScoreResponse | null>(null);
+	let ecobalyseScore = $state<EcobalyseScoreResponse | null>(null);
 	let isScoreLoading = $state(false);
 	let scoreError = $state<string | null>(null);
 	let currentScoreRequestController = $state<AbortController | null>(null);
 
-	/** Inactivity delay (in ms) before the green-score is recomputed automatically. */
+	/** Inactivity delay (in ms) before scores are recomputed automatically. */
 	const SCORE_INACTIVITY_DELAY = 3000;
 
 	/**
@@ -67,8 +84,7 @@
 	);
 
 	/**
-	 * Total weight (in grams) of the ingredients that were ignored by the
-	 * backend (i.e. whose id appears in the missing list of the last response).
+	 * Total weight (in grams) of the ingredients that were ignored by Green-Score.
 	 */
 	let ignoredWeight = $derived.by(() => {
 		if (!greenScore) return 0;
@@ -82,30 +98,27 @@
 	let nonEmptyIngredientCount = $derived(countNonEmptyIngredients(ingredients));
 
 	/**
-	 * Ingredient ids flagged as missing in the last computed score.
-	 *
-	 * Cleared while a recomputation is in flight (see `isScoreLoading`) so the
-	 * highlight always reflects the currently displayed score, never a stale one.
+	 * Ingredient ids flagged as missing in the active score view.
 	 */
-	let missingIngredientIds = $derived(
-		isScoreLoading || !greenScore ? [] : greenScore.missingIngredientIds
-	);
+	let missingIngredientIds = $derived.by(() => {
+		if (isScoreLoading) return [];
+		if (activeMethod === 'ecobalyse') {
+			return ecobalyseScore?.missingIngredientIds ?? [];
+		}
+		return greenScore?.missingIngredientIds ?? [];
+	});
 
 	/**
-	 * Compute the green-score for the current ingredients.
-	 *
-	 * Guards against concurrent computations: only the result of the most recent
-	 * call is applied, earlier (stale) results are discarded. Captures errors
-	 * from the latest call only.
+	 * Compute all supported scores for the current ingredients.
 	 */
-	async function fetchGreenScore() {
+	async function fetchScores() {
 		currentScoreRequestController?.abort(); // abort previous request
 		// Only compute when there is at least one non-empty ingredient
 		if (!ingredients.some(isIngredientNotEmpty)) {
 			currentScoreRequestController = null;
 			isScoreLoading = false;
 			greenScore = null;
-			isScoreLoading = false;
+			ecobalyseScore = null;
 			return;
 		}
 		const requestController = new AbortController();
@@ -113,11 +126,14 @@
 		isScoreLoading = true;
 		scoreError = null;
 		try {
-			greenScore = await computeGreenScore(ingredients, requestController.signal);
+			const res = await computeAllScores(ingredients, recipeParameters, requestController.signal);
+			greenScore = res.greenScore;
+			ecobalyseScore = res.ecobalyse ?? null;
 		} catch (e) {
 			if (e instanceof DOMException && e.name === 'AbortError') return;
 			scoreError = e instanceof Error ? e.message : 'An error occurred';
 			greenScore = null;
+			ecobalyseScore = null;
 		} finally {
 			if (currentScoreRequestController === requestController) {
 				currentScoreRequestController = null;
@@ -127,11 +143,9 @@
 	}
 
 	// Reset the inactivity timer whenever the ingredients change.
-	// After the delay without edits, the score is recomputed automatically.
 	$effect(() => {
-		// Read the signature so the effect re-runs on any ingredient change
 		void ingredientsSignature;
-		const timer = setTimeout(fetchGreenScore, SCORE_INACTIVITY_DELAY);
+		const timer = setTimeout(fetchScores, SCORE_INACTIVITY_DELAY);
 		return () => clearTimeout(timer);
 	});
 </script>
@@ -152,11 +166,16 @@
 	<!-- Ingredients List (row edition logic delegated to RecipeRowEditor) -->
 	<RecipeRowEditor bind:ingredients {missingIngredientIds} />
 
+	<!-- Advanced Recipe Parameters (Ecobalyse food2) -->
+	<div class="mt-6">
+		<RecipeParameters bind:parameters={recipeParameters} onchange={fetchScores} />
+	</div>
+
 	<!-- Actions -->
 	<div class="mt-6 flex items-center gap-4">
 		<button
 			class="btn btn-primary"
-			onclick={fetchGreenScore}
+			onclick={fetchScores}
 			disabled={isScoreLoading || !ingredients.some(isIngredientNotEmpty)}
 		>
 			{#if isScoreLoading}
@@ -166,22 +185,17 @@
 		</button>
 	</div>
 
-	<!-- Summary -->
-	<div class="bg-base-200 mt-8 rounded-lg p-4">
-		<h2 class="text-lg font-semibold">{$_('recipe.summary', { default: 'Summary' })}</h2>
-		<p class="text-base-content/70 mt-1">
-			{nonEmptyIngredientCount}
-			{$_('recipe.ingredients_count', { default: 'ingredient(s) added' })}
-		</p>
+	<!-- Dual Score Display (Green-Score & Ecobalyse tabs) -->
+	<div class="mt-8">
+		<ScoreDisplay
+			{greenScore}
+			{ecobalyseScore}
+			bind:activeMethod
+			totalIngredientCount={nonEmptyIngredientCount}
+			{totalWeight}
+			{ignoredWeight}
+			isLoading={isScoreLoading}
+			error={scoreError}
+		/>
 	</div>
-
-	<!-- Green Score display (logo + limitations) -->
-	<ScoreDisplay
-		score={greenScore}
-		totalIngredientCount={nonEmptyIngredientCount}
-		{totalWeight}
-		{ignoredWeight}
-		isLoading={isScoreLoading}
-		error={scoreError}
-	/>
 </div>
