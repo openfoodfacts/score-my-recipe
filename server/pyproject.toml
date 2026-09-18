@@ -13,8 +13,9 @@ dependencies = [
     "typer>=0.26.8",
     "pyyaml>=6.0.3",
     "openpyxl>=3.1",
-    "asyncstdlib>=3.14.0",
+    "async-lru>=2.3.0",
     "aiofile>=3.12.3",
+    "pydantic-async-validation>=0.5.1",
 ]
 
 [project.optional-dependencies]
@@ -28,3 +29,9 @@ dev = [
 
 [tool.ruff]
 line-length = 100
+
+
+[pytest]
+filterwarnings = [
+    'ignore::async_lru.AlruCacheLoopResetWarning',
+]

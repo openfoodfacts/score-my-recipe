@@ -77,10 +77,8 @@ def mock_countries_taxonomy():
         "DE": "en:germany",
     }
 
-    # reset the module-level ``_countries`` cache so each test rebuilds it
-    # from the mocked taxonomy (different tests may use the same lang code)
-    saved = recipes._countries.copy()
-    recipes._countries.clear()
+    # reset cache
+    recipes.get_countries_entries.cache_clear()
     try:
         with (
             patch("api.off.get_countries_taxonomy", new_callable=AsyncMock) as mock_tax,
@@ -90,8 +88,7 @@ def mock_countries_taxonomy():
             mock_origins.return_value = mocked_origins
             yield mock_tax
     finally:
-        recipes._countries.clear()
-        recipes._countries.update(saved)
+        recipes.get_countries_entries.cache_clear()
 
 
 def country_list_to_dict(countries: list[types.Country]) -> dict[str, str]:

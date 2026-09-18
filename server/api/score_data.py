@@ -5,7 +5,7 @@ import io
 import logging
 
 from aiofile import async_open
-from asyncstdlib.functools import cache as async_cache
+from async_lru import alru_cache as async_cache
 
 import api.settings as settings
 from api import off
@@ -45,7 +45,7 @@ LABELS_BONUS_INGREDIENTS_RESTRICTIONS = {
 }
 
 
-@async_cache
+@async_cache(maxsize=1)
 async def get_epi_modifiers():
     """return a dict mapping origins to EPI bonuses
 
@@ -82,7 +82,7 @@ async def get_epi_modifiers():
 DEFAULT_DISTANCE_MODIFIER = -7.0
 
 
-@async_cache
+@async_cache(maxsize=1)
 async def get_distances_modifiers() -> dict[tuple[str, str], float]:
     """return a dict mapping origins to distance modifiers
 

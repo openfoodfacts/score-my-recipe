@@ -3,7 +3,7 @@
 from typing import Iterable, Optional
 import asyncio
 
-from asyncstdlib.functools import cache as async_cache
+from async_lru import alru_cache as async_cache
 import openfoodfacts
 import openfoodfacts.taxonomy as taxonomy
 
@@ -51,21 +51,28 @@ async def parse_text(text: str, lang: str) -> list[OFFIngredient]:
     return [OFFIngredient(**ingredient) for ingredient in ingredients_data]
 
 
+# type helper, we first have the id, then the label, then the synonyms,
+# then any additional properties
+TaxonomyLangLabelType = list[tuple[str, str, list[str], list[Optional[str]]]]
+
+
 def taxonomy_lang_label_and_synonyms(
-    lang: str, entries: Iterable[taxonomy.TaxonomyNode], *properties: str,
-) -> list[tuple[str, str, list[str]]]:
+    lang: str,
+    entries: Iterable[taxonomy.TaxonomyNode],
+    *properties: str,
+) -> TaxonomyLangLabelType:
     """Get the list of (id, label, synonyms) for a given language from a list of
     taxonomy entries.
 
     Both label and synonyms fall back to the "xx" (neutral) language then to
     english if they are not available in the requested language.
     """
-    result: list[tuple[*str]] = []
+    result: TaxonomyLangLabelType = []
     for entry in entries:
         label = entry.names.get(lang, entry.names.get("xx", entry.names.get("en", entry.id)))
         synonyms = entry.synonyms.get(lang, entry.synonyms.get("xx", entry.synonyms.get("en", [])))
         property_values = [_property_value(entry, prop) for prop in properties]
-        data = (entry.id, label, synonyms, *property_values)
+        data = (entry.id, label, synonyms, property_values)
         result.append(data)
     return result
 
@@ -108,6 +115,14 @@ async def get_countries_taxonomy() -> taxonomy.Taxonomy:
     return countries_taxonomy
 
 
+async def get_languages_taxonomy() -> taxonomy.Taxonomy:
+    """Get the languages taxonomy from Open Food Facts API"""
+    languages_taxonomy = await asyncio.to_thread(
+        taxonomy.get_taxonomy, taxonomy.TaxonomyType.language, cache_dir=get_settings().cache_dir
+    )
+    return languages_taxonomy
+
+
 def _node_chain(node: taxonomy.TaxonomyNode) -> list[taxonomy.TaxonomyNode]:
     """Return the node followed by all its parents (closest first)."""
     return [node, *node.get_parents_hierarchy()]
@@ -128,7 +143,7 @@ def _property_value(node: taxonomy.TaxonomyNode, prop: str) -> Optional[str]:
     return str(raw)
 
 
-@async_cache
+@async_cache(maxsize=1)
 async def origins_by_country_code() -> dict[str, str]:
     """Get a dict mapping 2-letter country codes to the corresponding origin id
 
@@ -145,7 +160,7 @@ async def origins_by_country_code() -> dict[str, str]:
     return {country_code: origin.id for country_code, origin in country_to_origins.items()}
 
 
-@async_cache
+@async_cache(maxsize=1)
 async def origin_to_country_origin() -> dict[str, str]:
     """Get a dict mapping origin id to the corresponding country origin id"""
     country_origins = await origins_by_country_code()
@@ -160,3 +175,13 @@ async def origin_to_country_origin() -> dict[str, str]:
         for child in origin_node.get_children_hierarchy():
             result[child.id] = origin_id
     return result
+
+
+@async_cache(maxsize=1)
+async def languages_by_code() -> dict[str, str]:
+    languages_taxonomy = await get_languages_taxonomy()
+    _iter = (
+        (_property_value(node, "language_code_2"), node.id)
+        for node in languages_taxonomy.iter_nodes()
+    )
+    return {code: node_id for code, node_id in _iter if code is not None}

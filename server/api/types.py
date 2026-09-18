@@ -2,6 +2,7 @@ from typing import Annotated, Any, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from pydantic.alias_generators import to_camel
+from pydantic_async_validation import async_field_validator
 
 import api.score_types as score_types
 
@@ -117,6 +118,15 @@ class LangRequest(BaseModel):
     model_config = ConfigDict(json_schema_extra={"examples": [{"lang": "en"}]})
 
     lang: Annotated[str, Field(description="Language for the request (2 or 5 letter code)")]
+
+    @async_field_validator("lang")
+    async def check_language_code(self, value: str) -> str:
+        """Check if the language code is valid (exists in the OFF languages taxonomy)"""
+        import api.checks as checks
+
+        if not await checks.check_language_code(value):
+            raise ValueError(f"Language code {value} is not supported")
+        return value
 
 
 class TaxonomyRequest(LangRequest):

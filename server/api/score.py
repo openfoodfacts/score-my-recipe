@@ -5,7 +5,7 @@ import math
 from typing import Optional
 
 import openfoodfacts.taxonomy as taxonomy
-from asyncstdlib.functools import cache as async_cache
+from async_lru import alru_cache as async_cache
 
 import api.agribalyse as agribalyse
 import api.off as off
@@ -147,7 +147,7 @@ def normalize_ef_score(ef_score: float) -> float:
     return min(max(normalized_score, 0.0), 100.0)
 
 
-@async_cache
+@async_cache(maxsize=1)
 async def labels_bonus_full() -> dict[str, int]:
     """Return the labels bonus dictionary, including all children of the listed labels."""
     taxonomy = await off.get_labels_taxonomy()
@@ -165,7 +165,7 @@ async def labels_bonus_full() -> dict[str, int]:
     return labels_bonus_full
 
 
-@async_cache
+@async_cache(maxsize=1)
 async def labels_bonus_ingredients_restrictions_full() -> dict[str, list[str]]:
     """Return the labels bonus restrictions dictionary, including all children of the listed labels."""
     taxonomy = await off.get_ingredients_taxonomy()
