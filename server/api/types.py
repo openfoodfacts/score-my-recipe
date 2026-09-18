@@ -509,9 +509,20 @@ class GreenScoreRequest(CamelModel):
         """
         if value is None:
             return None
+        if not isinstance(value, str):
+            raise ValueError(f"Country code must be a string, got {type(value)}")
         if len(value) != 2:
             raise ValueError(f"Country code must be 2 letters, got {value}")
         return value.upper()
+
+    @async_field_validator("country")
+    async def check_country_code(self, value: str) -> str:
+        """Check if the country code is valid (exists in the OFF countries taxonomy)"""
+        import api.checks as checks
+
+        if not await checks.check_country_code(value):
+            raise ValueError(f"Country code {value} is not supported")
+        return value
 
 
 class IngredientAgribalyse(CamelModel):
