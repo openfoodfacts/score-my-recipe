@@ -29,6 +29,8 @@ import openfoodfacts.taxonomy as taxonomy
 import openpyxl
 
 from api.settings import get_settings
+from api.off import _node_chain, _property_value
+
 
 logger = logging.getLogger(__name__)
 
@@ -253,26 +255,6 @@ def _column_for_property(prop: str) -> str:
     if prop.startswith("ciqual"):
         return CIQUAL_CODE_COLUMN
     raise ValueError(f"Unknown code property prefix: {prop!r}")
-
-
-def _node_chain(node: taxonomy.TaxonomyNode) -> list[taxonomy.TaxonomyNode]:
-    """Return the node followed by all its parents (closest first)."""
-    return [node, *node.get_parents_hierarchy()]
-
-
-def _property_value(node: taxonomy.TaxonomyNode, prop: str) -> Optional[str]:
-    """Read a code property from a taxonomy node.
-
-    Taxonomy properties are stored as language -> value dicts (e.g.
-    `{"en": "25525"}`); we return the value, preferring English then any.
-    """
-    raw = node.properties.get(prop)
-    if raw is None:
-        return None
-    if isinstance(raw, dict):
-        value = raw.get("en") or next(iter(raw.values()), None)
-        return str(value) if value is not None else None
-    return str(raw)
 
 
 def find_agribalyse_row(

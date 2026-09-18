@@ -5,7 +5,7 @@ import io
 import logging
 
 from aiofile import async_open
-from asyncstdlib.functools import cache as async_cache
+from async_lru import alru_cache as async_cache
 
 import api.settings as settings
 from api import off
@@ -45,7 +45,7 @@ LABELS_BONUS_INGREDIENTS_RESTRICTIONS = {
 }
 
 
-@async_cache
+@async_cache(maxsize=1)
 async def get_epi_modifiers():
     """return a dict mapping origins to EPI bonuses
 
@@ -76,3 +76,58 @@ async def get_epi_modifiers():
                 else:
                     scores[child.id] = min(scores[child.id], modifier)
     return scores
+
+
+# Distance modifier for worst case: no origin provided, or no country provided for recipe
+DEFAULT_DISTANCE_MODIFIER = -7.0
+
+
+@async_cache(maxsize=1)
+async def get_distances_modifiers() -> dict[tuple[str, str], float]:
+    """return a dict mapping origins to distance modifiers
+
+    see https://docs.score-environnemental.com/methodologie-recette/bonus-malus-recette/origine
+
+    the modifier for recepies corresponds to the (distance_score/10 - 7)
+
+    """
+    distances_modifiers = {}
+
+    # First use the extended distance file, this is a distance score computed by Open Food Facts,
+    # see https://wiki.openfoodfacts.org/Transportation_distances
+    # it maps country code to country code
+    fpath = settings.get_settings().data_dir / "greenscore-extended-distances-scores.csv"
+    origins_by_country_code = await off.origins_by_country_code()
+    async with async_open(fpath, "r", encoding="utf-8") as f:
+        content = await f.read()
+    reader = csv.DictReader(io.StringIO(content))
+    for row in reader:
+        row_origin_id = origins_by_country_code.get(row["ISO Country Code"].upper())
+        if row_origin_id is None:
+            logger.warning(
+                f"Origin for country code {row['ISO Country Code']} not found in taxonomy, skipping"
+            )
+            continue
+        # map to every origin that has this country code
+        for country_code, distance_score in row.items():
+            # there are other columns names, but we only care about the country code ones
+            origin_id = origins_by_country_code.get(country_code.upper())
+            if origin_id and distance_score and distance_score.strip():
+                # distance modifier between the two origins
+                distances_modifiers[(origin_id, row_origin_id)] = float(distance_score) / 10.0 - 7.0
+
+    # then add values from the more official source, this directly uses taxonomy ids (but it's less complete)
+    fpath = settings.get_settings().data_dir / "greenscore-distances-scores.csv"
+    # async read, then use csv.DictReader (which does not support async)
+    async with async_open(fpath, "r", encoding="utf-8") as f:
+        content = await f.read()
+    reader = csv.DictReader(io.StringIO(content), delimiter="\t")
+    for row in reader:
+        row_origin_id = row["origin"].strip()
+        for origin_id, distance_score in row.items():
+            # only origin identifiers
+            if not origin_id.startswith("en:"):
+                continue
+            if distance_score.strip():
+                distances_modifiers[(origin_id, row_origin_id)] = float(distance_score) / 10 - 7
+    return distances_modifiers

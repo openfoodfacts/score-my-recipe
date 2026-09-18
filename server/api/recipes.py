@@ -4,6 +4,8 @@ It contains all the business logic.
 
 import logging
 
+from async_lru import alru_cache as async_lru_cache
+
 import api.agribalyse as agribalyse
 import api.off as off
 import api.types as types
@@ -41,8 +43,25 @@ def two_letter_lang_code(lang: str) -> str:
     return lang.replace("_", "-").split("-")[0]
 
 
-# local caching
-_origins = dict()
+@async_lru_cache(maxsize=200)
+async def _get_origins_entries(lang: str) -> off.TaxonomyLangLabelType:
+    """Internal version of get_origins that caches the result for a given language code"""
+    origins_taxonomy = await off.get_origins_taxonomy()
+    # only keep origins that have bonus/malus
+    epi_modifiers = await score_data.get_epi_modifiers()
+    origins = {origin for origin in origins_taxonomy.iter_nodes() if origin.id in epi_modifiers}
+    # add children
+    for origin in list(origins):
+        origins.update(origin.get_children_hierarchy())
+    # verify all origins are included
+    missing_origins = set(epi_modifiers.keys()) - {origin.id for origin in origins}
+    if missing_origins:
+        # log a warning
+        logger.warning(f"Missing origins in taxonomy: {missing_origins}")
+    # sort by id for predictable order
+    origins_list = off.taxonomy_lang_label_and_synonyms(lang, origins)
+    origins_list.sort(key=lambda x: x[0])
+    return origins_list
 
 
 async def get_origins(lang: str, include_synonyms: bool = False) -> list[types.Origin]:
@@ -51,35 +70,36 @@ async def get_origins(lang: str, include_synonyms: bool = False) -> list[types.O
     Note: as the list is not too big, we let clients handle suggestions to users
     """
     lang = two_letter_lang_code(lang)
-    if lang not in _origins:
-        origins_taxonomy = await off.get_origins_taxonomy()
-        # only keep origins that have bonus/malus
-        epi_modifiers = await score_data.get_epi_modifiers()
-        origins = {origin for origin in origins_taxonomy.iter_nodes() if origin.id in epi_modifiers}
-        # add children
-        for origin in list(origins):
-            origins.update(origin.get_children_hierarchy())
-        # verify all origins are included
-        missing_origins = set(epi_modifiers.keys()) - {origin.id for origin in origins}
-        if missing_origins:
-            # log a warning
-            logger.warning(f"Missing origins in taxonomy: {missing_origins}")
-        # sort by id for predictable order
-        origins_list = off.taxonomy_lang_label_and_synonyms(lang, origins)
-        origins_list.sort(key=lambda x: x[0])
-        _origins[lang] = origins_list
+    origins = await _get_origins_entries(lang)
     return [
         types.Origin(
             id=origin_id, label=origin_label, synonyms=origin_synonyms if include_synonyms else None
         )
-        for origin_id, origin_label, origin_synonyms in _origins[lang]
+        for origin_id, origin_label, origin_synonyms, _ in origins
     ]
 
 
 ALL_GREEN_SCORE_LABELS = set(label for label in score_data.LABELS_BONUS.keys())
 
-# local caching
-_labels = dict()
+
+@async_lru_cache(maxsize=200)
+async def _get_labels_entries(lang: str) -> off.TaxonomyLangLabelType:
+    """Internal version of get_labels that caches the result for a given language code"""
+    labels_taxonomy = await off.get_labels_taxonomy()
+    all_labels = labels_taxonomy.iter_nodes()
+    filtered_labels = {label for label in all_labels if label.id in ALL_GREEN_SCORE_LABELS}
+    # add children of relevant labels
+    for label in list(filtered_labels):
+        filtered_labels.update(label.get_children_hierarchy())
+    # verify all green score labels are included
+    missing_labels = ALL_GREEN_SCORE_LABELS - {label.id for label in filtered_labels}
+    if missing_labels:
+        # log a warning
+        logger.warning(f"Missing green-score relevant labels in taxonomy: {missing_labels}")
+    labels_list = off.taxonomy_lang_label_and_synonyms(lang, filtered_labels)
+    # sort by id for predictable order
+    labels_list.sort(key=lambda x: x[0])
+    return labels_list
 
 
 async def get_labels(lang: str, include_synonyms: bool = False) -> list[types.Label]:
@@ -88,52 +108,75 @@ async def get_labels(lang: str, include_synonyms: bool = False) -> list[types.La
     The list is filtered to only include labels that impact the green-score
     """
     lang = two_letter_lang_code(lang)
-    if lang not in _labels:
-        labels_taxonomy = await off.get_labels_taxonomy()
-        all_labels = labels_taxonomy.iter_nodes()
-        filtered_labels = {label for label in all_labels if label.id in ALL_GREEN_SCORE_LABELS}
-        # add children of relevant labels
-        for label in list(filtered_labels):
-            filtered_labels.update(label.get_children_hierarchy())
-        # verify all green score labels are included
-        missing_labels = ALL_GREEN_SCORE_LABELS - {label.id for label in filtered_labels}
-        if missing_labels:
-            # log a warning
-            logger.warning(f"Missing green-score relevant labels in taxonomy: {missing_labels}")
-        labels_list = off.taxonomy_lang_label_and_synonyms(lang, filtered_labels)
-        # sort by id for predictable order
-        labels_list.sort(key=lambda x: x[0])
-        _labels[lang] = labels_list
+    _labels = await _get_labels_entries(lang)
     return [
         types.Label(
             id=label_id, label=label_label, synonyms=label_synonyms if include_synonyms else None
         )
-        for label_id, label_label, label_synonyms in _labels[lang]
+        for label_id, label_label, label_synonyms, _ in _labels
     ]
 
 
-# local caching
-_ingredients = dict()
+@async_lru_cache(maxsize=200)
+async def get_countries_entries(lang: str) -> off.TaxonomyLangLabelType:
+    """Internal version of get_countries that caches the result for a given language code"""
+    countries_taxonomy = await off.get_countries_taxonomy()
+    all_countries = countries_taxonomy.iter_nodes()
+    origins_by_country_code = await off.origins_by_country_code()
+    country_ids = set(origins_by_country_code.values())
+    filtered_countries = {country for country in all_countries if country.id in country_ids}
+    # verify all green score countries are included
+    missing_countries = country_ids - {country.id for country in filtered_countries}
+    if missing_countries:
+        # log a warning
+        logger.warning(f"Missing green-score relevant countries in taxonomy: {missing_countries}")
+    countries_list = off.taxonomy_lang_label_and_synonyms(
+        lang, filtered_countries, "country_code_2"
+    )
+    # sort by id for predictable order
+    countries_list.sort(key=lambda x: x[0])
+    return countries_list
+
+
+async def get_countries(lang: str, include_synonyms: bool = False) -> list[types.Country]:
+    """Get the list of countries relevant for green-score computation
+
+    The list is filtered to only include labels that impact the green-score
+    """
+    lang = two_letter_lang_code(lang)
+    _countries = await get_countries_entries(lang)
+    return [
+        types.Country(
+            id=country_id,
+            label=country_label,
+            synonyms=country_synonyms if include_synonyms else None,
+            country_code=country_code_2.upper() if country_code_2 else None,
+        )
+        for country_id, country_label, country_synonyms, (country_code_2,) in _countries
+    ]
+
+
+@async_lru_cache(maxsize=200)
+async def _get_ingredients_entries(lang: str) -> off.TaxonomyLangLabelType:
+    """Internal version of get_ingredients that caches the result for a given language code"""
+    ingredients_taxonomy = await off.get_ingredients_taxonomy()
+    ingredients_list = off.taxonomy_lang_label_and_synonyms(lang, ingredients_taxonomy.iter_nodes())
+    # sort by id for predictable order
+    ingredients_list.sort(key=lambda x: x[0])
+    return ingredients_list
 
 
 async def get_ingredients(lang: str, include_synonyms: bool = False) -> list[types.Ingredient]:
     """Get the list of ingredients relevant for green-score computation"""
     lang = two_letter_lang_code(lang)
-    if lang not in _ingredients:
-        ingredients_taxonomy = await off.get_ingredients_taxonomy()
-        ingredients_list = off.taxonomy_lang_label_and_synonyms(
-            lang, ingredients_taxonomy.iter_nodes()
-        )
-        # sort by id for predictable order
-        ingredients_list.sort(key=lambda x: x[0])
-        _ingredients[lang] = ingredients_list
+    _ingredients = await _get_ingredients_entries(lang)
     return [
         types.Ingredient(
             id=ingredient_id,
             label=ingredient_label,
             synonyms=ingredient_synonyms if include_synonyms else None,
         )
-        for ingredient_id, ingredient_label, ingredient_synonyms in _ingredients[lang]
+        for ingredient_id, ingredient_label, ingredient_synonyms, _ in _ingredients
     ]
 
 
@@ -170,5 +213,5 @@ async def suggest_scored_ingredient(
             synonyms=ingredient_synonyms if include_synonyms else None,
             agribalyse_code=code_by_id[ingredient_id],
         )
-        for ingredient_id, ingredient_label, ingredient_synonyms in labels
+        for ingredient_id, ingredient_label, ingredient_synonyms, _ in labels
     ]

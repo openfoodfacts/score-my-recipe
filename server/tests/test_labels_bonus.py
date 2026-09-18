@@ -7,6 +7,7 @@ Covers ``safe_zip_recipe_metrics``, ``labels_bonus_full``, ``gather_labels_bonus
 
 import pytest
 
+from api.score_data import DEFAULT_DISTANCE_MODIFIER
 from api import score
 from api.score_types import IngredientMetrics
 from tests.helpers import (
@@ -277,12 +278,12 @@ async def test_compute_green_score_applies_labels_bonus(agribalyse_index):
     )
     recipe = [build_ingredient_obj("i1", "apple", "en:apple", labels=["en:eu-organic"])]
     with patch_ingredients_taxonomy(ingredients_taxonomy), patch_labels_taxonomy(labels_taxonomy):
-        result = await score.compute_green_score(recipe)
+        result = await score.compute_green_score(recipe, country="FR")
     expected_ef = 0.3
     assert result.global_ef_score == pytest.approx(expected_ef)
     assert result.labels_bonus == pytest.approx(15)
     assert result.numeric_score == pytest.approx(
-        score.normalize_ef_score(expected_ef) + 15 + WORLD_EPI_MODIFIER
+        score.normalize_ef_score(expected_ef) + 15 + WORLD_EPI_MODIFIER + DEFAULT_DISTANCE_MODIFIER
     )
     assert result.letter_grade == "A"
 
@@ -300,10 +301,12 @@ async def test_compute_green_score_no_label_keeps_ef_score(agribalyse_index):
     )
     recipe = [build_ingredient_obj("i1", "apple", "en:apple")]
     with patch_ingredients_taxonomy(ingredients_taxonomy), patch_labels_taxonomy(labels_taxonomy):
-        result = await score.compute_green_score(recipe)
+        result = await score.compute_green_score(recipe, country="FR")
     expected_normalized = score.normalize_ef_score(0.3)
     assert result.labels_bonus == pytest.approx(0.0)
-    assert result.numeric_score == pytest.approx(expected_normalized + WORLD_EPI_MODIFIER)
+    assert result.numeric_score == pytest.approx(
+        expected_normalized + WORLD_EPI_MODIFIER + DEFAULT_DISTANCE_MODIFIER
+    )
     assert result.letter_grade == "B"
 
 
@@ -316,7 +319,7 @@ async def test_compute_green_score_all_missing_labels_bonus_none(agribalyse_inde
     )
     recipe = [build_ingredient_obj("i1", "water", "en:water", labels=["en:eu-organic"])]
     with patch_ingredients_taxonomy(ingredients_taxonomy), patch_labels_taxonomy(labels_taxonomy):
-        result = await score.compute_green_score(recipe)
+        result = await score.compute_green_score(recipe, country="FR")
     assert result.global_ef_score is None
     assert result.labels_bonus is None
     assert result.numeric_score is None
@@ -345,7 +348,9 @@ async def test_compute_green_score_diluted_bonus(agribalyse_index):
         build_ingredient_obj("i_water", "water", "en:water"),
     ]
     with patch_ingredients_taxonomy(ingredients_taxonomy), patch_labels_taxonomy(labels_taxonomy):
-        result = await score.compute_green_score(recipe)
+        result = await score.compute_green_score(recipe, country="FR")
     assert result.labels_bonus == pytest.approx(15)
     expected_normalized = score.normalize_ef_score(0.3)
-    assert result.numeric_score == pytest.approx(expected_normalized + 15 + WORLD_EPI_MODIFIER)
+    assert result.numeric_score == pytest.approx(
+        expected_normalized + 15 + WORLD_EPI_MODIFIER + DEFAULT_DISTANCE_MODIFIER
+    )
