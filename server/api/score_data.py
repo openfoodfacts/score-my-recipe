@@ -112,7 +112,7 @@ async def get_distances_modifiers() -> dict[tuple[str, str], float]:
         for country_code, distance_score in row.items():
             # there are other columns names, but we only care about the country code ones
             origin_id = origins_by_country_code.get(country_code.upper())
-            if origin_id and distance_score.strip():
+            if origin_id and distance_score and distance_score.strip():
                 # distance modifier between the two origins
                 distances_modifiers[(origin_id, row_origin_id)] = float(distance_score) / 10.0 - 7.0
 
