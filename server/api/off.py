@@ -60,12 +60,13 @@ def taxonomy_lang_label_and_synonyms(
     Both label and synonyms fall back to the "xx" (neutral) language then to
     english if they are not available in the requested language.
     """
-    result: list[tuple[str, str, list[str]]] = []
+    result: list[tuple[*str]] = []
     for entry in entries:
         label = entry.names.get(lang, entry.names.get("xx", entry.names.get("en", entry.id)))
         synonyms = entry.synonyms.get(lang, entry.synonyms.get("xx", entry.synonyms.get("en", [])))
         property_values = [_property_value(entry, prop) for prop in properties]
-        result.append((entry.id, label, synonyms, *property_values))
+        data = (entry.id, label, synonyms, *property_values)
+        result.append(data)
     return result
 
 

@@ -72,12 +72,7 @@
 			</span>
 		</div>
 	{:else}
-		<select
-			id="country-select"
-			class="select select-bordered w-48"
-			bind:value
-			disabled={isLoading}
-		>
+		<select id="country-select" class="select select-bordered w-48" bind:value disabled={isLoading}>
 			<option value={null}>
 				{$_('recipe.country_placeholder', { default: 'Select your country' })}
 			</option>
