@@ -9,7 +9,6 @@
 		{ name: 'navbar.methodology', href: `${offLinks.website}/green-score` }
 	]);
 
-	let { value } = $props();
 	function updateLanguage(event) {
 		locale.set(event.target.value);
 	}
@@ -38,7 +37,7 @@
 		
 		<div class="locale-selector flex flex-1">
 			<div class="select">
-				<select value={value} onchange={updateLanguage}>
+				<select value={$locale} onchange={updateLanguage}>
 					{#each AVAILABLE_LOCALES as locale }
 						<option value={locale.get('code')}>{locale.get('label')}</option>
 					{/each}
