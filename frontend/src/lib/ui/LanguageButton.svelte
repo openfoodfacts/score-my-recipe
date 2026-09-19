@@ -1,9 +1,14 @@
-<script>
+<script lang="ts">
 	import { _, AVAILABLE_LOCALES } from '$lib/i18n';
 	import { locale } from "svelte-i18n";
 
-	function updateLanguage(event) {
-		locale.set(event.target.value);
+	function updateLanguage(event: Event & { currentTarget: EventTarget & HTMLSelectElement; }) {
+
+		const value = event.target instanceof HTMLSelectElement ? event.target.value: null;
+
+		if(value){
+			locale.set(value);
+		}
 	}
 </script>
 
