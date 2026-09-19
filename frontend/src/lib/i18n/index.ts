@@ -9,16 +9,28 @@
  */
 import { init, register, getLocaleFromNavigator, isLoading } from 'svelte-i18n';
 import { browser } from '$app/environment';
+import countries from './countries.json';
 
-const locales = ['en-US', 'fr-FR'];
+function generateCountryCode(country: Record<string, string>) {
+	return `${country['languageCode']}-${country['countryCode'].toUpperCase()}`;
+}
+
+const AVAILABLE_LOCALES: Map<string, string>[] = [];
+
+countries.forEach((country) => {
+	const country_local: Map<string, string> = new Map();
+	country_local.set('label', country['label']);
+	country_local.set('code', generateCountryCode(country));
+	AVAILABLE_LOCALES.push(country_local);
+});
 
 const FALLBACK_LOCALE = 'en-US';
 
 // TODO: when we have many locales we should load them lazily, when we really need them
-locales.forEach((locale) => {
-	register(locale, async () => {
-		const messages = await import(`./messages/${locale}.json`);
-		return messages.default;
+countries.forEach((locale) => {
+	const code = generateCountryCode(locale);
+	register(code, async () => {
+		return (await import(`./messages/${code}.json`)).default;
 	});
 });
 
@@ -42,5 +54,5 @@ export function getBrowserLocale() {
 	return navLang || FALLBACK_LOCALE;
 }
 
-export { isLoading };
+export { isLoading, AVAILABLE_LOCALES };
 export * from 'svelte-i18n';
