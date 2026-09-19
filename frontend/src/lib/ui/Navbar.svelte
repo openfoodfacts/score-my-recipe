@@ -8,14 +8,13 @@
 		{ name: 'navbar.score_recipe', href: '/add' },
 		{ name: 'navbar.methodology', href: `${offLinks.website}/green-score` }
 	]);
-
 </script>
 
 <nav class="bg-base-200 border-base-300 sticky top-0 z-50 border-b">
 	<div
 		class="mx-auto flex w-full max-w-7xl flex-row justify-between gap-4 px-6 py-4 md:items-center"
 	>
-		<Logo class="flex-2"/>
+		<Logo class="flex-2" />
 		<ul class="hidden justify-evenly md:flex md:flex-2">
 			{#each navItems as item (item.name)}
 				<li class="px-4 py-2">
@@ -31,9 +30,8 @@
 				{$_('navbar.join_community')}
 			</button>
 		</div>
-		
-		<LanguageButton/>
-		
+
+		<LanguageButton />
 	</div>
 </nav>
 

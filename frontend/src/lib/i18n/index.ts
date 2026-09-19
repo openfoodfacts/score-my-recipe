@@ -11,21 +11,18 @@ import { init, register, getLocaleFromNavigator, isLoading } from 'svelte-i18n';
 import { browser } from '$app/environment';
 import countries from './countries.json';
 
-
-function generateCountryCode(country: any){
-	return `${country['languageCode']}-${country['countryCode'].toUpperCase()}`
-} 
+function generateCountryCode(country: any) {
+	return `${country['languageCode']}-${country['countryCode'].toUpperCase()}`;
+}
 
 let AVAILABLE_LOCALES: Map<string, string>[] = [];
 
-countries.forEach(
-	(country) => {
-		const country_local : Map<string, string> = new Map();
-		country_local.set('label', country['label']);
-		country_local.set('code', generateCountryCode(country));
-		AVAILABLE_LOCALES.push(country_local);
-	}	
-);
+countries.forEach((country) => {
+	const country_local: Map<string, string> = new Map();
+	country_local.set('label', country['label']);
+	country_local.set('code', generateCountryCode(country));
+	AVAILABLE_LOCALES.push(country_local);
+});
 
 const FALLBACK_LOCALE = 'en-US';
 
@@ -57,5 +54,5 @@ export function getBrowserLocale() {
 	return navLang || FALLBACK_LOCALE;
 }
 
-export { isLoading, AVAILABLE_LOCALES};
+export { isLoading, AVAILABLE_LOCALES };
 export * from 'svelte-i18n';

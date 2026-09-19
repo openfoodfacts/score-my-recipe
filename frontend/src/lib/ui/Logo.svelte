@@ -13,7 +13,6 @@
 		mono?: boolean;
 		class?: string;
 	} = $props();
-
 </script>
 
 <picture class="flex items-center gap-4 {className}">
@@ -30,5 +29,7 @@
 			class="h-10"
 		/>
 	</a>
-	<a href="/" class="border-base-content/20 border-l pl-4 text-xl font-bold">{$_('navbar.for_the_recipes')}</a>
+	<a href="/" class="border-base-content/20 border-l pl-4 text-xl font-bold"
+		>{$_('navbar.for_the_recipes')}</a
+	>
 </picture>
