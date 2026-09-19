@@ -1,17 +1,14 @@
 <script>
-	import { _, AVAILABLE_LOCALES } from '$lib/i18n';
+	import { _ } from '$lib/i18n';
 	import Logo from '$lib/ui/Logo.svelte';
 	import { offLinks } from '$lib/offLink';
-	import { locale } from "svelte-i18n";
+	import LanguageButton from './LanguageButton.svelte';
 
 	const navItems = $state([
 		{ name: 'navbar.score_recipe', href: '/add' },
 		{ name: 'navbar.methodology', href: `${offLinks.website}/green-score` }
 	]);
 
-	function updateLanguage(event) {
-		locale.set(event.target.value);
-	}
 </script>
 
 <nav class="bg-base-200 border-base-300 sticky top-0 z-50 border-b">
@@ -35,15 +32,7 @@
 			</button>
 		</div>
 		
-		<div class="locale-selector flex flex-1">
-			<div class="select">
-				<select value={$locale} onchange={updateLanguage}>
-					{#each AVAILABLE_LOCALES as locale }
-						<option value={locale.get('code')}>{locale.get('label')}</option>
-					{/each}
-				</select>
-			</div>
-		</div>
+		<LanguageButton/>
 		
 	</div>
 </nav>
