@@ -1,5 +1,4 @@
-import { locale, waitLocale } from '$lib/i18n';
-import { browser } from '$app/environment';
+import { waitLocale } from '$lib/i18n';
 import type { LayoutLoad } from './$types';
 
 /**

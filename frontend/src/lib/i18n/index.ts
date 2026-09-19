@@ -11,11 +11,11 @@ import { init, register, getLocaleFromNavigator, isLoading } from 'svelte-i18n';
 import { browser } from '$app/environment';
 import countries from './countries.json';
 
-function generateCountryCode(country: any) {
+function generateCountryCode(country: Record<string, string>) {
 	return `${country['languageCode']}-${country['countryCode'].toUpperCase()}`;
 }
 
-let AVAILABLE_LOCALES: Map<string, string>[] = [];
+const AVAILABLE_LOCALES: Map<string, string>[] = [];
 
 countries.forEach((country) => {
 	const country_local: Map<string, string> = new Map();
@@ -28,7 +28,7 @@ const FALLBACK_LOCALE = 'en-US';
 
 // TODO: when we have many locales we should load them lazily, when we really need them
 countries.forEach((locale) => {
-	let code = generateCountryCode(locale);
+	const code = generateCountryCode(locale);
 	register(code, async () => {
 		return (await import(`./messages/${code}.json`)).default;
 	});

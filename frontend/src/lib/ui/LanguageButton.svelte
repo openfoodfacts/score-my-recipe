@@ -14,7 +14,7 @@
 <div class="locale-selector flex flex-1">
 	<div class="select">
 		<select value={$locale} onchange={updateLanguage}>
-			{#each AVAILABLE_LOCALES as locale}
+			{#each AVAILABLE_LOCALES as locale (locale.get('code'))}
 				<option value={locale.get('code')}>{locale.get('label')}</option>
 			{/each}
 		</select>
