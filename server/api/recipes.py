@@ -21,6 +21,8 @@ def off_ingredient_to_recipe_ingredient(
         codified_ingredient=off_ingredient.text,
         is_in_taxonomy=bool(off_ingredient.is_in_taxonomy),
         quantity_g=off_ingredient.quantity_g,
+        origins=off_ingredient.origins,   
+        labels=off_ingredient.labels,     
     )
 
 

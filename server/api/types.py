@@ -17,6 +17,8 @@ class OFFIngredient(BaseModel):
     ecobalyse_code: Optional[str] = None
     ciqual_food_code: Optional[str] = None
     is_in_taxonomy: Optional[int] = None
+    origins: Optional[str] = None  
+    labels: Optional[str] = None 
 
     @field_validator("quantity", mode="before")
     def transform_id_to_str(cls, value) -> str:
@@ -36,6 +38,8 @@ class RecipeIngredient(BaseModel):
                     "is_in_taxonomy": True,
                     "codified_ingredient": "apple",
                     "quantity_g": 150.0,
+                    "origins": "en:france",      
+                    "labels": "en:organic",     
                 }
             ]
         }
@@ -45,7 +49,8 @@ class RecipeIngredient(BaseModel):
     is_in_taxonomy: bool
     codified_ingredient: str
     quantity_g: Optional[float] = None
-
+    origins: Optional[str] = None   
+    labels: Optional[str] = None    
 
 class TaxonomyItem(BaseModel):
     """A taxonomy reference with an id and a localized label.
