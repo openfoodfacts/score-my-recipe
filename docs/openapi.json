@@ -193,6 +193,60 @@
         }
       }
     },
+    "/v1/countries": {
+      "get": {
+        "summary": "Get Countries",
+        "description": "Get the list of countries relevant for green-score computation",
+        "operationId": "get_countries_v1_countries_get",
+        "parameters": [
+          {
+            "name": "lang",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Language for the request (2 or 5 letter code)",
+              "title": "Lang"
+            },
+            "description": "Language for the request (2 or 5 letter code)"
+          },
+          {
+            "name": "include_synonyms",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "If true, include the synonyms of each item in the response.",
+              "default": false,
+              "title": "Include Synonyms"
+            },
+            "description": "If true, include the synonyms of each item in the response."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountriesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/ingredients": {
       "get": {
         "summary": "Get Ingredients",
@@ -363,6 +417,94 @@
         "title": "AccountedWeights",
         "description": "Accounted weights for the ponderated sum.\n\n* scorable takes the ratio of each ingredient compared to the total weight of ingredients that have an EF score\n* total takes the ratio of each ingredient compared to the total weight of all ingredients, including unmatched ones"
       },
+      "CountriesResponse": {
+        "properties": {
+          "countries": {
+            "items": {
+              "$ref": "#/components/schemas/Country"
+            },
+            "type": "array",
+            "title": "Countries"
+          }
+        },
+        "type": "object",
+        "required": [
+          "countries"
+        ],
+        "title": "CountriesResponse",
+        "description": "Response model for get_countries endpoint",
+        "examples": [
+          {
+            "countries": [
+              {
+                "id": "en:france",
+                "label": "France"
+              },
+              {
+                "id": "en:spain",
+                "label": "Spain"
+              }
+            ]
+          }
+        ]
+      },
+      "Country": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Taxonomy id of the item"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "Name of the item"
+          },
+          "synonyms": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Synonyms",
+            "description": "Synonyms in the requested language. Only present in the response when include_synonyms is true."
+          },
+          "country_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country Code",
+            "description": "ISO 3166-1 alpha-2 country code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label"
+        ],
+        "title": "Country",
+        "description": "Country model for Score My Recipe API",
+        "examples": [
+          {
+            "id": "en:france",
+            "label": "France",
+            "synonyms": [
+              "french"
+            ]
+          }
+        ]
+      },
       "GreenScoreRequest": {
         "properties": {
           "ingredients": {
@@ -372,6 +514,18 @@
             "type": "array",
             "title": "Ingredients",
             "description": "The ingredients of the recipe"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country",
+            "description": "Country code (ISO 3166-1 alpha-2) to compute the distance modifier for the recipe.If not provided, the distance will always be world"
           },
           "accountedWeights": {
             "$ref": "#/components/schemas/AccountedWeights",
@@ -387,6 +541,8 @@
         "description": "Request body for the green-score computation endpoint.\n\nIt is a thin wrapper around a list of ingredients",
         "examples": [
           {
+            "accountedWeights": "scorable",
+            "country": "FR",
             "ingredients": [
               {
                 "codifiedIngredient": {
@@ -453,6 +609,18 @@
             ],
             "title": "Epimodifier",
             "description": "The modifier from ingredient origin agricultural system (EPI), null if no ingredients have a score"
+          },
+          "distancesModifier": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distancesmodifier",
+            "description": "The modifier from ingredient origin distance, null if no ingredients have a score"
           },
           "numericScore": {
             "anyOf": [

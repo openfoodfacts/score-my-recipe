@@ -79,6 +79,16 @@ async def get_labels(
     return types.LabelsResponse(labels=labels)
 
 
+@app.get("/v1/countries", response_model_exclude_none=True)
+async def get_countries(
+    filter_query: Annotated[types.CountriesRequest, Query()], response: Response
+) -> types.CountriesResponse:
+    """Get the list of countries relevant for green-score computation"""
+    countries = await recipes.get_countries(filter_query.lang, filter_query.include_synonyms)
+    response.headers["Cache-Control"] = "max-age=86400"
+    return types.CountriesResponse(countries=countries)
+
+
 @app.get("/v1/ingredients", response_model_exclude_none=True)
 async def get_ingredients(
     filter_query: Annotated[types.IngredientsRequest, Query()], response: Response
@@ -110,5 +120,7 @@ async def suggest_scored_ingredient(
 async def green_score(request: types.GreenScoreRequest) -> types.GreenScoreResponse:
     """Compute the green-score of a recipe given as a list of ingredients."""
     return await score.compute_green_score(
-        request.ingredients, accounted_weights=request.accounted_weights
+        request.ingredients,
+        accounted_weights=request.accounted_weights,
+        country=request.country,
     )

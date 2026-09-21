@@ -37,6 +37,10 @@ class IngredientMetrics(BaseModel):
         default=None,
         description="Modifier from ingredient origin agricultural system (EPI)",
     )
+    distance_modifier: Optional[float] = Field(
+        default=None,
+        description="Modifier from ingredient origin distance to recipe country",
+    )
     ratio: Optional[float] = Field(
         default=None,
         description="Share of the ingredient weight in the chosen denominator "

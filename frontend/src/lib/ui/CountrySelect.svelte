@@ -1,0 +1,84 @@
+<!--
+  CountrySelect.svelte
+
+  A single-choice country selector for the recipe-level country context.
+  Fetches the list of countries relevant for the green-score computation from
+  the backend `/v1/countries` endpoint on mount and exposes the selected
+  ISO 3166-1 alpha-2 country code via a bindable `value` prop.
+
+  Only countries with a usable country code are offered (see `getCountries`),
+  since a country without a code cannot influence the distance modifier.
+
+  Props:
+  - value: The currently selected country code (bindable, `null` when unselected).
+-->
+<script lang="ts">
+	import { onMount } from 'svelte';
+	import { _ } from '$lib/i18n';
+	import { getLocale } from '$lib/i18n';
+	import { getCountries } from '$lib/api/taxonomy';
+	import type { components } from '../../api-schema';
+
+	type Country = components['schemas']['Country'];
+
+	type Props = {
+		value?: string | null;
+	};
+
+	let { value = $bindable(null) }: Props = $props();
+
+	let countries = $state<Country[]>([]);
+	let isLoading = $state(true);
+	let loadError = $state<string | null>(null);
+
+	/**
+	 * Derive a short language key ("en" or "fr") from the current locale, as the
+	 * countries endpoint expects a 2-letter language code.
+	 */
+	function getLangKey(): string {
+		const locale = getLocale();
+		return locale.startsWith('fr') ? 'fr' : 'en';
+	}
+
+	onMount(async () => {
+		try {
+			countries = await getCountries(getLangKey());
+		} catch (e) {
+			loadError = e instanceof Error ? e.message : 'An error occurred';
+		} finally {
+			isLoading = false;
+		}
+	});
+</script>
+
+<div class="flex flex-col">
+	<label class="label py-1" for="country-select">
+		<span class="label-text text-xs">{$_('recipe.country', { default: 'Country' })}</span>
+	</label>
+
+	{#if loadError}
+		<!-- Inline error: the select is disabled so no stale selection can be sent -->
+		<div class="flex items-center gap-2" role="alert" aria-live="polite">
+			<select
+				id="country-select"
+				class="select select-bordered w-48"
+				disabled
+				aria-label={$_('recipe.country_load_error', {
+					default: 'Could not load countries'
+				})}
+			></select>
+			<span class="text-error text-xs">
+				{$_('recipe.country_load_error', { default: 'Could not load countries' })}
+			</span>
+		</div>
+	{:else}
+		<select id="country-select" class="select select-bordered w-48" bind:value disabled={isLoading}>
+			<option value={null}>
+				{$_('recipe.country_placeholder', { default: 'Select your country' })}
+			</option>
+			{#each countries as country (country.id)}
+				<option value={country.country_code!}>{country.label}</option>
+			{/each}
+		</select>
+	{/if}
+</div>

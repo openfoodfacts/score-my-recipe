@@ -2,6 +2,7 @@
 
 import pytest
 
+from api.score_data import DEFAULT_DISTANCE_MODIFIER
 from api import score
 from tests.helpers import (
     WORLD_EPI_MODIFIER,
@@ -24,10 +25,11 @@ async def test_single_ingredient_ef_score(agribalyse_index):
     )
     with patch_ingredients_taxonomy(taxonomy):
         response = await score.compute_green_score(
-            [build_ingredient_obj("i1", "apple", "en:apple")]
+            [build_ingredient_obj("i1", "apple", "en:apple")],
+            country="FR",
         )
     assert response.numeric_score == pytest.approx(
-        score.normalize_ef_score(0.3) + WORLD_EPI_MODIFIER
+        score.normalize_ef_score(0.3) + WORLD_EPI_MODIFIER + DEFAULT_DISTANCE_MODIFIER
     )
     assert response.missing_ingredient_ids == []
 
@@ -53,10 +55,11 @@ async def test_weighted_average(agribalyse_index):
             [
                 build_ingredient_obj("i1", "apple", "en:apple", weight=100),
                 build_ingredient_obj("i2", "pear", "en:pear", weight=300),
-            ]
+            ],
+            country="FR",
         )
     assert response.numeric_score == pytest.approx(
-        score.normalize_ef_score(0.45) + WORLD_EPI_MODIFIER
+        score.normalize_ef_score(0.45) + WORLD_EPI_MODIFIER + DEFAULT_DISTANCE_MODIFIER
     )
     assert response.missing_ingredient_ids == []
 
@@ -77,11 +80,12 @@ async def test_missing_ingredient_excluded(agribalyse_index):
             [
                 build_ingredient_obj("i_apple", "apple", "en:apple", weight=100),
                 build_ingredient_obj("i_water", "water", "en:water", weight=100),
-            ]
+            ],
+            country="FR",
         )
     # Only apple contributes -> raw ef = 0.3
     assert response.numeric_score == pytest.approx(
-        score.normalize_ef_score(0.3) + WORLD_EPI_MODIFIER
+        score.normalize_ef_score(0.3) + WORLD_EPI_MODIFIER + DEFAULT_DISTANCE_MODIFIER
     )
     assert response.missing_ingredient_ids == ["i_water"]
 
@@ -100,7 +104,8 @@ async def test_all_ingredients_missing_returns_none(agribalyse_index):
             [
                 build_ingredient_obj("i1", "water", "en:water"),
                 build_ingredient_obj("i2", "salt", "en:salt"),
-            ]
+            ],
+            country="FR",
         )
     assert response.numeric_score is None
     assert response.letter_grade is None
@@ -120,5 +125,6 @@ async def test_non_positive_weight_raises(agribalyse_index):
     with patch_ingredients_taxonomy(taxonomy):
         with pytest.raises(ValueError, match="negative weight"):
             await score.compute_green_score(
-                [build_ingredient_obj("i1", "apple", "en:apple", weight=-1)]
+                [build_ingredient_obj("i1", "apple", "en:apple", weight=-1)],
+                country="FR",
             )
