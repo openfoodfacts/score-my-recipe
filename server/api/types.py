@@ -14,6 +14,7 @@ class OFFIngredient(BaseModel):
     id: str
     text: str
     quantity: Optional[str] = None
+    quantity_ml: Optional[float] = None
     quantity_g: Optional[float] = None
     ecobalyse_code: Optional[str] = None
     ciqual_food_code: Optional[str] = None
@@ -37,15 +38,19 @@ class RecipeIngredient(BaseModel):
                     "is_in_taxonomy": True,
                     "codified_ingredient": "apple",
                     "quantity_g": 150.0,
+                    "quantity_value": 0.15,
+                    "quantity_unit": "kg",
                 }
             ]
         }
     )
 
-    taxonomy_id: Optional[str] = None
-    is_in_taxonomy: bool
-    codified_ingredient: str
-    quantity_g: Optional[float] = None
+    taxonomy_id: Annotated[Optional[str], Field(description="Taxonomy id of the ingredient")] = None
+    is_in_taxonomy: Annotated[bool, Field(description="Whether the ingredient is in the taxonomy")]
+    codified_ingredient: Annotated[str, Field(description="Codified ingredient name")]
+    quantity_g: Annotated[Optional[float], Field(description="Quantity in grams")] = None
+    quantity_value: Annotated[Optional[float], Field(description="Numeric value of the quantity")] = None
+    quantity_unit: Annotated[Optional[str], Field(description="Unit of the quantity")] = None
 
 
 class TaxonomyItem(BaseModel):

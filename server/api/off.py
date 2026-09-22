@@ -42,7 +42,7 @@ async def parse_text(text: str, lang: str) -> list[OFFIngredient]:
     #         "cc": "fr",
     #         "fields": "ingredients",
     #         "product": {
-    #         "ingredients_text_fr": "patates bio et vegan de france (2kg), tomates (argentine et pérou) (1kg), persil"
+    #         "ingredients_text_fr": "2 œuf, 2kg de patates bio et vegan de france, 300ml de lait, 20g de tomate concentrée, persil"
     #         }
     #     }'
     # ```
