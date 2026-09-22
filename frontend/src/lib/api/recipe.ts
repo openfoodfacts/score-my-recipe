@@ -74,6 +74,7 @@ export function apiIngredientToIngredient(apiIngredient: RecipeIngredient): Ingr
 		weight: apiIngredient.quantity_g ?? null,
 		codifiedIngredient: taxonomyItem,
 		labels: [],
+		isFreshProduce: false,
 		seasonality: false,
 		origin: null
 	};
