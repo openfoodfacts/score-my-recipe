@@ -199,6 +199,12 @@ async def get_ingredients(lang: str, include_synonyms: bool = False) -> list[typ
     ]
 
 
+# Standard units we expose to clients: only mass (g) and volume (ml) are
+# relevant for recipe quantities, so units relying on other standard units
+# (e.g. energy in kJ) are filtered out.
+ALLOWED_STANDARD_UNITS = ("g", "ml")
+
+
 @async_lru_cache(maxsize=200)
 async def _get_units_entries(lang: str) -> off.TaxonomyLangLabelType:
     """Internal version of get_units that caches the result for a given language code"""
@@ -206,6 +212,10 @@ async def _get_units_entries(lang: str) -> off.TaxonomyLangLabelType:
     units_list = off.taxonomy_lang_label_and_synonyms(
         lang, units_taxonomy.iter_nodes(), "standard_unit"
     )
+    # only keep units whose standard_unit is a mass (g) or volume (ml)
+    units_list = [
+        unit for unit in units_list if unit[3][0] in ALLOWED_STANDARD_UNITS
+    ]
     # sort by id for predictable order
     units_list.sort(key=lambda x: x[0])
     return units_list

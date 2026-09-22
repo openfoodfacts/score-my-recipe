@@ -76,17 +76,20 @@ def unit_list_to_dict(units: list[types.Unit]) -> dict[str, str]:
 
 
 @pytest.mark.asyncio
-async def test_get_units_returns_all_units(mock_units_taxonomy):
-    """get_units returns every unit of the taxonomy, without any filtering."""
+async def test_get_units_filters_to_g_and_ml_standard_units(mock_units_taxonomy):
+    """get_units only returns units whose standard_unit is g or ml.
+
+    en:kilojoule (kJ) and en:piece (no standard_unit) must be excluded.
+    """
     result = await recipes.get_units("en")
     assert isinstance(result, list)
     assert all(isinstance(unit, types.Unit) for unit in result)
     assert unit_list_to_dict(result) == {
         "en:cup": "cup",
         "en:gram": "gram",
-        "en:kilojoule": "kilojoule",
-        "en:piece": "piece",
     }
+    # units with other (or no) standard_unit are filtered out
+    assert all(unit.id not in ("en:kilojoule", "en:piece") for unit in result)
 
 
 @pytest.mark.asyncio
@@ -96,9 +99,6 @@ async def test_get_units_returns_standard_unit(mock_units_taxonomy):
     standard_unit_by_id = {unit.id: unit.standard_unit for unit in result}
     assert standard_unit_by_id["en:cup"] == "ml"
     assert standard_unit_by_id["en:gram"] == "g"
-    assert standard_unit_by_id["en:kilojoule"] == "kJ"
-    # units without a standard_unit in the taxonomy get None
-    assert standard_unit_by_id["en:piece"] is None
 
 
 @pytest.mark.asyncio
@@ -108,8 +108,6 @@ async def test_get_units_uses_correct_language_labels(mock_units_taxonomy):
     assert unit_list_to_dict(result_fr) == {
         "en:cup": "tasse",
         "en:gram": "gramme",
-        "en:kilojoule": "kilojoule",
-        "en:piece": "pièce",
     }
 
 
@@ -139,8 +137,6 @@ def test_get_units_api_returns_correct_data(mock_units_taxonomy):
     assert {unit["id"]: unit["label"] for unit in data["units"]} == {
         "en:cup": "cup",
         "en:gram": "gram",
-        "en:kilojoule": "kilojoule",
-        "en:piece": "piece",
     }
 
 
@@ -154,15 +150,15 @@ def test_get_units_api_returns_standard_unit(mock_units_taxonomy):
     }
     assert standard_unit_by_id["en:cup"] == "ml"
     assert standard_unit_by_id["en:gram"] == "g"
-    assert standard_unit_by_id["en:kilojoule"] == "kJ"
 
 
-def test_get_units_api_omits_standard_unit_when_none(mock_units_taxonomy):
-    """The /v1/units endpoint omits standard_unit when the taxonomy has none."""
+def test_get_units_api_excludes_non_g_ml_units(mock_units_taxonomy):
+    """The /v1/units endpoint excludes units whose standard_unit is not g or ml."""
     response = client.get("/v1/units", params={"lang": "en"})
     assert response.status_code == 200
-    piece = next(unit for unit in response.json()["units"] if unit["id"] == "en:piece")
-    assert "standard_unit" not in piece
+    ids = {unit["id"] for unit in response.json()["units"]}
+    assert "en:kilojoule" not in ids
+    assert "en:piece" not in ids
 
 
 def test_get_units_api_cache_control_header(mock_units_taxonomy):
@@ -193,11 +189,11 @@ async def test_get_units_includes_synonyms_when_requested(mock_units_taxonomy):
 async def test_get_units_synonyms_language_fallback(mock_units_taxonomy):
     """Synonyms fall back to english when not available in the requested language.
 
-    en:kilojoule has no spanish synonyms, so the english ones are returned.
+    en:cup has no spanish synonyms, so the english ones are returned.
     """
     result_es = await recipes.get_units("es", include_synonyms=True)
-    kilojoule = next(unit for unit in result_es if unit.id == "en:kilojoule")
-    assert kilojoule.synonyms == ["kilojoules"]
+    cup = next(unit for unit in result_es if unit.id == "en:cup")
+    assert cup.synonyms == ["cups"]
 
 
 def test_get_units_api_synonyms_excluded_by_default(mock_units_taxonomy):
