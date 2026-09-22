@@ -49,7 +49,9 @@ class RecipeIngredient(BaseModel):
     is_in_taxonomy: Annotated[bool, Field(description="Whether the ingredient is in the taxonomy")]
     codified_ingredient: Annotated[str, Field(description="Codified ingredient name")]
     quantity_g: Annotated[Optional[float], Field(description="Quantity in grams")] = None
-    quantity_value: Annotated[Optional[float], Field(description="Numeric value of the quantity")] = None
+    quantity_value: Annotated[
+        Optional[float], Field(description="Numeric value of the quantity")
+    ] = None
     quantity_unit: Annotated[Optional[str], Field(description="Unit of the quantity")] = None
 
 
@@ -305,6 +307,53 @@ class IngredientsResponse(BaseModel):
     )
 
     ingredients: list[Ingredient]
+
+
+class Unit(TaxonomyItem):
+    """Unit model for Score My Recipe API"""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {"id": "en:gram", "label": "gram", "standard_unit": "g", "synonyms": ["g", "grams"]}
+            ]
+        }
+    )
+
+    standard_unit: Annotated[
+        Optional[str],
+        Field(
+            default=None,
+            description="Standard unit the unit converts to (e.g. 'g', 'ml', 'kJ'). "
+            "Omitted when the taxonomy does not define one for this unit.",
+        ),
+    ]
+
+
+class UnitsRequest(TaxonomyRequest):
+    model_config = ConfigDict(
+        json_schema_extra={"examples": [{"lang": "en", "include_synonyms": False}]}
+    )
+    pass
+
+
+class UnitsResponse(BaseModel):
+    """Response model for get_units endpoint"""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "units": [
+                        {"id": "en:gram", "label": "gram", "standard_unit": "g"},
+                        {"id": "en:cup", "label": "cup", "standard_unit": "ml"},
+                    ]
+                }
+            ]
+        }
+    )
+
+    units: list[Unit]
 
 
 class ScoredIngredient(Ingredient):

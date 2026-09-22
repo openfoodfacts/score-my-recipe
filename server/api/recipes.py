@@ -199,6 +199,33 @@ async def get_ingredients(lang: str, include_synonyms: bool = False) -> list[typ
     ]
 
 
+@async_lru_cache(maxsize=200)
+async def _get_units_entries(lang: str) -> off.TaxonomyLangLabelType:
+    """Internal version of get_units that caches the result for a given language code"""
+    units_taxonomy = await off.get_units_taxonomy()
+    units_list = off.taxonomy_lang_label_and_synonyms(
+        lang, units_taxonomy.iter_nodes(), "standard_unit"
+    )
+    # sort by id for predictable order
+    units_list.sort(key=lambda x: x[0])
+    return units_list
+
+
+async def get_units(lang: str, include_synonyms: bool = False) -> list[types.Unit]:
+    """Get the list of units available in the Open Food Facts units taxonomy"""
+    lang = two_letter_lang_code(lang)
+    _units = await _get_units_entries(lang)
+    return [
+        types.Unit(
+            id=unit_id,
+            label=unit_label,
+            synonyms=unit_synonyms if include_synonyms else None,
+            standard_unit=standard_unit,
+        )
+        for unit_id, unit_label, unit_synonyms, (standard_unit,) in _units
+    ]
+
+
 async def suggest_scored_ingredient(
     lang: str, include_synonyms: bool, taxonomy_id: str
 ) -> list[types.ScoredIngredient]:

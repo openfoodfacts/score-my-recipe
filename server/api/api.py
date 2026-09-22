@@ -99,6 +99,19 @@ async def get_ingredients(
     return types.IngredientsResponse(ingredients=ingredients)
 
 
+@app.get("/v1/units", response_model_exclude_none=True)
+async def get_units(
+    filter_query: Annotated[types.UnitsRequest, Query()], response: Response
+) -> types.UnitsResponse:
+    """Get the list of units available in the Open Food Facts units taxonomy
+
+    Note: as the list is not too big, we let clients handle suggestions to users
+    """
+    units = await recipes.get_units(filter_query.lang, filter_query.include_synonyms)
+    response.headers["Cache-Control"] = "max-age=86400"
+    return types.UnitsResponse(units=units)
+
+
 @app.get("/v1/suggest-scored-ingredient", response_model_exclude_none=True)
 async def suggest_scored_ingredient(
     filter_query: Annotated[types.SuggestScoredIngredientRequest, Query()], response: Response
