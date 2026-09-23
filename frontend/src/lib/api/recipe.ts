@@ -74,10 +74,12 @@ export function apiIngredientToIngredient(apiIngredient: RecipeIngredient): Ingr
 		? { id: apiIngredient.origins, label: apiIngredient.origins, isInTaxonomy: true }
 		: null;
 
-	// Pre-fill labels from the parsed text (e.g. "en:organic").
-	const labels: TaxonomyItem[] = apiIngredient.labels
-		? [{ id: apiIngredient.labels, label: apiIngredient.labels, isInTaxonomy: true }]
-		: [];
+	
+	const labels: TaxonomyItem[] = (apiIngredient.labels ?? []).map(label => ({
+		id: label,
+		label: label,
+		isInTaxonomy: true
+	}));
 
 	return {
 		id: generateIngredientId(),

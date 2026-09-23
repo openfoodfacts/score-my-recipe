@@ -447,7 +447,9 @@ export interface components {
             /** Origins */
             origins?: string | null;
             /** Labels */
-            labels?: string | null;
+            labels?: string[];
+            /** Notes */
+            notes?: string[];
         };
         /**
          * RecipeIngredientInput
