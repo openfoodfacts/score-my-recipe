@@ -50,7 +50,8 @@ class RecipeIngredient(BaseModel):
     codified_ingredient: str
     quantity_g: Optional[float] = None
     origins: Optional[str] = None   
-    labels: Optional[str] = None    
+    labels: list[str] = Field(default_factory=list)
+    notes: list[str] = Field(default_factory=list)    
 
 class TaxonomyItem(BaseModel):
     """A taxonomy reference with an id and a localized label.

@@ -59,7 +59,8 @@ def test_parse_text_ingredient_structure(mock_off_parse_text):
     assert "is_in_taxonomy" in ingredient
     assert "quantity_g" in ingredient
     assert "origins" in ingredient    
-    assert "labels" in ingredient     
+    assert "labels" in ingredient 
+    assert "notes" in ingredient    
 
 
 def test_parse_text_converts_off_ingredient(mock_off_parse_text):
@@ -158,11 +159,11 @@ def test_parse_text_returns_origins_and_labels_when_detected(
 
     # First ingredient: butter — should have both origins and labels
     assert ingredients[0]["origins"] == "en:france"
-    assert ingredients[0]["labels"] == "en:organic"
+    assert ingredients[0]["labels"] == ["en:organic"]
 
     # Second ingredient: cocoa — has origin but no label
     assert ingredients[1]["origins"] == "en:ecuador"
-    assert ingredients[1]["labels"] is None
+    assert ingredients[1]["labels"] == []
 
 
 def test_parse_text_origins_and_labels_null_when_not_in_text(mock_off_parse_text):
@@ -178,5 +179,43 @@ def test_parse_text_origins_and_labels_null_when_not_in_text(mock_off_parse_text
         # Fields must EXIST in the response even when null — not be missing entirely
         assert "origins" in ingredient
         assert "labels" in ingredient
-        assert ingredient["origins"] is None
-        assert ingredient["labels"] is None
+        assert ingredient["labels"] == []
+        assert ingredient["notes"] == []
+
+
+@pytest.fixture
+def mock_off_parse_text_with_multiple_values():
+    """Mock returning an ingredient with comma-separated origins and labels"""
+    with patch("api.recipes.off.parse_text", new_callable=AsyncMock) as mock:
+        mock.return_value = [
+            OFFIngredient(
+                id="en:salad",
+                text="salad",
+                quantity="100g",
+                quantity_g=100.0,
+                is_in_taxonomy=1,
+                origins="en:france,en:italy",
+                labels="en:organic,en:vegan",
+            )
+        ]
+        yield mock
+
+def test_parse_text_handles_multiple_origins_and_labels(mock_off_parse_text_with_multiple_values):
+    """Test that multiple labels are split into a list, and multiple origins are dropped with a note"""
+    response = client.post(
+        "/v1/parse_text",
+        json={"text": "100g organic vegan salad from France and Italy", "lang": "en"},
+    )
+    assert response.status_code == 200
+    ingredients = response.json()["ingredients"]
+    
+    # Labels should be split into a list of two items
+    assert ingredients[0]["labels"] == ["en:organic", "en:vegan"]
+    
+    # Origins should be dropped (None) because there are multiple
+    assert ingredients[0]["origins"] is None
+    
+    # A note should be added explaining the dropped origin
+    assert len(ingredients[0]["notes"]) == 1
+    assert "Dropped origins" in ingredients[0]["notes"][0]
+    assert "en:france,en:italy" in ingredients[0]["notes"][0]
