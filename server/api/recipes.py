@@ -18,11 +18,27 @@ def off_ingredient_to_recipe_ingredient(
     off_ingredient: types.OFFIngredient,
 ) -> types.RecipeIngredient:
     """Convert an OFFIngredient to a RecipeIngredient"""
+    
+    # Handle labels: split by comma if present
+    labels = []
+    if off_ingredient.labels:
+        labels = [label.strip() for label in off_ingredient.labels.split(",")]
+        
+    # Handle origins: drop if multiple (contains comma)
+    origins = off_ingredient.origins
+    notes = []
+    if origins and "," in origins:
+        notes.append(f"Dropped origins because multiple origins are not supported: {origins}")
+        origins = None
+        
     return types.RecipeIngredient(
         taxonomy_id=off_ingredient.id,
         codified_ingredient=off_ingredient.text,
         is_in_taxonomy=bool(off_ingredient.is_in_taxonomy),
         quantity_g=off_ingredient.quantity_g,
+        origins=origins,
+        labels=labels,
+        notes=notes,
     )
 
 
