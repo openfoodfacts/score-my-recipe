@@ -2,6 +2,7 @@ from typing import Annotated, Any, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from pydantic.alias_generators import to_camel
+from pydantic_async_validation import async_field_validator
 
 import api.score_types as score_types
 
@@ -124,6 +125,15 @@ class LangRequest(BaseModel):
 
     lang: Annotated[str, Field(description="Language for the request (2 or 5 letter code)")]
 
+    @async_field_validator("lang")
+    async def check_language_code(self, value: str) -> str:
+        """Check if the language code is valid (exists in the OFF languages taxonomy)"""
+        import api.checks as checks
+
+        if not await checks.check_language_code(value):
+            raise ValueError(f"Language code {value} is not supported")
+        return value
+
 
 class TaxonomyRequest(LangRequest):
     """Base request model for taxonomy endpoints (origins, labels, ingredients).
@@ -216,6 +226,50 @@ class LabelsResponse(BaseModel):
     )
 
     labels: list[Label]
+
+
+class Country(TaxonomyItem):
+    """Country model for Score My Recipe API"""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [{"id": "en:france", "label": "France", "synonyms": ["french"]}]
+        }
+    )
+
+    country_code: Annotated[
+        Optional[str],
+        Field(
+            default=None,
+            description="ISO 3166-1 alpha-2 country code",
+        ),
+    ]
+
+
+class CountriesRequest(TaxonomyRequest):
+    model_config = ConfigDict(
+        json_schema_extra={"examples": [{"lang": "en", "include_synonyms": False}]}
+    )
+    pass
+
+
+class CountriesResponse(BaseModel):
+    """Response model for get_countries endpoint"""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "countries": [
+                        {"id": "en:france", "label": "France"},
+                        {"id": "en:spain", "label": "Spain"},
+                    ]
+                }
+            ]
+        }
+    )
+
+    countries: list[Country]
 
 
 class Ingredient(TaxonomyItem):
@@ -399,6 +453,8 @@ class GreenScoreRequest(CamelModel):
         json_schema_extra={
             "examples": [
                 {
+                    "country": "FR",
+                    "accountedWeights": "scorable",
                     "ingredients": [
                         {
                             "id": "i1",
@@ -426,13 +482,22 @@ class GreenScoreRequest(CamelModel):
                             "seasonality": False,
                             "origin": None,
                         },
-                    ]
+                    ],
                 }
             ]
         }
     )
 
     ingredients: Annotated[RecipeInput, Field(description="The ingredients of the recipe")]
+
+    country: Annotated[
+        Optional[str],
+        Field(
+            default=None,
+            description="Country code (ISO 3166-1 alpha-2) to compute the distance modifier for the recipe."
+            "If not provided, the distance will always be world",
+        ),
+    ] = None
 
     accounted_weights: Annotated[
         score_types.AccountedWeights,
@@ -441,6 +506,29 @@ class GreenScoreRequest(CamelModel):
             description=score_types.AccountedWeights.__doc__,
         ),
     ] = score_types.AccountedWeights.ONLY_SCORABLE
+
+    @field_validator("country", mode="before")
+    def upper_country_code(cls, value: Optional[str]) -> Optional[str]:
+        """Ensure the country code is uppercase (ISO 3166-1 alpha-2)
+
+        And is a 2-letter code if provided. If not, return None.
+        """
+        if value is None:
+            return None
+        if not isinstance(value, str):
+            raise ValueError(f"Country code must be a string, got {type(value)}")
+        if len(value) != 2:
+            raise ValueError(f"Country code must be 2 letters, got {value}")
+        return value.upper()
+
+    @async_field_validator("country")
+    async def check_country_code(self, value: str) -> str:
+        """Check if the country code is valid (exists in the OFF countries taxonomy)"""
+        import api.checks as checks
+
+        if not await checks.check_country_code(value):
+            raise ValueError(f"Country code {value} is not supported")
+        return value
 
 
 class IngredientAgribalyse(CamelModel):
@@ -515,6 +603,12 @@ class GreenScoreResponse(CamelModel):
         Optional[float],
         Field(
             description="The modifier from ingredient origin agricultural system (EPI), null if no ingredients have a score"
+        ),
+    ] = None
+    distances_modifier: Annotated[
+        Optional[float],
+        Field(
+            description="The modifier from ingredient origin distance, null if no ingredients have a score"
         ),
     ] = None
     numeric_score: Annotated[

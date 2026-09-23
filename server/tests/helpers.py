@@ -11,6 +11,9 @@ from api import types
 # useful constant when computing scores without origins
 WORLD_EPI_MODIFIER = -3.0
 
+# useful constant when computing scores for France distance
+FRANCE_DISTANCE_MODIFIER = 3
+
 
 @contextmanager
 def patch_ingredients_taxonomy(taxonomy):
@@ -28,6 +31,7 @@ def patch_labels_taxonomy(taxonomy):
     table from the provided (mocked) taxonomy.
     """
     import api.score as score
+
     score.labels_bonus_full.cache_clear()
     try:
         with patch("api.off.get_labels_taxonomy", new_callable=AsyncMock) as mock_tax:

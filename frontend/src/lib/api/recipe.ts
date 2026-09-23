@@ -132,22 +132,39 @@ export function ingredientToGreenScoreInput(
 }
 
 /**
+ * Optional parameters for the green-score computation.
+ */
+export type ComputeGreenScoreOptions = {
+	/**
+	 * ISO 3166-1 alpha-2 country code (e.g. `"FR"`) of the country the recipe is
+	 * being cooked in. Used by the backend to compute the distance modifier.
+	 * When omitted, the distance defaults to "world".
+	 */
+	country?: string;
+	/** Optional abort signal to cancel the in-flight request. */
+	signal?: AbortSignal;
+};
+
+/**
  * Compute the green-score of a recipe by calling the backend endpoint.
  *
  * Only non-empty ingredients are sent, as empty lines are just placeholders for
  * the editor and carry no meaningful data.
  *
  * @param ingredients - The current list of ingredients in the editor.
+ * @param options - Optional parameters (country code and abort signal).
  * @returns The green-score response from the backend.
  * @throws {Error} If the backend responds with a non-2xx status code.
  */
 export async function computeGreenScore(
 	ingredients: IngredientsList,
-	signal?: AbortSignal
+	options: ComputeGreenScoreOptions = {}
 ): Promise<GreenScoreResponse> {
+	const { country, signal } = options;
 	const payload: GreenScoreRequest = {
 		ingredients: ingredients.filter(isIngredientNotEmpty).map(ingredientToGreenScoreInput),
-		accountedWeights: 'scorable'
+		accountedWeights: 'scorable',
+		country: country ?? null
 	};
 	const response = await fetch(`${API_BASE_URL}/v1/green-score`, {
 		method: 'POST',

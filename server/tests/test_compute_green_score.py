@@ -2,6 +2,7 @@
 
 import pytest
 
+from api.score_data import DEFAULT_DISTANCE_MODIFIER
 from api import score
 from api import types
 from tests.helpers import (
@@ -27,9 +28,12 @@ async def test_score_for_single_ingredient(agribalyse_index):
         result = await score.compute_green_score(
             types.GreenScoreRequest(
                 ingredients=[build_ingredient_obj("i1", "apple", "en:apple")]
-            ).ingredients
+            ).ingredients,
+            country="FR",
         )
-    assert result.numeric_score == pytest.approx(76.381296 + WORLD_EPI_MODIFIER, rel=1e-4)
+    assert result.numeric_score == pytest.approx(
+        76.381296 + WORLD_EPI_MODIFIER + DEFAULT_DISTANCE_MODIFIER, rel=1e-4
+    )
     assert result.letter_grade == "B"
     assert result.missing_ingredient_ids == []
 
@@ -54,9 +58,12 @@ async def test_score_weighted_mix(agribalyse_index):
                     build_ingredient_obj("i1", "apple", "en:apple", weight=100),
                     build_ingredient_obj("i2", "pear", "en:pear", weight=300),
                 ]
-            ).ingredients
+            ).ingredients,
+            country="FR",
         )
-    assert result.numeric_score == pytest.approx(57.813704 + WORLD_EPI_MODIFIER, rel=1e-4)
+    assert result.numeric_score == pytest.approx(
+        57.813704 + WORLD_EPI_MODIFIER + DEFAULT_DISTANCE_MODIFIER, rel=1e-4
+    )
     assert result.letter_grade == "C"
     assert result.missing_ingredient_ids == []
 
@@ -79,9 +86,12 @@ async def test_missing_ingredients_reported(agribalyse_index):
                     build_ingredient_obj("i_apple", "apple", "en:apple"),
                     build_ingredient_obj("i_water", "water", "en:water"),
                 ]
-            ).ingredients
+            ).ingredients,
+            country="FR",
         )
-    assert result.numeric_score == pytest.approx(76.381296 + WORLD_EPI_MODIFIER, rel=1e-4)
+    assert result.numeric_score == pytest.approx(
+        76.381296 + WORLD_EPI_MODIFIER + DEFAULT_DISTANCE_MODIFIER, rel=1e-4
+    )
     assert result.letter_grade == "B"
     assert result.missing_ingredient_ids == ["i_water"]
 
@@ -94,7 +104,8 @@ async def test_no_score_when_all_missing(agribalyse_index):
         result = await score.compute_green_score(
             types.GreenScoreRequest(
                 ingredients=[build_ingredient_obj("i1", "water", "en:water")]
-            ).ingredients
+            ).ingredients,
+            country="FR",
         )
     assert result.numeric_score is None
     assert result.letter_grade is None

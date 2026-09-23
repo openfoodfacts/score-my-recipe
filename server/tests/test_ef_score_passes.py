@@ -2,6 +2,7 @@
 
 import pytest
 
+from api.score_data import DEFAULT_DISTANCE_MODIFIER
 from api import score
 from api.score_types import IngredientMetrics, AccountedWeights
 from tests.helpers import (
@@ -158,17 +159,19 @@ async def test_recipe_ef_score_total_denominator_dilutes(agribalyse_index):
         response_scorable = await score.compute_green_score(
             recipe,
             accounted_weights=AccountedWeights.ONLY_SCORABLE,
+            country="FR",
         )
         response_total = await score.compute_green_score(
             recipe,
             accounted_weights=AccountedWeights.ALL_WEIGHTS,
+            country="FR",
         )
     # raw EF scores: scorable = 0.3 (only apple), total = 0.15 (apple diluted by water)
     assert response_scorable.numeric_score == pytest.approx(
-        score.normalize_ef_score(0.3) + WORLD_EPI_MODIFIER
+        score.normalize_ef_score(0.3) + WORLD_EPI_MODIFIER + DEFAULT_DISTANCE_MODIFIER
     )
     assert response_total.numeric_score == pytest.approx(
-        score.normalize_ef_score(0.15) + WORLD_EPI_MODIFIER * 0.5
+        score.normalize_ef_score(0.15) + WORLD_EPI_MODIFIER * 0.5 + DEFAULT_DISTANCE_MODIFIER * 0.5
     )
     assert response_scorable.missing_ingredient_ids == ["i_water"]
     assert response_total.missing_ingredient_ids == ["i_water"]
