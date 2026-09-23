@@ -7,6 +7,13 @@ from pydantic_async_validation import async_field_validator
 import api.score_types as score_types
 
 
+# Sentinel value used as a "unit" when the quantity refers to countable items
+# (e.g. "1 egg", "2 broccoli") rather than a measurable mass or volume.
+# It is deliberately distinct from any OFF taxonomy id (``en:...`` / ``xx:...``)
+# so it cannot be confused with a real unit.
+ITEM_UNIT = "item"
+
+
 class OFFIngredient(BaseModel):
     """Ingredient model for Open Food Facts API"""
 
@@ -677,3 +684,43 @@ class GreenScoreResponse(CamelModel):
             description="List of ingredient ids that were missing from the Agribalyse computation"
         ),
     ] = []
+
+
+class RecomputeQuantityRequest(CamelModel):
+    """Request body for the ``POST /v1/recompute-quantity`` endpoint.
+
+    ``unit`` is either a unit id from the OFF units taxonomy (e.g. ``xx:kg``)
+    or the ``{ITEM_UNIT}`` sentinel for countable ingredients (e.g. "1 egg").
+    """
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "quantity_g": 2000,
+                    "old_value": 2000,
+                    "old_unit": "xx:g",
+                    "new_value": 2,
+                    "new_unit": "xx:kg",
+                }
+            ]
+        }
+    )
+
+    quantity_g: Annotated[float, Field(ge=0, description="Previous quantity in grams")]
+    old_value: Annotated[float, Field(ge=0, description="Previous numeric value of the quantity")]
+    old_unit: Annotated[str, Field(description=f"Previous unit (taxonomy id or '{ITEM_UNIT}')")]
+    new_value: Annotated[float, Field(ge=0, description="New numeric value of the quantity")]
+    new_unit: Annotated[str, Field(description=f"New unit (taxonomy id or '{ITEM_UNIT}')")]
+
+
+class RecomputeQuantityResponse(CamelModel):
+    """Response model for the ``POST /v1/recompute-quantity`` endpoint."""
+
+    model_config = ConfigDict(
+        json_schema_extra={"examples": [{"quantity_g": 2000, "value": 2, "unit": "xx:kg"}]}
+    )
+
+    quantity_g: Annotated[float, Field(description="New quantity in grams")]
+    value: Annotated[float, Field(description="New numeric value of the quantity")]
+    unit: Annotated[str, Field(description=f"New unit (taxonomy id or '{ITEM_UNIT}')")]

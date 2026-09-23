@@ -140,6 +140,28 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	'/v1/units': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get Units
+		 * @description Get the list of units available in the Open Food Facts units taxonomy
+		 *
+		 *     Note: as the list is not too big, we let clients handle suggestions to users
+		 */
+		get: operations['get_units_v1_units_get'];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	'/v1/suggest-scored-ingredient': {
 		parameters: {
 			query?: never;
@@ -178,6 +200,33 @@ export interface paths {
 		 * @description Compute the green-score of a recipe given as a list of ingredients.
 		 */
 		post: operations['green_score_v1_green_score_post'];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/v1/recompute-quantity': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Recompute Quantity
+		 * @description Recompute the quantity in grams after the user edited an ingredient's value/unit.
+		 *
+		 *     This is useful to let user change the value of a recipe item in a natural fashion
+		 *     (eg. change 1 egg to 3 eggs)
+		 *     while keeping the equivalent "g" conversion for green-score computation.
+		 *
+		 *     A best effort is done to also allow changing the unit,
+		 *     but currently, only new units that can be converted to grams are supported
+		 */
+		post: operations['recompute_quantity_v1_recompute_quantity_post'];
 		delete?: never;
 		options?: never;
 		head?: never;
@@ -515,18 +564,42 @@ export interface components {
 		 *       "codified_ingredient": "apple",
 		 *       "is_in_taxonomy": true,
 		 *       "quantity_g": 150,
+		 *       "quantity_unit": "kg",
+		 *       "quantity_value": 0.15,
 		 *       "taxonomy_id": "en:apple"
 		 *     }
 		 */
 		RecipeIngredient: {
-			/** Taxonomy Id */
+			/**
+			 * Taxonomy Id
+			 * @description Taxonomy id of the ingredient
+			 */
 			taxonomy_id?: string | null;
-			/** Is In Taxonomy */
+			/**
+			 * Is In Taxonomy
+			 * @description Whether the ingredient is in the taxonomy
+			 */
 			is_in_taxonomy: boolean;
-			/** Codified Ingredient */
+			/**
+			 * Codified Ingredient
+			 * @description Codified ingredient name
+			 */
 			codified_ingredient: string;
-			/** Quantity G */
+			/**
+			 * Quantity G
+			 * @description Quantity in grams
+			 */
 			quantity_g?: number | null;
+			/**
+			 * Quantity Value
+			 * @description Numeric value of the quantity
+			 */
+			quantity_value?: number | null;
+			/**
+			 * Quantity Unit
+			 * @description Unit of the quantity
+			 */
+			quantity_unit?: string | null;
 		};
 		/**
 		 * RecipeIngredientInput
@@ -630,6 +703,73 @@ export interface components {
 			ingredients: components['schemas']['RecipeIngredient'][];
 		};
 		/**
+		 * RecomputeQuantityRequest
+		 * @description Request body for the ``POST /v1/recompute-quantity`` endpoint.
+		 *
+		 *     ``unit`` is either a unit id from the OFF units taxonomy (e.g. ``xx:kg``)
+		 *     or the ``{ITEM_UNIT}`` sentinel for countable ingredients (e.g. "1 egg").
+		 * @example {
+		 *       "new_unit": "xx:kg",
+		 *       "new_value": 2,
+		 *       "old_unit": "xx:g",
+		 *       "old_value": 2000,
+		 *       "quantity_g": 2000
+		 *     }
+		 */
+		RecomputeQuantityRequest: {
+			/**
+			 * Quantityg
+			 * @description Previous quantity in grams
+			 */
+			quantityG: number;
+			/**
+			 * Oldvalue
+			 * @description Previous numeric value of the quantity
+			 */
+			oldValue: number;
+			/**
+			 * Oldunit
+			 * @description Previous unit (taxonomy id or 'item')
+			 */
+			oldUnit: string;
+			/**
+			 * Newvalue
+			 * @description New numeric value of the quantity
+			 */
+			newValue: number;
+			/**
+			 * Newunit
+			 * @description New unit (taxonomy id or 'item')
+			 */
+			newUnit: string;
+		};
+		/**
+		 * RecomputeQuantityResponse
+		 * @description Response model for the ``POST /v1/recompute-quantity`` endpoint.
+		 * @example {
+		 *       "quantity_g": 2000,
+		 *       "unit": "xx:kg",
+		 *       "value": 2
+		 *     }
+		 */
+		RecomputeQuantityResponse: {
+			/**
+			 * Quantityg
+			 * @description New quantity in grams
+			 */
+			quantityG: number;
+			/**
+			 * Value
+			 * @description New numeric value of the quantity
+			 */
+			value: number;
+			/**
+			 * Unit
+			 * @description New unit (taxonomy id or 'item')
+			 */
+			unit: string;
+		};
+		/**
 		 * ScoredIngredient
 		 * @description An ingredient alternative with its matching Agribalyse row code.
 		 *
@@ -706,6 +846,63 @@ export interface components {
 			 * @description Whether the item comes from the taxonomy (true) or is custom
 			 */
 			isInTaxonomy: boolean;
+		};
+		/**
+		 * Unit
+		 * @description Unit model for Score My Recipe API
+		 * @example {
+		 *       "id": "en:gram",
+		 *       "label": "gram",
+		 *       "standard_unit": "g",
+		 *       "synonyms": [
+		 *         "g",
+		 *         "grams"
+		 *       ]
+		 *     }
+		 */
+		Unit: {
+			/**
+			 * Id
+			 * @description Taxonomy id of the item
+			 */
+			id: string;
+			/**
+			 * Label
+			 * @description Name of the item
+			 */
+			label: string;
+			/**
+			 * Synonyms
+			 * @description Synonyms in the requested language. Only present in the response when include_synonyms is true.
+			 */
+			synonyms?: string[] | null;
+			/**
+			 * Standard Unit
+			 * @description Standard unit the unit converts to (e.g. 'g', 'ml', 'kJ'). Omitted when the taxonomy does not define one for this unit.
+			 */
+			standard_unit?: string | null;
+		};
+		/**
+		 * UnitsResponse
+		 * @description Response model for get_units endpoint
+		 * @example {
+		 *       "units": [
+		 *         {
+		 *           "id": "en:gram",
+		 *           "label": "gram",
+		 *           "standard_unit": "g"
+		 *         },
+		 *         {
+		 *           "id": "en:cup",
+		 *           "label": "cup",
+		 *           "standard_unit": "ml"
+		 *         }
+		 *       ]
+		 *     }
+		 */
+		UnitsResponse: {
+			/** Units */
+			units: components['schemas']['Unit'][];
 		};
 		/** ValidationError */
 		ValidationError: {
@@ -942,6 +1139,40 @@ export interface operations {
 			};
 		};
 	};
+	get_units_v1_units_get: {
+		parameters: {
+			query: {
+				/** @description Language for the request (2 or 5 letter code) */
+				lang: string;
+				/** @description If true, include the synonyms of each item in the response. */
+				include_synonyms?: boolean;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Successful Response */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					'application/json': components['schemas']['UnitsResponse'];
+				};
+			};
+			/** @description Validation Error */
+			422: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					'application/json': components['schemas']['HTTPValidationError'];
+				};
+			};
+		};
+	};
 	suggest_scored_ingredient_v1_suggest_scored_ingredient_get: {
 		parameters: {
 			query: {
@@ -998,6 +1229,39 @@ export interface operations {
 				};
 				content: {
 					'application/json': components['schemas']['GreenScoreResponse'];
+				};
+			};
+			/** @description Validation Error */
+			422: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					'application/json': components['schemas']['HTTPValidationError'];
+				};
+			};
+		};
+	};
+	recompute_quantity_v1_recompute_quantity_post: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				'application/json': components['schemas']['RecomputeQuantityRequest'];
+			};
+		};
+		responses: {
+			/** @description Successful Response */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					'application/json': components['schemas']['RecomputeQuantityResponse'];
 				};
 			};
 			/** @description Validation Error */

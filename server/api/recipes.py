@@ -8,6 +8,7 @@ import re
 from async_lru import alru_cache as async_lru_cache
 
 import api.agribalyse as agribalyse
+import api.exceptions as exceptions
 import api.off as off
 import api.types as types
 import api.score_data as score_data
@@ -234,6 +235,91 @@ async def get_units(lang: str, include_synonyms: bool = False) -> list[types.Uni
         )
         for unit_id, unit_label, unit_synonyms, (standard_unit,) in _units
     ]
+
+
+async def recompute_quantity(
+    quantity_g: float,
+    old_value: float,
+    old_unit: str,
+    new_value: float,
+    new_unit: str,
+) -> tuple[float, float, str]:
+    """Recompute the quantity in grams after the user edited an ingredient's value/unit.
+
+    Given the previous ``(value, unit, grams)`` and the new ``(value, unit)``,
+    returns ``(new_quantity_g, new_value, new_unit)``.
+
+    We do our best to recompute it in a simple manner,
+    but some unit conversions will require calling the Open Food Facts parse API
+    (not yet implemented).
+    """
+    # Case 1: the unit did not change -> cross-multiplication (the unit cancels out).
+    if new_unit == old_unit:
+        if old_value != 0:
+            return quantity_g * (new_value / old_value), new_value, new_unit
+        # A zero old value cannot be cross-multiplied. Fall back to the mass
+        # conversion factor of the (unchanged) unit when it is a mass unit, so
+        # that e.g. editing "0 kg" -> "2 kg" still yields 2000 g.
+        # TODO: for non-mass units, call the Open Food Facts parse API to
+        # recover the quantity in grams.
+        new_quantity_g = await _quantity_from_mass_unit(new_value, new_unit)
+        if new_quantity_g is not None:
+            return new_quantity_g, new_value, new_unit
+        raise exceptions.UnitConversionNotSupportedError(
+            f"Cannot recompute the quantity from a zero old value with unit '{new_unit}'."
+        )
+
+    # The unit changed: we need the new unit's conversion info from the taxonomy.
+    # ``types.ITEM_UNIT`` is a countable sentinel with no conversion factor.
+    if new_unit == types.ITEM_UNIT:
+        # TODO: call the Open Food Facts parse API to convert to a countable unit.
+        raise exceptions.UnitConversionNotSupportedError(
+            f"Converting to the countable unit '{types.ITEM_UNIT}' is not supported yet."
+        )
+
+    # Case 2: the new unit is a mass unit with a conversion factor.
+    new_quantity_g = await _quantity_from_mass_unit(new_value, new_unit)
+    if new_quantity_g is not None:
+        return new_quantity_g, new_value, new_unit
+
+    # Case 3: any other unit change (e.g. volume <-> mass).
+    # TODO: call the Open Food Facts parse API to convert the unit.
+    raise exceptions.UnitConversionNotSupportedError(
+        f"Converting from unit '{old_unit}' to unit '{new_unit}' is not supported yet."
+    )
+
+
+async def _quantity_from_mass_unit(value: float, unit_id: str) -> float | None:
+    f"""Compute the quantity in grams for a mass unit, or ``None`` if not a mass unit.
+
+    Returns ``value * conversion_factor`` when ``unit_id`` is a taxonomy unit whose
+    ``standard_unit`` is ``"g"`` and that defines a ``conversion_factor``.
+    Returns ``None`` for the ``{types.ITEM_UNIT}`` sentinel or any non-mass (e.g. volume) unit.
+
+    :raises exceptions.UnknownUnitError: if ``unit_id`` is not in the units taxonomy
+        and is not the ``{types.ITEM_UNIT}`` sentinel.
+    """
+    if unit_id == types.ITEM_UNIT:
+        return None
+    standard_unit, conversion_factor = await _unit_conversion(unit_id)
+    if standard_unit == "g" and conversion_factor is not None:
+        return value * conversion_factor
+    return None
+
+
+async def _unit_conversion(unit_id: str) -> tuple[str | None, float | None]:
+    """Look up a unit's ``standard_unit`` and ``conversion_factor`` in the OFF taxonomy.
+
+    :raises exceptions.UnknownUnitError: if ``unit_id`` is not in the units taxonomy.
+    """
+    units_taxonomy = await off.get_units_taxonomy()
+    if unit_id not in units_taxonomy:
+        raise exceptions.UnknownUnitError(f"Unit '{unit_id}' is not a known unit.")
+    node = units_taxonomy[unit_id]
+    standard_unit = off._property_value(node, "standard_unit")
+    factor_raw = off._property_value(node, "conversion_factor")
+    conversion_factor = float(factor_raw) if factor_raw is not None else None
+    return standard_unit, conversion_factor
 
 
 async def suggest_scored_ingredient(

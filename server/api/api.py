@@ -7,10 +7,11 @@ this file should only handle the HTTP specific parts.
 
 from typing import Annotated
 
-from fastapi import FastAPI, Query, Response
+from fastapi import FastAPI, HTTPException, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 import api.recipes as recipes
+import api.exceptions as exceptions
 import api.score as score
 import api.types as types
 
@@ -137,3 +138,31 @@ async def green_score(request: types.GreenScoreRequest) -> types.GreenScoreRespo
         accounted_weights=request.accounted_weights,
         country=request.country,
     )
+
+
+@app.post("/v1/recompute-quantity")
+async def recompute_quantity(
+    request: types.RecomputeQuantityRequest,
+) -> types.RecomputeQuantityResponse:
+    """Recompute the quantity in grams after the user edited an ingredient's value/unit.
+
+    This is useful to let user change the value of a recipe item in a natural fashion
+    (eg. change 1 egg to 3 eggs)
+    while keeping the equivalent "g" conversion for green-score computation.
+
+    A best effort is done to also allow changing the unit,
+    but currently, only new units that can be converted to grams are supported
+    """
+    try:
+        quantity_g, value, unit = await recipes.recompute_quantity(
+            request.quantity_g,
+            request.old_value,
+            request.old_unit,
+            request.new_value,
+            request.new_unit,
+        )
+    except exceptions.UnknownUnitError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    except exceptions.UnitConversionNotSupportedError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    return types.RecomputeQuantityResponse(quantity_g=quantity_g, value=value, unit=unit)
