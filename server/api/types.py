@@ -406,7 +406,7 @@ class RecipeIngredientInput(CamelModel):
                             "isInTaxonomy": True,
                         }
                     ],
-                    "seasonality": False,
+                    "isInSeason": False,
                     "origin": {
                         "id": "en:france",
                         "label": "France",
@@ -428,7 +428,8 @@ class RecipeIngredientInput(CamelModel):
     labels: Annotated[
         list[TaxonomyItem], Field(description="Labels / certifications (organic, fair-trade...)")
     ] = []
-    seasonality: Annotated[bool, Field(description="Whether the ingredient is seasonal")] = False
+    is_fresh_plant: Annotated[bool, Field(description="Whether the ingredient is a fresh plant")] = False
+    is_in_season: Annotated[bool, Field(description="Whether the ingredient is in season")] = False
     origin: Annotated[
         Optional[TaxonomyItem], Field(description="Origin country/region, null if unspecified")
     ] = None
@@ -460,7 +461,7 @@ class GreenScoreRequest(CamelModel):
                                 "isInTaxonomy": True,
                             },
                             "labels": [],
-                            "seasonality": False,
+                            "isInSeason": False,
                             "origin": None,
                         },
                         {
@@ -473,7 +474,7 @@ class GreenScoreRequest(CamelModel):
                                 "isInTaxonomy": True,
                             },
                             "labels": [],
-                            "seasonality": False,
+                            "isInSeason": False,
                             "origin": None,
                         },
                     ],
@@ -603,6 +604,12 @@ class GreenScoreResponse(CamelModel):
         Optional[float],
         Field(
             description="The modifier from ingredient origin distance, null if no ingredients have a score"
+        ),
+    ] = None
+    seasonality_modifier: Annotated[
+        Optional[float],
+        Field(
+            description="The modifier from ingredient seasonality, null if no ingredients have a score"
         ),
     ] = None
     numeric_score: Annotated[

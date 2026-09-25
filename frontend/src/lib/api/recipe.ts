@@ -74,8 +74,8 @@ export function apiIngredientToIngredient(apiIngredient: RecipeIngredient): Ingr
 		weight: apiIngredient.quantity_g ?? null,
 		codifiedIngredient: taxonomyItem,
 		labels: [],
-		isFreshProduce: false,
-		seasonality: false,
+		isFreshPlant: false,
+		isInSeason: false,
 		origin: null
 	};
 }
@@ -114,7 +114,8 @@ export function ingredientToGreenScoreInput(
 		weight: ingredient.weight ?? 0,
 		codifiedIngredient,
 		labels: ingredient.labels,
-		seasonality: ingredient.seasonality,
+		isFreshPlant: ingredient.isFreshPlant,
+		isInSeason: ingredient.isInSeason,
 		origin: ingredient.origin
 	};
 }
