@@ -320,6 +320,30 @@ def global_distance_modifier(metrics: score_types.RecipeMetrics) -> Optional[flo
     return sum(modifiers) if modifiers else None
 
 
+def global_seasonality_modifier(recipe: types.RecipeInput) -> float:
+    """Gather the seasonality bonus/malus points.
+
+    This is a global modifier based only on fresh vegetables and fruits
+    """
+    # first compute ratio among fresh produce ingredients
+    total_fresh_plant_weight = sum(
+        ingredient.weight for ingredient in recipe if ingredient.is_fresh_plant
+    )
+    if total_fresh_plant_weight == 0:
+        return 0.0
+    total_in_season_weight = sum(
+        ingredient.weight
+        for ingredient in recipe
+        if ingredient.is_fresh_plant and ingredient.is_in_season
+    )
+    # all fresh produce ingredients are in season, return the maximum bonus
+    if total_fresh_plant_weight == total_in_season_weight:
+        return 5.0
+    else:
+        ratio = total_in_season_weight / total_fresh_plant_weight
+        return -10 * (1 - ratio)
+
+
 def score_to_letter(score: float) -> str:
     """Convert a score to a letter grade (A, B, C, D, E)"""
     if score >= 90:
@@ -364,9 +388,10 @@ async def compute_green_score(
         labels_bonus = global_labels_bonus(metrics)
         epi_modifier = global_epi_modifier(metrics)
         distances_modifier = global_distance_modifier(metrics)
+        seasonality_modifier = global_seasonality_modifier(recipe)
         # TODO account for packaging, origins and seasonality in the green-score computation
         numeric_score = (
-            normalized_ef_score + labels_bonus + (epi_modifier or 0.0) + (distances_modifier or 0.0)
+            normalized_ef_score + labels_bonus + (epi_modifier or 0.0) + (distances_modifier or 0.0) + seasonality_modifier
         )
         # normalize to 0-100 range
         numeric_score = min(max(numeric_score, 0.0), 100.0)
@@ -376,6 +401,7 @@ async def compute_green_score(
         labels_bonus = None
         epi_modifier = None
         distances_modifier = None
+        seasonality_modifier = None
         numeric_score = None
         letter_grade = None
     return types.GreenScoreResponse(
@@ -383,6 +409,7 @@ async def compute_green_score(
         labels_bonus=labels_bonus,
         epi_modifier=epi_modifier,
         distances_modifier=distances_modifier,
+        seasonality_modifier=seasonality_modifier,
         numeric_score=numeric_score,
         letter_grade=letter_grade,
         missing_ingredient_ids=missing_ingredient_ids,
