@@ -7,10 +7,11 @@ this file should only handle the HTTP specific parts.
 
 from typing import Annotated
 
-from fastapi import FastAPI, Query, Response
+from fastapi import FastAPI, HTTPException, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 import api.recipes as recipes
+import api.exceptions as exceptions
 import api.score as score
 import api.types as types
 
@@ -57,6 +58,7 @@ async def parse_text(request: types.RecipeParseRequest) -> types.RecipeParseResp
 
 
 @app.get("/v1/origins", response_model_exclude_none=True)
+@types.async_validate_model
 async def get_origins(
     filter_query: Annotated[types.OriginsRequest, Query()], response: Response
 ) -> types.OriginsResponse:
@@ -70,6 +72,7 @@ async def get_origins(
 
 
 @app.get("/v1/labels", response_model_exclude_none=True)
+@types.async_validate_model
 async def get_labels(
     filter_query: Annotated[types.LabelsRequest, Query()], response: Response
 ) -> types.LabelsResponse:
@@ -80,6 +83,7 @@ async def get_labels(
 
 
 @app.get("/v1/countries", response_model_exclude_none=True)
+@types.async_validate_model
 async def get_countries(
     filter_query: Annotated[types.CountriesRequest, Query()], response: Response
 ) -> types.CountriesResponse:
@@ -90,6 +94,7 @@ async def get_countries(
 
 
 @app.get("/v1/ingredients", response_model_exclude_none=True)
+@types.async_validate_model
 async def get_ingredients(
     filter_query: Annotated[types.IngredientsRequest, Query()], response: Response
 ) -> types.IngredientsResponse:
@@ -99,7 +104,22 @@ async def get_ingredients(
     return types.IngredientsResponse(ingredients=ingredients)
 
 
+@app.get("/v1/units", response_model_exclude_none=True)
+@types.async_validate_model
+async def get_units(
+    filter_query: Annotated[types.UnitsRequest, Query()], response: Response
+) -> types.UnitsResponse:
+    """Get the list of units available in the Open Food Facts units taxonomy
+
+    Note: as the list is not too big, we let clients handle suggestions to users
+    """
+    units = await recipes.get_units(filter_query.lang, filter_query.include_synonyms)
+    response.headers["Cache-Control"] = "max-age=86400"
+    return types.UnitsResponse(units=units)
+
+
 @app.get("/v1/suggest-scored-ingredient", response_model_exclude_none=True)
+@types.async_validate_model
 async def suggest_scored_ingredient(
     filter_query: Annotated[types.SuggestScoredIngredientRequest, Query()], response: Response
 ) -> types.SuggestScoredIngredientResponse:
@@ -117,6 +137,7 @@ async def suggest_scored_ingredient(
 
 
 @app.post("/v1/green-score")
+@types.async_validate_model
 async def green_score(request: types.GreenScoreRequest) -> types.GreenScoreResponse:
     """Compute the green-score of a recipe given as a list of ingredients."""
     return await score.compute_green_score(
@@ -124,3 +145,36 @@ async def green_score(request: types.GreenScoreRequest) -> types.GreenScoreRespo
         accounted_weights=request.accounted_weights,
         country=request.country,
     )
+
+
+@app.post("/v1/recompute-quantity")
+@types.async_validate_model
+async def recompute_quantity(
+    request: types.RecomputeQuantityRequest,
+) -> types.RecomputeQuantityResponse:
+    """Recompute the quantity in grams after the user edited an ingredient's value/unit.
+
+    This is useful to let user change the value of a recipe item in a natural fashion
+    (eg. change 1 egg to 3 eggs)
+    while keeping the equivalent "g" conversion for green-score computation.
+
+    A best effort is done to also allow changing the unit,
+    but currently, only new units that can be converted to grams are supported.
+
+    Units may be given as a taxonomy id, a localized unit name (resolved using
+    ``lang``) or the ``item`` sentinel for countable ingredients.
+    """
+    try:
+        quantity_g, value, unit = await recipes.recompute_quantity(
+            request.quantity_g,
+            request.old_value,
+            request.old_unit,
+            request.new_value,
+            request.new_unit,
+            request.lang,
+        )
+    except exceptions.UnknownUnitError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    except exceptions.UnitConversionNotSupportedError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    return types.RecomputeQuantityResponse(quantity_g=quantity_g, value=value, unit=unit)

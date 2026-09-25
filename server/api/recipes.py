@@ -3,10 +3,13 @@ It contains all the business logic.
 """
 
 import logging
+import re
+import unicodedata
 
 from async_lru import alru_cache as async_lru_cache
 
 import api.agribalyse as agribalyse
+import api.exceptions as exceptions
 import api.off as off
 import api.types as types
 import api.score_data as score_data
@@ -14,16 +17,34 @@ import api.score_data as score_data
 logger = logging.getLogger(__name__)
 
 
+# A numeric value (with an eventual dot) and a unit
+QUANTITY_UNIT_REGEX = re.compile(r"^\s*(?P<value>\d+(\.\d+)?)\s*(?P<unit>\w+)?\s*$")
+
+
 def off_ingredient_to_recipe_ingredient(
     off_ingredient: types.OFFIngredient,
 ) -> types.RecipeIngredient:
     """Convert an OFFIngredient to a RecipeIngredient"""
-    return types.RecipeIngredient(
+    # handle original quantity and unit
+    quantity_value = None
+    quantity_unit = None
+    if off_ingredient.quantity is not None:
+        # get quantity / unit
+        matched = QUANTITY_UNIT_REGEX.match(off_ingredient.quantity)
+        if matched:
+            if matched.group("value"):
+                quantity_value = float(matched.group("value"))
+            if matched.group("unit"):
+                quantity_unit = matched.group("unit")
+    ingredient = types.RecipeIngredient(
         taxonomy_id=off_ingredient.id,
         codified_ingredient=off_ingredient.text,
         is_in_taxonomy=bool(off_ingredient.is_in_taxonomy),
         quantity_g=off_ingredient.quantity_g,
+        quantity_value=quantity_value,
+        quantity_unit=quantity_unit,
     )
+    return ingredient
 
 
 async def parse_text(text: str, lang: str) -> list[types.RecipeIngredient]:
@@ -178,6 +199,206 @@ async def get_ingredients(lang: str, include_synonyms: bool = False) -> list[typ
         )
         for ingredient_id, ingredient_label, ingredient_synonyms, _ in _ingredients
     ]
+
+
+# Standard units we expose to clients: only mass (g) and volume (ml) are
+# relevant for recipe quantities, so units relying on other standard units
+# (e.g. energy in kJ) are filtered out.
+ALLOWED_STANDARD_UNITS = ("g", "ml")
+
+
+@async_lru_cache(maxsize=200)
+async def _get_units_entries(lang: str) -> off.TaxonomyLangLabelType:
+    """Internal version of get_units that caches the result for a given language code"""
+    units_taxonomy = await off.get_units_taxonomy()
+    units_list = off.taxonomy_lang_label_and_synonyms(
+        lang, units_taxonomy.iter_nodes(), "standard_unit"
+    )
+    # only keep units whose standard_unit is a mass (g) or volume (ml)
+    units_list = [unit for unit in units_list if unit[3][0] in ALLOWED_STANDARD_UNITS]
+    # sort by id for predictable order
+    units_list.sort(key=lambda x: x[0])
+    return units_list
+
+
+async def get_units(lang: str, include_synonyms: bool = False) -> list[types.Unit]:
+    """Get the list of units available in the Open Food Facts units taxonomy"""
+    lang = two_letter_lang_code(lang)
+    _units = await _get_units_entries(lang)
+    return [
+        types.Unit(
+            id=unit_id,
+            label=unit_label,
+            synonyms=unit_synonyms if include_synonyms else None,
+            standard_unit=standard_unit,
+        )
+        for unit_id, unit_label, unit_synonyms, (standard_unit,) in _units
+    ]
+
+
+def _normalize_unit_name(name: str) -> str:
+    """Normalize a unit name for case- and accent-insensitive lookup.
+
+    Lowercases, strips surrounding whitespace, removes accents (e.g. ``"pièce"``
+    -> ``"piece"``) and replaces spaces with ``-`` (so ``"fl oz"`` matches the
+    ``"fl-oz"`` form used in taxonomy slugs).
+    """
+    # decompose accents and drop the combining marks (NFKD + ASCII round-trip)
+    no_accents = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode("ascii")
+    return no_accents.strip().lower().replace(" ", "-")
+
+
+@async_lru_cache(maxsize=200)
+async def _unit_name_to_id(lang: str) -> dict[str, str]:
+    """Cached mapping of normalized unit name -> taxonomy id, for ``lang`` and ``xx``.
+
+    Built only from the units returned by :func:`_get_units_entries` (i.e. mass
+    and volume units). Translations from both the requested ``lang`` (which
+    already falls back to ``xx``/``en`` for missing entries) and the neutral
+    ``xx`` language are merged, so language-neutral abbreviations such as
+    ``"kg"`` (the ``xx`` name of ``xx:kg``) resolve regardless of the requested
+    language.
+
+    Both the canonical label and every synonym are used as keys. On a collision
+    (a name shared by two units) the first-seen unit wins and a warning is logged.
+    """
+    name_to_id: dict[str, str] = {}
+    # merge the requested language and the neutral "xx" language
+    for entries in (await _get_units_entries(lang), await _get_units_entries("xx")):
+        for unit_id, label, synonyms, _ in entries:
+            for translation in (label, *(synonyms or [])):
+                key = _normalize_unit_name(translation)
+                if not key:
+                    continue
+                if key in name_to_id and name_to_id[key] != unit_id:
+                    logger.warning(
+                        "Unit name '%s' maps to both '%s' and '%s'; keeping '%s'.",
+                        translation,
+                        name_to_id[key],
+                        unit_id,
+                        name_to_id[key],
+                    )
+                else:
+                    name_to_id[key] = unit_id
+    return name_to_id
+
+
+async def _resolve_unit_name(name: str, lang: str) -> str | None:
+    """Resolve a localized unit name to its taxonomy id, or ``None`` if unknown.
+
+    Probes the cached name->id mapping built from :func:`_get_units_entries` for
+    ``lang`` (which already merges the neutral ``xx`` language, so abbreviations
+    like ``"kg"`` resolve for any language).
+    """
+    name_to_id = await _unit_name_to_id(lang)
+    return name_to_id.get(_normalize_unit_name(name))
+
+
+async def recompute_quantity(
+    quantity_g: float,
+    old_value: float,
+    old_unit: str,
+    new_value: float,
+    new_unit: str,
+    lang: str,
+) -> tuple[float, float, str]:
+    """Recompute the quantity in grams after the user edited an ingredient's value/unit.
+
+    Given the previous ``(value, unit, grams)`` and the new ``(value, unit)``,
+    returns ``(new_quantity_g, new_value, new_unit)``.
+
+    Units may be given either as a taxonomy id (e.g. ``xx:kg``), as a localized
+    unit name (e.g. ``"kg"``) resolved through ``lang`` (and the neutral ``xx``
+    language), or as the ``{types.ITEM_UNIT}`` sentinel for countable ingredients.
+    The ``new_unit`` is only resolved when its conversion factor is actually
+    needed (the unit cancels out in a plain cross-multiplication); ``old_unit``
+    is never resolved and is only compared as-is to detect an unchanged unit.
+
+    We do our best to recompute it in a simple manner,
+    but some unit conversions will require calling the Open Food Facts parse API
+    (not yet implemented).
+    """
+    lang = two_letter_lang_code(lang)
+    # Case 1: the unit did not change -> cross-multiplication (the unit cancels out).
+    if new_unit == old_unit:
+        if old_value != 0:
+            return quantity_g * (new_value / old_value), new_value, new_unit
+        # A zero old value cannot be cross-multiplied. Fall back to the mass
+        # conversion factor of the (unchanged) unit when it is a mass unit, so
+        # that e.g. editing "0 kg" -> "2 kg" still yields 2000 g.
+        # TODO: for non-mass units, call the Open Food Facts parse API to
+        # recover the quantity in grams.
+        new_quantity_g = await _quantity_from_mass_unit(new_value, new_unit, lang)
+        if new_quantity_g is not None:
+            return new_quantity_g, new_value, new_unit
+        raise exceptions.UnitConversionNotSupportedError(
+            f"Cannot recompute the quantity from a zero old value with unit '{new_unit}'."
+        )
+
+    # The unit changed: we need the new unit's conversion info from the taxonomy.
+    # ``types.ITEM_UNIT`` is a countable sentinel with no conversion factor.
+    if new_unit == types.ITEM_UNIT:
+        # TODO: call the Open Food Facts parse API to convert to a countable unit.
+        raise exceptions.UnitConversionNotSupportedError(
+            f"Converting to the countable unit '{types.ITEM_UNIT}' is not supported yet."
+        )
+
+    # Case 2: the new unit is a mass unit with a conversion factor.
+    new_quantity_g = await _quantity_from_mass_unit(new_value, new_unit, lang)
+    if new_quantity_g is not None:
+        return new_quantity_g, new_value, new_unit
+
+    # Case 3: any other unit change (e.g. volume <-> mass).
+    # TODO: call the Open Food Facts parse API to convert the unit.
+    raise exceptions.UnitConversionNotSupportedError(
+        f"Converting from unit '{old_unit}' to unit '{new_unit}' is not supported yet."
+    )
+
+
+async def _quantity_from_mass_unit(value: float, unit_id: str, lang: str) -> float | None:
+    f"""Compute the quantity in grams for a mass unit, or ``None`` if not a mass unit.
+
+    Returns ``value * conversion_factor`` when ``unit_id`` is a taxonomy unit whose
+    ``standard_unit`` is ``"g"`` and that defines a ``conversion_factor``.
+    Returns ``None`` for the ``{types.ITEM_UNIT}`` sentinel or any non-mass (e.g. volume) unit.
+
+    ``unit_id`` may be a taxonomy id or a localized unit name; names are resolved
+    to their taxonomy id using ``lang`` (and the neutral ``xx`` language).
+
+    :raises exceptions.UnknownUnitError: if ``unit_id`` is not in the units taxonomy
+        (neither a known id nor a resolvable name) and is not the ``{types.ITEM_UNIT}``
+        sentinel.
+    """
+    if unit_id == types.ITEM_UNIT:
+        return None
+    standard_unit, conversion_factor = await _unit_conversion(unit_id, lang)
+    if standard_unit == "g" and conversion_factor is not None:
+        return value * conversion_factor
+    return None
+
+
+async def _unit_conversion(unit_id: str, lang: str) -> tuple[str | None, float | None]:
+    """Look up a unit's ``standard_unit`` and ``conversion_factor`` in the OFF taxonomy.
+
+    ``unit_id`` may be a taxonomy id (e.g. ``xx:kg``) or a localized unit name
+    (e.g. ``"kg"``); names are resolved to their taxonomy id using ``lang`` (and
+    the neutral ``xx`` language) before the lookup.
+
+    :raises exceptions.UnknownUnitError: if ``unit_id`` is neither a known taxonomy
+        id nor a resolvable unit name.
+    """
+    units_taxonomy = await off.get_units_taxonomy()
+    if unit_id not in units_taxonomy:
+        # not a taxonomy id: try to resolve it as a localized unit name
+        resolved = await _resolve_unit_name(unit_id, lang)
+        if resolved is None:
+            raise exceptions.UnknownUnitError(f"Unit '{unit_id}' is not a known unit.")
+        unit_id = resolved
+    node = units_taxonomy[unit_id]
+    standard_unit = off._property_value(node, "standard_unit")
+    factor_raw = off._property_value(node, "conversion_factor")
+    conversion_factor = float(factor_raw) if factor_raw is not None else None
+    return standard_unit, conversion_factor
 
 
 async def suggest_scored_ingredient(
