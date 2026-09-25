@@ -1,8 +1,9 @@
+import functools
 from typing import Annotated, Any, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from pydantic.alias_generators import to_camel
-from pydantic_async_validation import async_field_validator
+from pydantic_async_validation import AsyncValidationModelMixin, async_field_validator
 
 import api.score_types as score_types
 
@@ -12,6 +13,22 @@ import api.score_types as score_types
 # It is deliberately distinct from any OFF taxonomy id (``en:...`` / ``xx:...``)
 # so it cannot be confused with a real unit.
 ITEM_UNIT = "item"
+
+
+def async_validate_model(fn):
+    """Decorator to run async validation on a Pydantic model before calling the function.
+
+    The decorated function must have the Pydantic model as first argument
+    and will be validated before
+    the function is called. If validation fails, a ``ValidationError`` is raised.
+    """
+    @functools.wraps(fn)
+    async def wrapper(*args, **kwargs):
+        for arg in list(args) + list(kwargs.values()):
+            if isinstance(arg, AsyncValidationModelMixin):
+                await arg.model_async_validate()
+        return await fn(*args, **kwargs)
+    return wrapper
 
 
 class OFFIngredient(BaseModel):
@@ -126,7 +143,7 @@ class RecipeParseResponse(BaseModel):
     ingredients: list[RecipeIngredient]
 
 
-class LangRequest(BaseModel):
+class LangRequest(AsyncValidationModelMixin, BaseModel):
     """Request model for parse_text endpoint"""
 
     model_config = ConfigDict(json_schema_extra={"examples": [{"lang": "en"}]})
@@ -686,22 +703,25 @@ class GreenScoreResponse(CamelModel):
     ] = []
 
 
-class RecomputeQuantityRequest(CamelModel):
+class RecomputeQuantityRequest(LangRequest, CamelModel):
     """Request body for the ``POST /v1/recompute-quantity`` endpoint.
 
-    ``unit`` is either a unit id from the OFF units taxonomy (e.g. ``xx:kg``)
-    or the ``{ITEM_UNIT}`` sentinel for countable ingredients (e.g. "1 egg").
+    Each unit (``old_unit`` / ``new_unit``) may be given either as a unit id
+    from the OFF units taxonomy (e.g. ``xx:kg``), as a localized unit name
+    resolvable through the units taxonomy (e.g. ``"kg"``, ``"tasse"``), or as
+    the ``{ITEM_UNIT}`` sentinel for countable ingredients (e.g. "1 egg").
     """
 
     model_config = ConfigDict(
         json_schema_extra={
             "examples": [
                 {
+                    "lang": "en",
                     "quantity_g": 2000,
                     "old_value": 2000,
-                    "old_unit": "xx:g",
+                    "old_unit": "g",
                     "new_value": 2,
-                    "new_unit": "xx:kg",
+                    "new_unit": "kg",
                 }
             ]
         }
@@ -709,18 +729,39 @@ class RecomputeQuantityRequest(CamelModel):
 
     quantity_g: Annotated[float, Field(ge=0, description="Previous quantity in grams")]
     old_value: Annotated[float, Field(ge=0, description="Previous numeric value of the quantity")]
-    old_unit: Annotated[str, Field(description=f"Previous unit (taxonomy id or '{ITEM_UNIT}')")]
+    old_unit: Annotated[
+        str, Field(description=f"Previous unit (unit name, taxonomy id or '{ITEM_UNIT}')")
+    ]
     new_value: Annotated[float, Field(ge=0, description="New numeric value of the quantity")]
-    new_unit: Annotated[str, Field(description=f"New unit (taxonomy id or '{ITEM_UNIT}')")]
+    new_unit: Annotated[
+        str, Field(description=f"New unit (unit name, taxonomy id or '{ITEM_UNIT}')")
+    ]
+    # lang: Annotated[
+    #     str,
+    #     Field(
+    #         description="Language code (2 or 5 letters) "
+    #         "used to resolve unit names to their taxonomy id."
+    #     ),
+    # ]
 
 
 class RecomputeQuantityResponse(CamelModel):
-    """Response model for the ``POST /v1/recompute-quantity`` endpoint."""
+    """Response model for the ``POST /v1/recompute-quantity`` endpoint.
+
+    The ``unit`` field echoes the ``new_unit`` sent in the request (it may be a
+    unit name, a taxonomy id or ``{ITEM_UNIT}``).
+    """
 
     model_config = ConfigDict(
-        json_schema_extra={"examples": [{"quantity_g": 2000, "value": 2, "unit": "xx:kg"}]}
+        json_schema_extra={"examples": [{"quantity_g": 2000, "value": 2, "unit": "kg"}]}
     )
 
     quantity_g: Annotated[float, Field(description="New quantity in grams")]
     value: Annotated[float, Field(description="New numeric value of the quantity")]
-    unit: Annotated[str, Field(description=f"New unit (taxonomy id or '{ITEM_UNIT}')")]
+    unit: Annotated[
+        str,
+        Field(
+            description="New unit, echoed from the request "
+            f"(unit name, taxonomy id or '{ITEM_UNIT}')"
+        ),
+    ]

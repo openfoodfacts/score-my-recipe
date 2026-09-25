@@ -4,6 +4,7 @@ It contains all the business logic.
 
 import logging
 import re
+import unicodedata
 
 from async_lru import alru_cache as async_lru_cache
 
@@ -214,9 +215,7 @@ async def _get_units_entries(lang: str) -> off.TaxonomyLangLabelType:
         lang, units_taxonomy.iter_nodes(), "standard_unit"
     )
     # only keep units whose standard_unit is a mass (g) or volume (ml)
-    units_list = [
-        unit for unit in units_list if unit[3][0] in ALLOWED_STANDARD_UNITS
-    ]
+    units_list = [unit for unit in units_list if unit[3][0] in ALLOWED_STANDARD_UNITS]
     # sort by id for predictable order
     units_list.sort(key=lambda x: x[0])
     return units_list
@@ -237,22 +236,89 @@ async def get_units(lang: str, include_synonyms: bool = False) -> list[types.Uni
     ]
 
 
+def _normalize_unit_name(name: str) -> str:
+    """Normalize a unit name for case- and accent-insensitive lookup.
+
+    Lowercases, strips surrounding whitespace, removes accents (e.g. ``"pièce"``
+    -> ``"piece"``) and replaces spaces with ``-`` (so ``"fl oz"`` matches the
+    ``"fl-oz"`` form used in taxonomy slugs).
+    """
+    # decompose accents and drop the combining marks (NFKD + ASCII round-trip)
+    no_accents = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode("ascii")
+    return no_accents.strip().lower().replace(" ", "-")
+
+
+@async_lru_cache(maxsize=200)
+async def _unit_name_to_id(lang: str) -> dict[str, str]:
+    """Cached mapping of normalized unit name -> taxonomy id, for ``lang`` and ``xx``.
+
+    Built only from the units returned by :func:`_get_units_entries` (i.e. mass
+    and volume units). Translations from both the requested ``lang`` (which
+    already falls back to ``xx``/``en`` for missing entries) and the neutral
+    ``xx`` language are merged, so language-neutral abbreviations such as
+    ``"kg"`` (the ``xx`` name of ``xx:kg``) resolve regardless of the requested
+    language.
+
+    Both the canonical label and every synonym are used as keys. On a collision
+    (a name shared by two units) the first-seen unit wins and a warning is logged.
+    """
+    name_to_id: dict[str, str] = {}
+    # merge the requested language and the neutral "xx" language
+    for entries in (await _get_units_entries(lang), await _get_units_entries("xx")):
+        for unit_id, label, synonyms, _ in entries:
+            for translation in (label, *(synonyms or [])):
+                key = _normalize_unit_name(translation)
+                if not key:
+                    continue
+                if key in name_to_id and name_to_id[key] != unit_id:
+                    logger.warning(
+                        "Unit name '%s' maps to both '%s' and '%s'; keeping '%s'.",
+                        translation,
+                        name_to_id[key],
+                        unit_id,
+                        name_to_id[key],
+                    )
+                else:
+                    name_to_id[key] = unit_id
+    return name_to_id
+
+
+async def _resolve_unit_name(name: str, lang: str) -> str | None:
+    """Resolve a localized unit name to its taxonomy id, or ``None`` if unknown.
+
+    Probes the cached name->id mapping built from :func:`_get_units_entries` for
+    ``lang`` (which already merges the neutral ``xx`` language, so abbreviations
+    like ``"kg"`` resolve for any language).
+    """
+    name_to_id = await _unit_name_to_id(lang)
+    return name_to_id.get(_normalize_unit_name(name))
+
+
 async def recompute_quantity(
     quantity_g: float,
     old_value: float,
     old_unit: str,
     new_value: float,
     new_unit: str,
+    lang: str,
 ) -> tuple[float, float, str]:
     """Recompute the quantity in grams after the user edited an ingredient's value/unit.
 
     Given the previous ``(value, unit, grams)`` and the new ``(value, unit)``,
     returns ``(new_quantity_g, new_value, new_unit)``.
 
+    Units may be given either as a taxonomy id (e.g. ``xx:kg``), as a localized
+    unit name (e.g. ``"kg"``) resolved through ``lang`` (and the neutral ``xx``
+    language), or as the ``{types.ITEM_UNIT}`` sentinel for countable ingredients.
+    The ``new_unit`` is only resolved when its conversion factor is actually
+    needed (the unit cancels out in a plain cross-multiplication); ``old_unit``
+    is never resolved and is only compared as-is to detect an unchanged unit.
+
     We do our best to recompute it in a simple manner,
     but some unit conversions will require calling the Open Food Facts parse API
     (not yet implemented).
     """
+    lang = two_letter_lang_code(lang)
     # Case 1: the unit did not change -> cross-multiplication (the unit cancels out).
     if new_unit == old_unit:
         if old_value != 0:
@@ -262,7 +328,7 @@ async def recompute_quantity(
         # that e.g. editing "0 kg" -> "2 kg" still yields 2000 g.
         # TODO: for non-mass units, call the Open Food Facts parse API to
         # recover the quantity in grams.
-        new_quantity_g = await _quantity_from_mass_unit(new_value, new_unit)
+        new_quantity_g = await _quantity_from_mass_unit(new_value, new_unit, lang)
         if new_quantity_g is not None:
             return new_quantity_g, new_value, new_unit
         raise exceptions.UnitConversionNotSupportedError(
@@ -278,7 +344,7 @@ async def recompute_quantity(
         )
 
     # Case 2: the new unit is a mass unit with a conversion factor.
-    new_quantity_g = await _quantity_from_mass_unit(new_value, new_unit)
+    new_quantity_g = await _quantity_from_mass_unit(new_value, new_unit, lang)
     if new_quantity_g is not None:
         return new_quantity_g, new_value, new_unit
 
@@ -289,32 +355,45 @@ async def recompute_quantity(
     )
 
 
-async def _quantity_from_mass_unit(value: float, unit_id: str) -> float | None:
+async def _quantity_from_mass_unit(value: float, unit_id: str, lang: str) -> float | None:
     f"""Compute the quantity in grams for a mass unit, or ``None`` if not a mass unit.
 
     Returns ``value * conversion_factor`` when ``unit_id`` is a taxonomy unit whose
     ``standard_unit`` is ``"g"`` and that defines a ``conversion_factor``.
     Returns ``None`` for the ``{types.ITEM_UNIT}`` sentinel or any non-mass (e.g. volume) unit.
 
+    ``unit_id`` may be a taxonomy id or a localized unit name; names are resolved
+    to their taxonomy id using ``lang`` (and the neutral ``xx`` language).
+
     :raises exceptions.UnknownUnitError: if ``unit_id`` is not in the units taxonomy
-        and is not the ``{types.ITEM_UNIT}`` sentinel.
+        (neither a known id nor a resolvable name) and is not the ``{types.ITEM_UNIT}``
+        sentinel.
     """
     if unit_id == types.ITEM_UNIT:
         return None
-    standard_unit, conversion_factor = await _unit_conversion(unit_id)
+    standard_unit, conversion_factor = await _unit_conversion(unit_id, lang)
     if standard_unit == "g" and conversion_factor is not None:
         return value * conversion_factor
     return None
 
 
-async def _unit_conversion(unit_id: str) -> tuple[str | None, float | None]:
+async def _unit_conversion(unit_id: str, lang: str) -> tuple[str | None, float | None]:
     """Look up a unit's ``standard_unit`` and ``conversion_factor`` in the OFF taxonomy.
 
-    :raises exceptions.UnknownUnitError: if ``unit_id`` is not in the units taxonomy.
+    ``unit_id`` may be a taxonomy id (e.g. ``xx:kg``) or a localized unit name
+    (e.g. ``"kg"``); names are resolved to their taxonomy id using ``lang`` (and
+    the neutral ``xx`` language) before the lookup.
+
+    :raises exceptions.UnknownUnitError: if ``unit_id`` is neither a known taxonomy
+        id nor a resolvable unit name.
     """
     units_taxonomy = await off.get_units_taxonomy()
     if unit_id not in units_taxonomy:
-        raise exceptions.UnknownUnitError(f"Unit '{unit_id}' is not a known unit.")
+        # not a taxonomy id: try to resolve it as a localized unit name
+        resolved = await _resolve_unit_name(unit_id, lang)
+        if resolved is None:
+            raise exceptions.UnknownUnitError(f"Unit '{unit_id}' is not a known unit.")
+        unit_id = resolved
     node = units_taxonomy[unit_id]
     standard_unit = off._property_value(node, "standard_unit")
     factor_raw = off._property_value(node, "conversion_factor")

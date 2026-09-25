@@ -224,7 +224,10 @@ export interface paths {
 		 *     while keeping the equivalent "g" conversion for green-score computation.
 		 *
 		 *     A best effort is done to also allow changing the unit,
-		 *     but currently, only new units that can be converted to grams are supported
+		 *     but currently, only new units that can be converted to grams are supported.
+		 *
+		 *     Units may be given as a taxonomy id, a localized unit name (resolved using
+		 *     ``lang``) or the ``item`` sentinel for countable ingredients.
 		 */
 		post: operations['recompute_quantity_v1_recompute_quantity_post'];
 		delete?: never;
@@ -706,12 +709,18 @@ export interface components {
 		 * RecomputeQuantityRequest
 		 * @description Request body for the ``POST /v1/recompute-quantity`` endpoint.
 		 *
-		 *     ``unit`` is either a unit id from the OFF units taxonomy (e.g. ``xx:kg``)
-		 *     or the ``{ITEM_UNIT}`` sentinel for countable ingredients (e.g. "1 egg").
+		 *     Each unit (``old_unit`` / ``new_unit``) may be given either as a unit id
+		 *     from the OFF units taxonomy (e.g. ``xx:kg``), as a localized unit name
+		 *     resolvable through the units taxonomy (e.g. ``"kg"``, ``"tasse"``), or as
+		 *     the ``{ITEM_UNIT}`` sentinel for countable ingredients (e.g. "1 egg").
+		 *
+		 *     Unit names are resolved to their taxonomy id using ``lang`` (and the
+		 *     neutral ``xx`` language as a fallback).
 		 * @example {
-		 *       "new_unit": "xx:kg",
+		 *       "lang": "en",
+		 *       "new_unit": "kg",
 		 *       "new_value": 2,
-		 *       "old_unit": "xx:g",
+		 *       "old_unit": "g",
 		 *       "old_value": 2000,
 		 *       "quantity_g": 2000
 		 *     }
@@ -729,7 +738,7 @@ export interface components {
 			oldValue: number;
 			/**
 			 * Oldunit
-			 * @description Previous unit (taxonomy id or 'item')
+			 * @description Previous unit (unit name, taxonomy id or 'item')
 			 */
 			oldUnit: string;
 			/**
@@ -739,16 +748,24 @@ export interface components {
 			newValue: number;
 			/**
 			 * Newunit
-			 * @description New unit (taxonomy id or 'item')
+			 * @description New unit (unit name, taxonomy id or 'item')
 			 */
 			newUnit: string;
+			/**
+			 * Lang
+			 * @description Language code (2 or 5 letters) used to resolve unit names to their taxonomy id. Validated against the OFF languages taxonomy.
+			 */
+			lang: string;
 		};
 		/**
 		 * RecomputeQuantityResponse
 		 * @description Response model for the ``POST /v1/recompute-quantity`` endpoint.
+		 *
+		 *     The ``unit`` field echoes the ``new_unit`` sent in the request (it may be a
+		 *     unit name, a taxonomy id or ``{ITEM_UNIT}``).
 		 * @example {
 		 *       "quantity_g": 2000,
-		 *       "unit": "xx:kg",
+		 *       "unit": "kg",
 		 *       "value": 2
 		 *     }
 		 */
@@ -765,7 +782,7 @@ export interface components {
 			value: number;
 			/**
 			 * Unit
-			 * @description New unit (taxonomy id or 'item')
+			 * @description New unit, echoed from the request (unit name, taxonomy id or 'item')
 			 */
 			unit: string;
 		};

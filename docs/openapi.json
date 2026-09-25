@@ -462,7 +462,7 @@
     "/v1/recompute-quantity": {
       "post": {
         "summary": "Recompute Quantity",
-        "description": "Recompute the quantity in grams after the user edited an ingredient's value/unit.\n\nThis is useful to let user change the value of a recipe item in a natural fashion\n(eg. change 1 egg to 3 eggs)\nwhile keeping the equivalent \"g\" conversion for green-score computation.\n\nA best effort is done to also allow changing the unit,\nbut currently, only new units that can be converted to grams are supported",
+        "description": "Recompute the quantity in grams after the user edited an ingredient's value/unit.\n\nThis is useful to let user change the value of a recipe item in a natural fashion\n(eg. change 1 egg to 3 eggs)\nwhile keeping the equivalent \"g\" conversion for green-score computation.\n\nA best effort is done to also allow changing the unit,\nbut currently, only new units that can be converted to grams are supported.\n\nUnits may be given as a taxonomy id, a localized unit name (resolved using\n``lang``) or the ``item`` sentinel for countable ingredients.",
         "operationId": "recompute_quantity_v1_recompute_quantity_post",
         "requestBody": {
           "content": {
@@ -1247,7 +1247,7 @@
           "oldUnit": {
             "type": "string",
             "title": "Oldunit",
-            "description": "Previous unit (taxonomy id or 'item')"
+            "description": "Previous unit (unit name, taxonomy id or 'item')"
           },
           "newValue": {
             "type": "number",
@@ -1258,7 +1258,12 @@
           "newUnit": {
             "type": "string",
             "title": "Newunit",
-            "description": "New unit (taxonomy id or 'item')"
+            "description": "New unit (unit name, taxonomy id or 'item')"
+          },
+          "lang": {
+            "type": "string",
+            "title": "Lang",
+            "description": "Language code (2 or 5 letters) used to resolve unit names to their taxonomy id. Validated against the OFF languages taxonomy."
           }
         },
         "type": "object",
@@ -1267,15 +1272,17 @@
           "oldValue",
           "oldUnit",
           "newValue",
-          "newUnit"
+          "newUnit",
+          "lang"
         ],
         "title": "RecomputeQuantityRequest",
-        "description": "Request body for the ``POST /v1/recompute-quantity`` endpoint.\n\n``unit`` is either a unit id from the OFF units taxonomy (e.g. ``xx:kg``)\nor the ``{ITEM_UNIT}`` sentinel for countable ingredients (e.g. \"1 egg\").",
+        "description": "Request body for the ``POST /v1/recompute-quantity`` endpoint.\n\nEach unit (``old_unit`` / ``new_unit``) may be given either as a unit id\nfrom the OFF units taxonomy (e.g. ``xx:kg``), as a localized unit name\nresolvable through the units taxonomy (e.g. ``\"kg\"``, ``\"tasse\"``), or as\nthe ``{ITEM_UNIT}`` sentinel for countable ingredients (e.g. \"1 egg\").\n\nUnit names are resolved to their taxonomy id using ``lang`` (and the\nneutral ``xx`` language as a fallback).",
         "examples": [
           {
-            "new_unit": "xx:kg",
+            "lang": "en",
+            "new_unit": "kg",
             "new_value": 2,
-            "old_unit": "xx:g",
+            "old_unit": "g",
             "old_value": 2000,
             "quantity_g": 2000
           }
@@ -1296,7 +1303,7 @@
           "unit": {
             "type": "string",
             "title": "Unit",
-            "description": "New unit (taxonomy id or 'item')"
+            "description": "New unit, echoed from the request (unit name, taxonomy id or 'item')"
           }
         },
         "type": "object",
@@ -1306,11 +1313,11 @@
           "unit"
         ],
         "title": "RecomputeQuantityResponse",
-        "description": "Response model for the ``POST /v1/recompute-quantity`` endpoint.",
+        "description": "Response model for the ``POST /v1/recompute-quantity`` endpoint.\n\nThe ``unit`` field echoes the ``new_unit`` sent in the request (it may be a\nunit name, a taxonomy id or ``{ITEM_UNIT}``).",
         "examples": [
           {
             "quantity_g": 2000,
-            "unit": "xx:kg",
+            "unit": "kg",
             "value": 2
           }
         ]

@@ -58,6 +58,7 @@ async def parse_text(request: types.RecipeParseRequest) -> types.RecipeParseResp
 
 
 @app.get("/v1/origins", response_model_exclude_none=True)
+@types.async_validate_model
 async def get_origins(
     filter_query: Annotated[types.OriginsRequest, Query()], response: Response
 ) -> types.OriginsResponse:
@@ -71,6 +72,7 @@ async def get_origins(
 
 
 @app.get("/v1/labels", response_model_exclude_none=True)
+@types.async_validate_model
 async def get_labels(
     filter_query: Annotated[types.LabelsRequest, Query()], response: Response
 ) -> types.LabelsResponse:
@@ -81,6 +83,7 @@ async def get_labels(
 
 
 @app.get("/v1/countries", response_model_exclude_none=True)
+@types.async_validate_model
 async def get_countries(
     filter_query: Annotated[types.CountriesRequest, Query()], response: Response
 ) -> types.CountriesResponse:
@@ -91,6 +94,7 @@ async def get_countries(
 
 
 @app.get("/v1/ingredients", response_model_exclude_none=True)
+@types.async_validate_model
 async def get_ingredients(
     filter_query: Annotated[types.IngredientsRequest, Query()], response: Response
 ) -> types.IngredientsResponse:
@@ -101,6 +105,7 @@ async def get_ingredients(
 
 
 @app.get("/v1/units", response_model_exclude_none=True)
+@types.async_validate_model
 async def get_units(
     filter_query: Annotated[types.UnitsRequest, Query()], response: Response
 ) -> types.UnitsResponse:
@@ -114,6 +119,7 @@ async def get_units(
 
 
 @app.get("/v1/suggest-scored-ingredient", response_model_exclude_none=True)
+@types.async_validate_model
 async def suggest_scored_ingredient(
     filter_query: Annotated[types.SuggestScoredIngredientRequest, Query()], response: Response
 ) -> types.SuggestScoredIngredientResponse:
@@ -131,6 +137,7 @@ async def suggest_scored_ingredient(
 
 
 @app.post("/v1/green-score")
+@types.async_validate_model
 async def green_score(request: types.GreenScoreRequest) -> types.GreenScoreResponse:
     """Compute the green-score of a recipe given as a list of ingredients."""
     return await score.compute_green_score(
@@ -141,6 +148,7 @@ async def green_score(request: types.GreenScoreRequest) -> types.GreenScoreRespo
 
 
 @app.post("/v1/recompute-quantity")
+@types.async_validate_model
 async def recompute_quantity(
     request: types.RecomputeQuantityRequest,
 ) -> types.RecomputeQuantityResponse:
@@ -151,7 +159,10 @@ async def recompute_quantity(
     while keeping the equivalent "g" conversion for green-score computation.
 
     A best effort is done to also allow changing the unit,
-    but currently, only new units that can be converted to grams are supported
+    but currently, only new units that can be converted to grams are supported.
+
+    Units may be given as a taxonomy id, a localized unit name (resolved using
+    ``lang``) or the ``item`` sentinel for countable ingredients.
     """
     try:
         quantity_g, value, unit = await recipes.recompute_quantity(
@@ -160,6 +171,7 @@ async def recompute_quantity(
             request.old_unit,
             request.new_value,
             request.new_unit,
+            request.lang,
         )
     except exceptions.UnknownUnitError as exc:
         raise HTTPException(status_code=422, detail=str(exc))
