@@ -33,19 +33,155 @@ async def _get_units_entries(lang: str) -> off.TaxonomyLangLabelType:
     return units_list
 
 
-async def get_units(lang: str, include_synonyms: bool = False) -> list[types.Unit]:
-    """Get the list of units available in the Open Food Facts units taxonomy"""
+async def get_units(
+    lang: str,
+    include_synonyms: bool = False,
+    compatible_with_unit: str | None = None,
+    ingredient_id: str | None = None,
+) -> list[types.Unit]:
+    """Get the list of units available in the Open Food Facts units taxonomy.
+
+    When ``compatible_with_unit`` is provided, only the units compatible with
+    that source unit are returned, plus the synthetic ``item`` unit when it is
+    a compatible target (see :func:`_is_item_compatible`).
+
+    The source unit may be given as a taxonomy id (e.g. ``xx:kg``), a localized
+    unit name resolved through ``lang`` (and the neutral ``xx`` language), or
+    the ``item`` sentinel for countable ingredients.
+
+    :raises exceptions.UnknownUnitError: if ``compatible_with_unit`` cannot be
+        resolved, or resolves to a unit whose standard_unit is neither ``"g"``
+        nor ``"ml"``.
+    :raises exceptions.UnknownIngredientError: if ``ingredient_id`` is provided
+        but not found in the ingredients taxonomy.
+    """
     lang = two_letter_lang_code(lang)
     _units = await _get_units_entries(lang)
-    return [
-        types.Unit(
-            id=unit_id,
-            label=unit_label,
-            synonyms=unit_synonyms if include_synonyms else None,
-            standard_unit=standard_unit,
+
+    # No filtering: return all g/ml taxonomy units (today's behavior).
+    if compatible_with_unit is None:
+        return [
+            types.Unit(
+                id=unit_id,
+                label=unit_label,
+                synonyms=unit_synonyms if include_synonyms else None,
+                standard_unit=standard_unit,
+            )
+            for unit_id, unit_label, unit_synonyms, (standard_unit,) in _units
+        ]
+
+    # Filtering mode: resolve the source unit's standard_unit.
+    # Raises UnknownUnitError if the source unit is unknown or not a mass/volume unit.
+    source_standard_unit = await _resolve_source_standard_unit(compatible_with_unit, lang)
+
+    # Validate the ingredient and read its average_weight_per_unit (if provided).
+    # Raises UnknownIngredientError if the ingredient is not in the taxonomy.
+    ingredient_avg_weight = (
+        await _ingredient_average_weight_per_unit(ingredient_id)
+        if ingredient_id is not None
+        else None
+    )
+
+    # Build the filtered list of taxonomy units + the synthetic 'item' unit.
+    result = []
+    for unit_id, unit_label, unit_synonyms, (standard_unit,) in _units:
+        if _is_target_compatible(standard_unit, source_standard_unit):
+            result.append(
+                types.Unit(
+                    id=unit_id,
+                    label=unit_label,
+                    synonyms=unit_synonyms if include_synonyms else None,
+                    standard_unit=standard_unit,
+                )
+            )
+
+    # Add the synthetic 'item' unit when it is a compatible target.
+    if _is_item_compatible(compatible_with_unit, ingredient_avg_weight):
+        result.append(
+            types.Unit(
+                id=types.ITEM_UNIT,
+                label=types.ITEM_UNIT,
+                synonyms=[] if include_synonyms else None,
+                standard_unit=None,
+            )
         )
-        for unit_id, unit_label, unit_synonyms, (standard_unit,) in _units
-    ]
+
+    # Keep units sorted by id (the synthetic 'item' sorts alphabetically).
+    result.sort(key=lambda u: u.id)
+    return result
+
+
+async_lru_cache(maxsize=200)
+async def _resolve_source_standard_unit(source_unit: str, lang: str) -> str | None:
+    """Resolve a source unit to its standard_unit for compatibility filtering.
+
+    Returns ``None`` for the ``item`` sentinel (which has no standard_unit).
+
+    :raises exceptions.UnknownUnitError: if the unit is unknown, or if it resolves
+        to a unit whose standard_unit is neither ``"g"`` nor ``"ml"``.
+    """
+    if source_unit == types.ITEM_UNIT:
+        return None
+    standard_unit, _ = await _unit_conversion(source_unit, lang)
+    if standard_unit not in ALLOWED_STANDARD_UNITS:
+        raise exceptions.UnknownUnitError(
+            f"Unit '{source_unit}' (standard_unit '{standard_unit}') "
+            "is not a mass or volume unit."
+        )
+    return standard_unit
+
+
+@async_lru_cache(maxsize=200)
+async def _ingredient_average_weight_per_unit(ingredient_id: str) -> float | None:
+    """Read the ``average_weight_per_unit`` property of an ingredient.
+
+    Returns the value as a positive float, or ``None`` when the property is
+    absent or does not parse to a positive number.
+
+    :raises exceptions.UnknownIngredientError: if ``ingredient_id`` is not in
+        the ingredients taxonomy.
+    """
+    ingredients_taxonomy = await off.get_ingredients_taxonomy()
+    if ingredient_id not in ingredients_taxonomy:
+        raise exceptions.UnknownIngredientError(
+            f"Ingredient '{ingredient_id}' is not a known ingredient."
+        )
+    node = ingredients_taxonomy[ingredient_id]
+    raw = off._property_value(node, "average_weight_per_unit")
+    if raw is None:
+        return None
+    try:
+        value = float(raw)
+    except (ValueError, TypeError):
+        return None
+    return value if value > 0 else None
+
+
+def _is_target_compatible(
+    target_standard_unit: str, source_standard_unit: str | None
+) -> bool:
+    """Check if a taxonomy target unit (g or ml) is compatible with the source unit.
+
+    Compatibility rules:
+    * all ``g`` units are compatible with any source unit;
+    * a target unit sharing the source unit's standard_unit is compatible.
+    """
+    # Rule 1: all 'g' units are compatible with any source unit.
+    if target_standard_unit == "g":
+        return True
+    # Rule 3: same standard_unit as the source.
+    return target_standard_unit == source_standard_unit
+
+
+def _is_item_compatible(source_unit: str, ingredient_avg_weight: float | None) -> bool:
+    """Determine if the synthetic ``item`` target unit is a compatible target.
+
+    Compatible when the source unit is itself ``item``, or when an ingredient
+    ``average_weight_per_unit`` was successfully resolved to a positive number.
+    """
+    if source_unit == types.ITEM_UNIT:
+        return True
+    return ingredient_avg_weight is not None and ingredient_avg_weight > 0
 
 
 def _normalize_unit_name(name: str) -> str:
@@ -106,6 +242,56 @@ async def _resolve_unit_name(name: str, lang: str) -> str | None:
     """
     name_to_id = await _unit_name_to_id(lang)
     return name_to_id.get(_normalize_unit_name(name))
+
+
+async def resolve_unit_to_taxonomy_item(
+    unit_name: str | None, lang: str
+) -> types.TaxonomyItem:
+    """Resolve a raw unit string (as parsed from a recipe) into a TaxonomyItem.
+
+    Used to turn the ``quantity`` unit extracted from the recipe text into the
+    structured ``TaxonomyItem`` stored on :class:`types.RecipeIngredient`,
+    consistent with how origins and labels are resolved.
+
+    Resolution order:
+
+    * ``None`` or blank -> the synthetic ``item`` unit
+      ``{id: ITEM_UNIT, label: ITEM_UNIT, is_in_taxonomy: True}``, the unit
+      used for countable ingredients (e.g. "3 eggs") that have no measurable
+      mass/volume unit.
+    * a known taxonomy id (e.g. ``xx:kg``) or a localized unit name resolvable
+      through ``lang`` (e.g. ``"kg"``, ``"tasse"``) -> ``{id, label, True}``
+      with the label localized in ``lang``.
+    * an unresolvable unit string -> a free-text entry
+      ``{id: None, label: <raw>, is_in_taxonomy: False}`` so the user still
+      sees what was parsed.
+
+    :param unit_name: the raw unit string from the parser, or ``None``.
+    :param lang: the language code used to resolve names and localize labels.
+    """
+    lang = two_letter_lang_code(lang)
+    # No unit: countable ingredient.
+    if not unit_name or not unit_name.strip():
+        return types.TaxonomyItem(
+            id=types.ITEM_UNIT, label=types.ITEM_UNIT, is_in_taxonomy=True
+        )
+    unit_name = unit_name.strip()
+    # Build an id -> localized label map from the units list for this language.
+    units_entries = await _get_units_entries(lang)
+    id_to_label = {unit_id: unit_label for unit_id, unit_label, _, _ in units_entries}
+    # Try resolving as a taxonomy id first.
+    if unit_name in id_to_label:
+        return types.TaxonomyItem(
+            id=unit_name, label=id_to_label[unit_name], is_in_taxonomy=True
+        )
+    # Then try resolving as a localized unit name (label or synonym).
+    resolved_id = await _resolve_unit_name(unit_name, lang)
+    if resolved_id is not None:
+        return types.TaxonomyItem(
+            id=resolved_id, label=id_to_label[resolved_id], is_in_taxonomy=True
+        )
+    # Unresolvable: keep as a free-text entry so the user still sees the value.
+    return types.TaxonomyItem(id=None, label=unit_name, is_in_taxonomy=False)
 
 
 async def recompute_quantity(

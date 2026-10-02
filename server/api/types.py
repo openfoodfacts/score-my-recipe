@@ -145,7 +145,7 @@ class RecipeIngredient(BaseModel):
                     "origins": {"id": "en:france", "label": "France", "isInTaxonomy": True},
                     "labels": [{"id": "en:organic", "label": "Organic", "isInTaxonomy": True}],
                     "quantity_value": 0.15,
-                    "quantity_unit": "kg",
+                    "quantity_unit": {"id": "xx:kg", "label": "kilogram", "isInTaxonomy": True},
                 }
             ]
         }
@@ -164,7 +164,15 @@ class RecipeIngredient(BaseModel):
     quantity_value: Annotated[
         Optional[float], Field(description="Numeric value of the quantity")
     ] = None
-    quantity_unit: Annotated[Optional[str], Field(description="Unit of the quantity")] = None
+    quantity_unit: Annotated[
+        Optional[TaxonomyItem],
+        Field(
+            description="Unit of the quantity, as a TaxonomyItem. "
+            "Resolved from the parsed unit string through the units taxonomy "
+            f"(a free-text entry when unresolvable, or the '{ITEM_UNIT}' "
+            "sentinel for countable ingredients with no unit)."
+        ),
+    ] = None
     notes: Annotated[Optional[list[str]], Field(description="Notes about the ingredient")] = None
 
 
@@ -444,9 +452,49 @@ class Unit(SuggestedTaxonomyItem):
 
 class UnitsRequest(TaxonomyRequest):
     model_config = ConfigDict(
-        json_schema_extra={"examples": [{"lang": "en", "include_synonyms": False}]}
+        json_schema_extra={
+            "examples": [
+                {"lang": "en", "include_synonyms": False},
+                {
+                    "lang": "en",
+                    "include_synonyms": False,
+                    "compatible_with_unit": "ml",
+                    "ingredient_id": "en:egg",
+                },
+            ]
+        }
     )
-    pass
+
+    compatible_with_unit: Annotated[
+        Optional[str],
+        Field(
+            default=None,
+            description="If provided, only return the units compatible with this "
+            "source unit (a unit id, a localized unit name, or the 'item' sentinel).",
+        ),
+    ] = None
+    ingredient_id: Annotated[
+        Optional[str],
+        Field(
+            default=None,
+            description="Taxonomy id of an ingredient, used together with "
+            "compatible_with_unit to determine if the 'item' unit is a compatible "
+            "target (when the ingredient defines a positive average_weight_per_unit).",
+        ),
+    ] = None
+
+    @model_validator(mode="after")
+    def _enforce_ingredient_requires_source(self) -> "UnitsRequest":
+        """An ingredient_id is only meaningful together with a source unit.
+
+        Without compatible_with_unit there is no compatibility filtering to
+        apply, so providing an ingredient alone is a client error.
+        """
+        if self.ingredient_id is not None and self.compatible_with_unit is None:
+            raise ValueError(
+                "ingredient_id can only be provided together with compatible_with_unit."
+            )
+        return self
 
 
 class UnitsResponse(BaseModel):
