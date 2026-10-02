@@ -133,8 +133,19 @@
 			tagtype="ingredients"
 			id="ingredient-codified-{ingredient.id}"
 			tags={ingredient.codifiedIngredient ? [ingredient.codifiedIngredient] : []}
-			onChange={(newTags) => {
-				ingredient.codifiedIngredient = newTags[0] ?? null;
+						onChange={(newTags) => {
+				const tag = newTags[0] ?? null;
+				ingredient.codifiedIngredient = tag;
+				
+				// Reset or Prefill based on the new ingredient
+				if (tag) {
+					const suggestion = tag as IngredientSuggestion;
+					ingredient.isFreshPlant = suggestion.is_fresh_plant === true;
+					ingredient.isInSeason = suggestion.seasonality === 'in_season';
+				} else {
+					ingredient.isFreshPlant = false;
+					ingredient.isInSeason = false;
+				}
 			}}
 			single={true}
 			invalid={isMissing}

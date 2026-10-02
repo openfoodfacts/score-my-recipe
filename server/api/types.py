@@ -393,6 +393,8 @@ class SuggestedIngredient(Ingredient):
             "green-score computation."
         ),
     ]
+    is_fresh_plant: bool | None = None
+    seasonality: str | None = None
 
 
 class IngredientsRequest(TaxonomyRequest):
