@@ -232,12 +232,13 @@
 			single={true}
 			minChars={0}
 			formatLabel={formatUnitLabel}
+			selectListClasses="min-w-48"
 		/>
 	</div>
 
-	<!-- Grams (read-only, frozen except for the gram unit) -->
+	<!-- Grams (non-editable display, frozen except for the gram unit) -->
 	<div class="flex w-20 flex-col">
-		<label class="label py-1" for="ingredient-grams-{ingredient.id}">
+		<label class="label py-1">
 			<span class="flex items-center gap-1.5">
 				<span class="label-text text-xs" class:text-error={isZeroWeight}
 					>{$_('recipe.grams', { default: 'Grams' })}</span
@@ -275,15 +276,14 @@
 				{/if}
 			</span>
 		</label>
-		<input
+		<div
 			id="ingredient-grams-{ingredient.id}"
-			type="number"
-			class="input input-bordered w-full"
-			class:input-error={isZeroWeight}
-			value={ingredient.weight ?? 0}
-			readonly
-			placeholder="0"
-		/>
+			class="flex h-10 w-full items-center text-sm {isZeroWeight
+				? 'text-error'
+				: 'text-base-content/70'}"
+		>
+			{ingredient.weight ?? 0}
+		</div>
 	</div>
 
 	<!-- Labels -->

@@ -48,6 +48,12 @@
 		// selected tags and autocomplete suggestions. Used to substitute the label
 		// of the synthetic 'item' unit with the ingredient name at render time.
 		formatLabel?: (tag: TaxonomyItem) => string;
+		// Classes applied to the autocomplete dropdown (suggestion list)
+		// container, so its width can be decoupled from the widget width. Defaults
+		// to `w-full` (matches the widget). For narrow widgets such as the unit
+		// selector, pass a wider/explicit width (e.g. `min-w-48`) so the
+		// suggestion labels stay fully readable.
+		selectListClasses?: string;
 	};
 
 	type Suggestion = {
@@ -63,7 +69,8 @@
 		suggestionIcon,
 		invalid = false,
 		minChars = 3,
-		formatLabel = (tag: TaxonomyItem) => tag.label
+		formatLabel = (tag: TaxonomyItem) => tag.label,
+		selectListClasses = 'w-full'
 	}: Props = $props();
 
 	// Border treatment mirrors the focus state: red when invalid, otherwise the
@@ -385,7 +392,7 @@
 {#snippet autocompleteDropdown()}
 	{#if currentSuggestions.length > 0}
 		<div
-			class="dropdown-content bg-base-100 z-100 mt-1 w-full rounded-md shadow-lg focus:outline-none"
+			class="dropdown-content bg-base-100 z-100 mt-1 rounded-md shadow-lg focus:outline-none {selectListClasses}"
 		>
 			<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 			<ul tabindex="0" class="divide-base-200 divide-y">
