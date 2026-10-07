@@ -12,14 +12,17 @@ Initially taken from https://github.com/sinnwerkstatt/sveltekit-matomo
 	import { onMount, onDestroy } from 'svelte';
 	import { get } from 'svelte/store';
 
+	import { dev } from '$app/environment';
 	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
+	import { env } from '$env/dynamic/public';
 
 	import { tracker, type Tracker } from './tracker';
 
 	interface Props {
-		url: string;
-		siteId: number;
+		url?: string;
+		siteId?: number;
+		enabled?: boolean;
 		disableCookies?: boolean;
 		requireConsent?: boolean;
 		doNotTrack?: boolean;
@@ -32,8 +35,9 @@ Initially taken from https://github.com/sinnwerkstatt/sveltekit-matomo
 	}
 
 	let {
-		url,
-		siteId,
+		url = '',
+		siteId = 0,
+		enabled = !dev || env.PUBLIC_MATOMO_ENABLE_DEV === 'true',
 		disableCookies = false,
 		requireConsent = false,
 		doNotTrack = false,
@@ -45,18 +49,19 @@ Initially taken from https://github.com/sinnwerkstatt/sveltekit-matomo
 		onError
 	}: Props = $props();
 
-	let checkInterval: ReturnType<typeof setInterval> | null = null;
 	let scriptElement = $state<HTMLScriptElement | null>(null);
 	let scriptLoadError = $state(false);
+	let isInitialized = false;
 
 	const cleanUrl = $derived(url ? url.replace(/\/+$/, '') : '');
+	const isConfigured = $derived(Boolean(enabled && cleanUrl && siteId && siteId > 0));
 
 	function isMatomoLoaded(): boolean {
 		return typeof window !== 'undefined' && 'Matomo' in window && window.Matomo !== undefined;
 	}
 
-	async function initializeMatomo() {
-		if (!cleanUrl || !siteId || !isMatomoLoaded()) {
+	function initializeMatomo() {
+		if (isInitialized || !isConfigured || !isMatomoLoaded()) {
 			return;
 		}
 
@@ -84,6 +89,7 @@ Initially taken from https://github.com/sinnwerkstatt/sveltekit-matomo
 
 			track.setCustomUrl(page.url.href);
 			track.trackPageView();
+			isInitialized = true;
 		} catch (error) {
 			const err = error instanceof Error ? error : new Error(String(error));
 			if (onError) {
@@ -94,6 +100,10 @@ Initially taken from https://github.com/sinnwerkstatt/sveltekit-matomo
 		}
 	}
 
+	function handleScriptLoad() {
+		initializeMatomo();
+	}
+
 	function handleScriptError() {
 		scriptLoadError = true;
 		const error = new Error('Failed to load Matomo script');
@@ -102,63 +112,41 @@ Initially taken from https://github.com/sinnwerkstatt/sveltekit-matomo
 		} else {
 			console.error(error);
 		}
-		if (checkInterval) {
-			clearInterval(checkInterval);
-			checkInterval = null;
-		}
 	}
 
 	onMount(() => {
-		if (!cleanUrl || !siteId || scriptLoadError) return;
+		if (!isConfigured || scriptLoadError) return;
 
-		// Check if Matomo is already loaded (e.g., from cache)
+		// Check if Matomo is already loaded (e.g., from cache or loaded before onMount)
 		if (isMatomoLoaded()) {
 			initializeMatomo();
 			return;
 		}
 
-		// Poll for Matomo to be loaded
-		let attempts = 0;
-		const maxAttempts = 100; // 5 seconds with 50ms intervals
-
-		checkInterval = setInterval(() => {
-			attempts++;
-
-			if (isMatomoLoaded()) {
-				if (checkInterval) {
-					clearInterval(checkInterval);
-					checkInterval = null;
-				}
-				initializeMatomo();
-			} else if (attempts >= maxAttempts) {
-				if (checkInterval) {
-					clearInterval(checkInterval);
-					checkInterval = null;
-				}
-				handleScriptError();
-			}
-		}, 50);
+		if (scriptElement) {
+			scriptElement.addEventListener('load', handleScriptLoad);
+			scriptElement.addEventListener('error', handleScriptError);
+		}
 	});
 
 	onDestroy(() => {
-		if (checkInterval) {
-			clearInterval(checkInterval);
-			checkInterval = null;
-		}
 		if (scriptElement) {
+			scriptElement.removeEventListener('load', handleScriptLoad);
 			scriptElement.removeEventListener('error', handleScriptError);
 			scriptElement = null;
 		}
+		tracker.set(undefined);
+		isInitialized = false;
 	});
 
-	afterNavigate(async ({ to }) => {
-		if (!cleanUrl || !siteId) return;
+	afterNavigate(async ({ from, to }) => {
+		if (!isConfigured) return;
+
+		// Initial navigation is handled by initializeMatomo()
+		if (!from) return;
 
 		const currentTracker = get(tracker);
-		if (!currentTracker) {
-			await initializeMatomo();
-			return;
-		}
+		if (!currentTracker) return;
 
 		if (to?.url.href) {
 			try {
@@ -177,11 +165,12 @@ Initially taken from https://github.com/sinnwerkstatt/sveltekit-matomo
 </script>
 
 <svelte:head>
-	{#if cleanUrl && siteId}
+	{#if isConfigured}
 		<script
 			async
 			defer
 			src={`${cleanUrl}/matomo.js`}
+			onload={handleScriptLoad}
 			onerror={handleScriptError}
 			bind:this={scriptElement}
 		></script>
