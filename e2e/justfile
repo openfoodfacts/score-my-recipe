@@ -1,3 +1,15 @@
+# e2e commands (Playwright integration tests)
+
+# prefer bash
+set shell := ["bash", "-uc"]
+
+# Set up nvm (uses e2e/.nvmrc) — mirrors the frontend's local-nvm.sh
+use_nvm := "export NVM_DIR=\"${NVM_DIR:-$HOME/.nvm}\"; [ -s \"$NVM_DIR/nvm.sh\" ] && . \"$NVM_DIR/nvm.sh\"; [ -e ../frontend/local-nvm.sh ] && . ../frontend/local-nvm.sh; nvm use"
+
+# this help
+[default]
+help:
+    @just --list
 
 # ===========================================
 # End to end testing (e2e)
@@ -26,6 +38,23 @@ test:
 install_and_test:
     @just install
     @just test
+
+# ===========================================
+# QUALITY
+# ===========================================
+
+# Lint (auto-format with prettier)
+[group('quality')]
+lint:
+    {{ use_nvm }} && pnpm format
+
+# Quality checks (type-check + lint check)
+[group('quality')]
+check:
+    @echo "pnpm check ======================================"
+    {{ use_nvm }} && pnpm check
+    @echo "pnpm lint ======================================"
+    {{ use_nvm }} && pnpm lint
 
 [group('quality')]
 refresh_test_data: refresh_test_taxonomy refresh_api_data

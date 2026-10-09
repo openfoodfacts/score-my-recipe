@@ -28,6 +28,7 @@ From the repo root:
 ```bash
 just e2e
 ```
+
 (or `just test` in this folder)
 
 This installs e2e deps + Chromium (if needed) and runs the tests.
@@ -56,9 +57,11 @@ new score is correct.
 
 ```
 e2e/
-├── playwright.config.ts   # Playwright config (webServer, Chromium project)
-├── start-servers.sh        # Launches backend (8800) + frontend (5174)
+├── eslint.config.mjs        # ESLint flat config (TypeScript)
+├── playwright.config.ts     # Playwright config (webServer, Chromium project)
+├── start-servers.sh         # Launches backend (8800) + frontend (5174)
 ├── tests/
-│   └── recipe-score.spec.ts  # the integration test
+│   └── recipe-score.spec.ts # the integration test
+├── tsconfig.json            # TypeScript config (type-checking)
 └── package.json
 ```

@@ -81,6 +81,9 @@ lint:
     @echo "::group::Frontend lint"
     {{ just_frontend }} lint
     @echo "::endgroup::"
+    @echo "::group::E2E lint"
+    {{ just_e2e }} lint
+    @echo "::endgroup::"
 
 # Quality Checks
 [group('quality')]
@@ -90,6 +93,9 @@ check:
     @echo "::endgroup::"
     @echo "::group::Frontend check"
     {{ just_frontend }} check
+    @echo "::endgroup::"
+    @echo "::group::E2E check"
+    {{ just_e2e }} check
     @echo "::endgroup::"
     @echo "::group::openapi check"
     @just check-openapi
