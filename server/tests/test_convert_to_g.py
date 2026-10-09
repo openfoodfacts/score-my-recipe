@@ -12,7 +12,6 @@ from fastapi.testclient import TestClient
 from api.api import app
 from api import units
 from api import exceptions
-from api import types
 
 from tests.helpers import (
     create_taxonomy,
@@ -134,24 +133,18 @@ def _build_ingredients_taxonomy():
 def mock_taxonomies():
     """Mock both the units and ingredients taxonomies for convert_to_g tests.
 
-    Clears the per-ingredient property caches (``_ingredient_average_weight_per_unit``
-    and ``_ingredient_density_g_per_ml``) so each test rebuilds them from the
-    provided (mocked) taxonomy. The units caches are cleared by
+    The per-ingredient property caches (``_ingredient_average_weight_per_unit``
+    and ``_ingredient_density_g_per_ml``) are cleared by
+    :func:`patch_ingredients_taxonomy`, and the units caches by
     :func:`patch_units_taxonomy`.
     """
     units_taxonomy = _build_units_taxonomy()
     ingredients_taxonomy = _build_ingredients_taxonomy()
-    units._ingredient_average_weight_per_unit.cache_clear()
-    units._ingredient_density_g_per_ml.cache_clear()
-    try:
-        with (
-            patch_units_taxonomy(units_taxonomy),
-            patch_ingredients_taxonomy(ingredients_taxonomy),
-        ):
-            yield
-    finally:
-        units._ingredient_average_weight_per_unit.cache_clear()
-        units._ingredient_density_g_per_ml.cache_clear()
+    with (
+        patch_units_taxonomy(units_taxonomy),
+        patch_ingredients_taxonomy(ingredients_taxonomy),
+    ):
+        yield
 
 
 # --- mass unit conversion --------------------------------------------------

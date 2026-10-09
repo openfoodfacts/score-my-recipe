@@ -42,10 +42,32 @@ def patch_language_check(valid_codes: Iterable[str] = ("en", "fr", "es", "it", "
 
 @contextmanager
 def patch_ingredients_taxonomy(taxonomy):
-    """Patch ``api.off.get_ingredients_taxonomy`` to return ``taxonomy``."""
-    with patch("api.off.get_ingredients_taxonomy", new_callable=AsyncMock) as mock_tax:
-        mock_tax.return_value = taxonomy
-        yield mock_tax
+    """Patch ``api.off.get_ingredients_taxonomy`` to return ``taxonomy``.
+
+    Also resets the per-ingredient property caches in ``api.units``
+    (``_ingredient_average_weight_per_unit``, ``_ingredient_density_g_per_ml``
+    and ``_ingredient_is_known``) so each test rebuilds them from the
+    provided (mocked) taxonomy instead of a previous run's.
+    """
+    import api.units as units
+
+    for cache_name in (
+        "_ingredient_average_weight_per_unit",
+        "_ingredient_density_g_per_ml",
+        "_ingredient_is_known",
+    ):
+        getattr(units, cache_name).cache_clear()
+    try:
+        with patch("api.off.get_ingredients_taxonomy", new_callable=AsyncMock) as mock_tax:
+            mock_tax.return_value = taxonomy
+            yield mock_tax
+    finally:
+        for cache_name in (
+            "_ingredient_average_weight_per_unit",
+            "_ingredient_density_g_per_ml",
+            "_ingredient_is_known",
+        ):
+            getattr(units, cache_name).cache_clear()
 
 
 @contextmanager

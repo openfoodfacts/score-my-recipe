@@ -363,11 +363,13 @@ const unitsCache: Record<string, TaxonomyItem[]> = {};
  * Fetch the list of units (mass and volume) from the backend, with synonyms
  * for client-side matching.
  *
- * The synthetic ``item`` unit (for countable ingredients) is appended
- * client-side because its label is context-dependent (it should read as the
- * ingredient name, handled by the Tags ``formatLabel`` prop).
+ * This is the unfiltered fallback (all g/ml units, no ``item``) used by the
+ * Tags component when no ingredient is selected yet. The synthetic ``item``
+ * unit is never added here — it only comes from the backend via
+ * :func:`getCompatibleUnits` when the selected ingredient has a positive
+ * ``average_weight_per_unit``.
  *
- * @returns The list of unit TaxonomyItems (taxonomy units + the ``item`` sentinel).
+ * @returns The list of unit TaxonomyItems (taxonomy g/ml units only).
  * @throws {Error} If the backend responds with a non-2xx status code.
  */
 export async function getUnitsTaxonomy(): Promise<TaxonomyItem[]> {
@@ -388,39 +390,33 @@ export async function getUnitsTaxonomy(): Promise<TaxonomyItem[]> {
 		isInTaxonomy: true,
 		synonyms: unit.synonyms ?? []
 	}));
-	// Append the synthetic 'item' unit for countable ingredients.
-	// Its label is substituted at render time (see IngredientLine) so it
-	// displays as the ingredient name instead of the literal 'item'.
-	units.push({ id: ITEM_UNIT_ID, label: ITEM_UNIT_ID, isInTaxonomy: true, synonyms: [] });
 	unitsCache[lang] = units;
 	return units;
 }
 
 /**
- * Fetch the list of units compatible with a given source unit, optionally
- * filtered by ingredient (to determine if the synthetic ``item`` unit is a
- * valid target).
+ * Fetch the list of units compatible with a given ingredient.
  *
- * When the source unit or ingredient is not provided, callers should fall
- * back to :func:`getUnitsTaxonomy` (the full unfiltered list).
+ * The backend returns ``g`` units always, ``ml`` units when the ingredient
+ * has a positive ``density_g_per_ml``, and the synthetic ``item`` unit when
+ * the ingredient has a positive ``average_weight_per_unit``.
+ *
+ * When no ingredient id is provided, callers should fall back to
+ * :func:`getUnitsTaxonomy` (the full unfiltered list).
  *
  * @param lang - The language code for the unit labels.
- * @param compatibleWithUnit - The source unit (a taxonomy id, a localized
- *   unit name, or the ``item`` sentinel).
  * @param ingredientId - Optional taxonomy id of the ingredient, used to
- *   determine if the ``item`` unit is a compatible target.
+ *   determine which unit families (g, ml, item) are relevant.
  * @returns The list of compatible unit TaxonomyItems (with synonyms for matching).
  * @throws {Error} If the backend responds with a non-2xx status code.
  */
 export async function getCompatibleUnits(
 	lang: string,
-	compatibleWithUnit: string,
 	ingredientId?: string | null
 ): Promise<TaxonomyItem[]> {
 	const params = new URLSearchParams({
 		lang,
-		include_synonyms: 'true',
-		compatible_with_unit: compatibleWithUnit
+		include_synonyms: 'true'
 	});
 	if (ingredientId) {
 		params.set('ingredient_id', ingredientId);

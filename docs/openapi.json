@@ -304,7 +304,7 @@
     "/v1/units": {
       "get": {
         "summary": "Get Units",
-        "description": "Get the list of units available in the Open Food Facts units taxonomy\n\nNote: as the list is not too big, we let clients handle suggestions to users.\n\nWhen ``compatible_with_unit`` is provided, only the units compatible with\nthat source unit are returned (plus the synthetic ``item`` unit when\napplicable).",
+        "description": "Get the list of units available in the Open Food Facts units taxonomy\n\nNote: as the list is not too big, we let clients handle suggestions to users.\n\nWhen ``ingredient_id`` is provided, the returned units are narrowed to\nthose relevant for that ingredient (``g`` always, ``ml`` if the ingredient\nhas a density, ``item`` if it has an average weight per unit).",
         "operationId": "get_units_v1_units_get",
         "parameters": [
           {
@@ -331,24 +331,6 @@
             "description": "If true, include the synonyms of each item in the response."
           },
           {
-            "name": "compatible_with_unit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "If provided, only return the units compatible with this source unit (a unit id, a localized unit name, or the 'item' sentinel).",
-              "title": "Compatible With Unit"
-            },
-            "description": "If provided, only return the units compatible with this source unit (a unit id, a localized unit name, or the 'item' sentinel)."
-          },
-          {
             "name": "ingredient_id",
             "in": "query",
             "required": false,
@@ -361,10 +343,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Taxonomy id of an ingredient, used together with compatible_with_unit to determine if the 'item' unit is a compatible target (when the ingredient defines a positive average_weight_per_unit).",
+              "description": "Taxonomy id of an ingredient. When provided, the returned units are narrowed to those relevant for that ingredient: ``g`` units are always included, ``ml`` units only if the ingredient defines a positive ``density_g_per_ml``, and the ``item`` unit only if it defines a positive ``average_weight_per_unit``.",
               "title": "Ingredient Id"
             },
-            "description": "Taxonomy id of an ingredient, used together with compatible_with_unit to determine if the 'item' unit is a compatible target (when the ingredient defines a positive average_weight_per_unit)."
+            "description": "Taxonomy id of an ingredient. When provided, the returned units are narrowed to those relevant for that ingredient: ``g`` units are always included, ``ml`` units only if the ingredient defines a positive ``density_g_per_ml``, and the ``item`` unit only if it defines a positive ``average_weight_per_unit``."
           }
         ],
         "responses": {

@@ -163,15 +163,14 @@ async def get_units(
 
     Note: as the list is not too big, we let clients handle suggestions to users.
 
-    When ``compatible_with_unit`` is provided, only the units compatible with
-    that source unit are returned (plus the synthetic ``item`` unit when
-    applicable).
+    When ``ingredient_id`` is provided, the returned units are narrowed to
+    those relevant for that ingredient (``g`` always, ``ml`` if the ingredient
+    has a density, ``item`` if it has an average weight per unit).
     """
     try:
         unit_list = await units.get_units(
             filter_query.lang,
             filter_query.include_synonyms,
-            filter_query.compatible_with_unit,
             filter_query.ingredient_id,
         )
     except exceptions.UnknownUnitError as exc:

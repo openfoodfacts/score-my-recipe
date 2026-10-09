@@ -204,17 +204,18 @@ export function createQuantityConvert(ingredient: Ingredient) {
 /**
  * Owns the compatible-units list for a single ingredient.
  *
- * Whenever the ingredient's unit or codified ingredient changes, fetches
- * the list of compatible units from the backend. Falls back to null (all
- * units) when the source unit is null or the fetch fails, so the user is
- * never stuck with an empty dropdown.
+ * Whenever the ingredient's codified ingredient changes, fetches the list of
+ * compatible units from the backend (driven by the ingredient's density and
+ * average_weight_per_unit properties). Falls back to null (all units) when no
+ * ingredient id is available or the fetch fails, so the user is never stuck
+ * with an empty dropdown.
  *
  * @param ingredient - The bindable ingredient object.
  * @returns A reactive getter for ``compatibleUnits``.
  */
 export function createCompatibleUnits(ingredient: Ingredient) {
-	// The filtered list of units compatible with the current ingredient's
-	// unit. When null, the Tags component falls back to fetching all units.
+	// The filtered list of units compatible with the current ingredient.
+	// When null, the Tags component falls back to fetching all units.
 	let compatibleUnits = $state<TaxonomyItem[] | null>(null);
 
 	/**
@@ -223,9 +224,9 @@ export function createCompatibleUnits(ingredient: Ingredient) {
 	 * On error, falls back to null (all units) so the user is not stuck
 	 * with an empty dropdown.
 	 */
-	async function fetchCompatibleUnits(sourceUnit: string, ingredientId: string | null) {
+	async function fetchCompatibleUnits(ingredientId: string | null) {
 		try {
-			const units = await getCompatibleUnits(getLocaleKey(), sourceUnit, ingredientId);
+			const units = await getCompatibleUnits(getLocaleKey(), ingredientId);
 			compatibleUnits = units;
 		} catch (e) {
 			console.error('Failed to fetch compatible units', e);
@@ -234,24 +235,20 @@ export function createCompatibleUnits(ingredient: Ingredient) {
 	}
 
 	/**
-	 * Fetch compatible units whenever the source unit or codified
-	 * ingredient changes. Falls back to null (all units) when the source
-	 * unit is null.
+	 * Fetch compatible units whenever the codified ingredient changes.
+	 * Falls back to null (all units) when no ingredient id is available.
 	 */
 	$effect(() => {
-		const unit = ingredient.quantityUnit;
 		// codifiedIngredient?.id is string | null | undefined; normalize to string | null
 		const codifiedId = ingredient.codifiedIngredient?.id ?? null;
 
-		const sourceUnit = unit ? unitToApiString(unit) : null;
-
-		if (sourceUnit === null) {
+		if (codifiedId === null) {
 			compatibleUnits = null;
 			return;
 		}
 
 		// Fetch compatible units (async — the state updates when the fetch completes)
-		void fetchCompatibleUnits(sourceUnit, codifiedId);
+		void fetchCompatibleUnits(codifiedId);
 	});
 
 	return {

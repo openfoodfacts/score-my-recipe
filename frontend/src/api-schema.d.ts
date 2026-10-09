@@ -153,9 +153,9 @@ export interface paths {
 		 *
 		 *     Note: as the list is not too big, we let clients handle suggestions to users.
 		 *
-		 *     When ``compatible_with_unit`` is provided, only the units compatible with
-		 *     that source unit are returned (plus the synthetic ``item`` unit when
-		 *     applicable).
+		 *     When ``ingredient_id`` is provided, the returned units are narrowed to
+		 *     those relevant for that ingredient (``g`` always, ``ml`` if the ingredient
+		 *     has a density, ``item`` if it has an average weight per unit).
 		 */
 		get: operations['get_units_v1_units_get'];
 		put?: never;
@@ -1154,9 +1154,7 @@ export interface operations {
 				lang: string;
 				/** @description If true, include the synonyms of each item in the response. */
 				include_synonyms?: boolean;
-				/** @description If provided, only return the units compatible with this source unit (a unit id, a localized unit name, or the 'item' sentinel). */
-				compatible_with_unit?: string | null;
-				/** @description Taxonomy id of an ingredient, used together with compatible_with_unit to determine if the 'item' unit is a compatible target (when the ingredient defines a positive average_weight_per_unit). */
+				/** @description Taxonomy id of an ingredient. When provided, the returned units are narrowed to those relevant for that ingredient: ``g`` units are always included, ``ml`` units only if the ingredient defines a positive ``density_g_per_ml``, and the ``item`` unit only if it defines a positive ``average_weight_per_unit``. */
 				ingredient_id?: string | null;
 			};
 			header?: never;
