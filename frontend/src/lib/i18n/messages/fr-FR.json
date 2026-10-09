@@ -131,7 +131,7 @@
 		"recipe_text": "Entrez chaque ingrédient sur une nouvelle ligne avec sa quantité (ex. 200g de farine, 3 œufs, 100g de sucre).",
 		"codified_ingredient": "Ingrédient standardisé issu de la base de données Open Food Facts / Agribalyse.",
 		"weight": "Quantité nette de l'ingrédient en grammes.",
-		"grams": "Quantité en grammes, utilisée pour le calcul du green-score. Recalculée à partir de la quantité et de l'unité via l'API pour les unités autres que le gramme.",
+		"grams": "Quantité en grammes, utilisée pour le calcul du green-score (recalculée automatiquement).",
 		"labels": "Certifications officielles (ex. Bio, Label Rouge, Commerce Équitable) apportant des bonus au Green-Score.",
 		"seasonality": "Cochez si les fruits et légumes sont de saison pour obtenir un bonus environnemental.",
 		"origin": "Origine géographique de l'ingrédient, utilisée pour évaluer l'impact du transport.",
