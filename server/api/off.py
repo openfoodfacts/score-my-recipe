@@ -177,6 +177,29 @@ def _property_value(node: taxonomy.TaxonomyNode, prop: str) -> Optional[str]:
     return str(raw)
 
 
+def _walk_up_numeric_property(
+    nodes: Iterable[taxonomy.TaxonomyNode], prop: str
+) -> Optional[float]:
+    """Read a numeric property from a node chain, returning the first match.
+
+    Walks ``nodes`` (closest first, as produced by :func:`_node_chain`)
+    and returns the property as a positive float from the first node that
+    defines it. Returns ``None`` when no node in the chain has a parseable
+    positive value.
+    """
+    for node in nodes:
+        raw = _property_value(node, prop)
+        if raw is None:
+            continue
+        try:
+            value = float(raw)
+        except (ValueError, TypeError):
+            continue
+        if value > 0:
+            return value
+    return None
+
+
 @async_cache(maxsize=1)
 async def origins_by_country_code() -> dict[str, str]:
     """Get a dict mapping 2-letter country codes to the corresponding origin id

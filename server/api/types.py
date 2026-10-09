@@ -899,3 +899,49 @@ class RecomputeQuantityResponse(CamelModel):
             f"(unit name, taxonomy id or '{ITEM_UNIT}')"
         ),
     ]
+
+
+class ConvertQuantityRequest(BaseModel):
+    """Query parameters for the ``GET /v1/convert-quantity`` endpoint.
+    """
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {"value": 2, "unit": "xx:kg"},
+                {"value": 3, "unit": "item", "ingredient_id": "en:egg"},
+                {"value": 200, "unit": "en:cup", "ingredient_id": "en:milk"},
+            ]
+        }
+    )
+
+    value: Annotated[float, Field(ge=0, description="Numeric value of the quantity")]
+    unit: Annotated[
+        str,
+        Field(
+            description=f"Unit taxonomy id (e.g. 'xx:kg') or the '{ITEM_UNIT}' "
+            "sentinel for countable ingredients."
+        ),
+    ]
+    ingredient_id: Annotated[
+        Optional[str],
+        Field(
+            default=None,
+            description="Taxonomy id of the ingredient.\n\n"
+            "Required when the unit is a volume unit "
+            "(to look up density_g_per_ml) "
+            f"or the '{ITEM_UNIT}' sentinel "
+            f"(to look up average_weight_per_unit).\n\n"
+            "Optional for mass units.",
+        ),
+    ] = None
+
+
+class ConvertQuantityResponse(BaseModel):
+    """Response model for the ``GET /v1/convert-quantity`` endpoint."""
+
+    model_config = ConfigDict(
+        json_schema_extra={"examples": [{"quantity_g": 2000}]}
+    )
+
+    quantity_g: Annotated[float, Field(description="The quantity converted to grams")]

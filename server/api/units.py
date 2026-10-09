@@ -135,8 +135,14 @@ async def _resolve_source_standard_unit(source_unit: str, lang: str) -> str | No
 async def _ingredient_average_weight_per_unit(ingredient_id: str) -> float | None:
     """Read the ``average_weight_per_unit`` property of an ingredient.
 
+    Walks up the parent hierarchy (closest first) and returns the value from
+    the first node that defines it, so that specific ingredient variants
+    (e.g. ``en:chicken-egg``) inherit the property from their parent
+    (e.g. ``en:egg``).
+
     Returns the value as a positive float, or ``None`` when the property is
-    absent or does not parse to a positive number.
+    absent (or does not parse to a positive number) on the node and all of
+    its parents.
 
     :raises exceptions.UnknownIngredientError: if ``ingredient_id`` is not in
         the ingredients taxonomy.
@@ -146,15 +152,36 @@ async def _ingredient_average_weight_per_unit(ingredient_id: str) -> float | Non
         raise exceptions.UnknownIngredientError(
             f"Ingredient '{ingredient_id}' is not a known ingredient."
         )
-    node = ingredients_taxonomy[ingredient_id]
-    raw = off._property_value(node, "average_weight_per_unit")
-    if raw is None:
-        return None
-    try:
-        value = float(raw)
-    except (ValueError, TypeError):
-        return None
-    return value if value > 0 else None
+    return off._walk_up_numeric_property(
+        off._node_chain(ingredients_taxonomy[ingredient_id]),
+        "average_weight_per_unit",
+    )
+
+
+@async_lru_cache(maxsize=200)
+async def _ingredient_density_g_per_ml(ingredient_id: str) -> float | None:
+    """Read the ``density_g_per_ml`` property of an ingredient.
+
+    Walks up the parent hierarchy (closest first) and returns the value from
+    the first node that defines it, mirroring
+    :func:`_ingredient_average_weight_per_unit`.
+
+    Returns the value as a positive float, or ``None`` when the property is
+    absent (or does not parse to a positive number) on the node and all of
+    its parents.
+
+    :raises exceptions.UnknownIngredientError: if ``ingredient_id`` is not in
+        the ingredients taxonomy.
+    """
+    ingredients_taxonomy = await off.get_ingredients_taxonomy()
+    if ingredient_id not in ingredients_taxonomy:
+        raise exceptions.UnknownIngredientError(
+            f"Ingredient '{ingredient_id}' is not a known ingredient."
+        )
+    return off._walk_up_numeric_property(
+        off._node_chain(ingredients_taxonomy[ingredient_id]),
+        "density_g_per_ml",
+    )
 
 
 def _is_target_compatible(
@@ -381,6 +408,91 @@ async def recompute_quantity(
     # TODO: call the Open Food Facts parse API to convert the unit.
     raise exceptions.UnitConversionNotSupportedError(
         f"Converting from unit '{old_unit}' to unit '{new_unit}' is not supported yet."
+    )
+
+
+async def convert_to_g(
+    value: float,
+    unit: str,
+    ingredient_id: str | None = None,
+) -> float:
+    """Convert a quantity given as ``(value, unit)`` to grams.
+
+    A stateless, absolute conversion that relies solely on the OFF taxonomies.
+
+    :param value: the numeric quantity (must be >= 0).
+    :param unit: a unit taxonomy id (e.g. ``xx:kg``) or the ``item`` sentinel
+        for countable ingredients.
+    :param ingredient_id: taxonomy id of the ingredient. Required when the
+        unit is a volume or ``item`` unit (to look up density / average
+        weight); ignored for mass units.
+
+    :raises exceptions.UnknownUnitError: if ``unit`` is neither a known
+        taxonomy unit nor the ``item`` sentinel, or if its ``standard_unit``
+        is neither ``"g"`` nor ``"ml"`` (i.e. not a unit relevant for recipes).
+    :raises exceptions.UnknownIngredientError: if ``ingredient_id`` is
+        provided but not found in the ingredients taxonomy.
+    :raises exceptions.UnitConversionNotSupportedError: if a required
+        property (``conversion_factor``, ``density_g_per_ml``,
+        ``average_weight_per_unit``) is missing, or if ``ingredient_id`` is
+        not provided for a volume or ``item`` conversion.
+    """
+    # Zero of anything is zero grams — skip all validation.
+    if value == 0:
+        return 0.0
+
+    # Countable unit: convert via the ingredient's average weight per unit.
+    if unit == types.ITEM_UNIT:
+        if ingredient_id is None:
+            raise exceptions.UnitConversionNotSupportedError(
+                f"Converting to '{types.ITEM_UNIT}' requires an ingredient_id "
+                f"(to look up its average_weight_per_unit). "
+                f"Please add the ingredient_id parameter."
+            )
+        avg_weight = await _ingredient_average_weight_per_unit(ingredient_id)
+        if avg_weight is None:
+            raise exceptions.UnitConversionNotSupportedError(
+                f"Ingredient '{ingredient_id}' (and its parents) does not define "
+                f"a positive average_weight_per_unit; cannot convert '{types.ITEM_UNIT}' to grams."
+            )
+        return value * avg_weight
+
+    # Resolve the unit's standard_unit and conversion factor from the taxonomy.
+    # Raises UnknownUnitError if the unit is not a known taxonomy id.
+    standard_unit, conversion_factor = await _unit_conversion(unit, lang="en")
+
+    # Mass unit: absolute grams.
+    if standard_unit == "g":
+        if conversion_factor is None:
+            raise exceptions.UnitConversionNotSupportedError(
+                f"Unit '{unit}' has a 'g' standard_unit but no conversion_factor."
+            )
+        return value * conversion_factor
+
+    # Volume unit: grams = value * factor * density.
+    if standard_unit == "ml":
+        if conversion_factor is None:
+            raise exceptions.UnitConversionNotSupportedError(
+                f"Unit '{unit}' has an 'ml' standard_unit but no conversion_factor."
+            )
+        if ingredient_id is None:
+            raise exceptions.UnitConversionNotSupportedError(
+                f"Converting a volume unit ('{unit}') to grams requires an "
+                f"ingredient_id (to look up its density_g_per_ml). "
+                f"Please add the ingredient_id parameter."
+            )
+        density = await _ingredient_density_g_per_ml(ingredient_id)
+        if density is None:
+            raise exceptions.UnitConversionNotSupportedError(
+                f"Ingredient '{ingredient_id}' (and its parents) does not define "
+                f"a positive density_g_per_ml; cannot convert volume to grams."
+            )
+        return value * conversion_factor * density
+
+    # Any other standard_unit (e.g. 'kJ') is not relevant for recipes.
+    raise exceptions.UnknownUnitError(
+        f"Unit '{unit}' (standard_unit '{standard_unit}') is not a known "
+        f"unit for a recipe (only 'g', 'ml' and 'item' are supported)."
     )
 
 

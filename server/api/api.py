@@ -242,3 +242,30 @@ async def recompute_quantity(
     except exceptions.UnitConversionNotSupportedError as exc:
         raise HTTPException(status_code=422, detail=str(exc))
     return types.RecomputeQuantityResponse(quantity_g=quantity_g, value=value, unit=unit)
+
+
+@app.get("/v1/convert-quantity", response_model_exclude_none=True)
+async def convert_quantity(
+    filter_query: Annotated[types.ConvertQuantityRequest, Query()], response: Response
+) -> types.ConvertQuantityResponse:
+    """Convert a quantity given as ``(value, unit)`` to grams.
+
+    For some conversions, ingredient is needed.
+
+    Getting the quantities in grams is needed for green-score computation,
+    and possibly other scores.
+    """
+    try:
+        quantity_g = await units.convert_to_g(
+            filter_query.value,
+            filter_query.unit,
+            filter_query.ingredient_id,
+        )
+    except exceptions.UnknownUnitError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    except exceptions.UnknownIngredientError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    except exceptions.UnitConversionNotSupportedError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    response.headers["Cache-Control"] = "max-age=86400"
+    return types.ConvertQuantityResponse(quantity_g=quantity_g)
