@@ -145,7 +145,7 @@ class RecipeIngredient(BaseModel):
                     "origins": {"id": "en:france", "label": "France", "isInTaxonomy": True},
                     "labels": [{"id": "en:organic", "label": "Organic", "isInTaxonomy": True}],
                     "quantity_value": 0.15,
-                    "quantity_unit": "kg",
+                    "quantity_unit": {"id": "xx:kg", "label": "kilogram", "isInTaxonomy": True},
                 }
             ]
         }
@@ -164,7 +164,15 @@ class RecipeIngredient(BaseModel):
     quantity_value: Annotated[
         Optional[float], Field(description="Numeric value of the quantity")
     ] = None
-    quantity_unit: Annotated[Optional[str], Field(description="Unit of the quantity")] = None
+    quantity_unit: Annotated[
+        Optional[TaxonomyItem],
+        Field(
+            description="Unit of the quantity, as a TaxonomyItem. "
+            "Resolved from the parsed unit string through the units taxonomy "
+            f"(a free-text entry when unresolvable, or the '{ITEM_UNIT}' "
+            "sentinel for countable ingredients with no unit)."
+        ),
+    ] = None
     notes: Annotated[Optional[list[str]], Field(description="Notes about the ingredient")] = None
 
 
@@ -444,9 +452,29 @@ class Unit(SuggestedTaxonomyItem):
 
 class UnitsRequest(TaxonomyRequest):
     model_config = ConfigDict(
-        json_schema_extra={"examples": [{"lang": "en", "include_synonyms": False}]}
+        json_schema_extra={
+            "examples": [
+                {"lang": "en", "include_synonyms": False},
+                {
+                    "lang": "en",
+                    "include_synonyms": False,
+                    "ingredient_id": "en:egg",
+                },
+            ]
+        }
     )
-    pass
+
+    ingredient_id: Annotated[
+        Optional[str],
+        Field(
+            default=None,
+            description="Taxonomy id of an ingredient. When provided, the returned "
+            "units are narrowed to those relevant for that ingredient: ``g`` units "
+            "are always included, ``ml`` units only if the ingredient defines a "
+            "positive ``density_g_per_ml``, and the ``item`` unit only if it defines "
+            "a positive ``average_weight_per_unit``.",
+        ),
+    ] = None
 
 
 class UnitsResponse(BaseModel):
@@ -789,65 +817,47 @@ class GreenScoreResponse(CamelModel):
     ] = None
 
 
-class RecomputeQuantityRequest(LangRequest, CamelModel):
-    """Request body for the ``POST /v1/recompute-quantity`` endpoint.
-
-    Each unit (``old_unit`` / ``new_unit``) may be given either as a unit id
-    from the OFF units taxonomy (e.g. ``xx:kg``), as a localized unit name
-    resolvable through the units taxonomy (e.g. ``"kg"``, ``"tasse"``), or as
-    the ``item`` sentinel for countable ingredients (e.g. "1 egg").
+class ConvertQuantityRequest(BaseModel):
+    """Query parameters for the ``GET /v1/convert-quantity`` endpoint.
     """
 
     model_config = ConfigDict(
         json_schema_extra={
             "examples": [
-                {
-                    "lang": "en",
-                    "quantity_g": 2000,
-                    "old_value": 2000,
-                    "old_unit": "g",
-                    "new_value": 2,
-                    "new_unit": "kg",
-                }
+                {"value": 2, "unit": "xx:kg"},
+                {"value": 3, "unit": "item", "ingredient_id": "en:egg"},
+                {"value": 200, "unit": "en:cup", "ingredient_id": "en:milk"},
             ]
         }
     )
 
-    quantity_g: Annotated[float, Field(ge=0, description="Previous quantity in grams")]
-    old_value: Annotated[float, Field(ge=0, description="Previous numeric value of the quantity")]
-    old_unit: Annotated[
-        str, Field(description=f"Previous unit (unit name, taxonomy id or '{ITEM_UNIT}')")
-    ]
-    new_value: Annotated[float, Field(ge=0, description="New numeric value of the quantity")]
-    new_unit: Annotated[
-        str, Field(description=f"New unit (unit name, taxonomy id or '{ITEM_UNIT}')")
-    ]
-    # lang: Annotated[
-    #     str,
-    #     Field(
-    #         description="Language code (2 or 5 letters) "
-    #         "used to resolve unit names to their taxonomy id."
-    #     ),
-    # ]
-
-
-class RecomputeQuantityResponse(CamelModel):
-    """Response model for the ``POST /v1/recompute-quantity`` endpoint.
-
-    The ``unit`` field echoes the ``new_unit`` sent in the request (it may be a
-    unit name, a taxonomy id or ``{ITEM_UNIT}``).
-    """
-
-    model_config = ConfigDict(
-        json_schema_extra={"examples": [{"quantityG": 2000, "value": 2, "unit": "kg"}]}
-    )
-
-    quantity_g: Annotated[float, Field(description="New quantity in grams")]
-    value: Annotated[float, Field(description="New numeric value of the quantity")]
+    value: Annotated[float, Field(ge=0, description="Numeric value of the quantity")]
     unit: Annotated[
         str,
         Field(
-            description="New unit, echoed from the request "
-            f"(unit name, taxonomy id or '{ITEM_UNIT}')"
+            description=f"Unit taxonomy id (e.g. 'xx:kg') or the '{ITEM_UNIT}' "
+            "sentinel for countable ingredients."
         ),
     ]
+    ingredient_id: Annotated[
+        Optional[str],
+        Field(
+            default=None,
+            description="Taxonomy id of the ingredient.\n\n"
+            "Required when the unit is a volume unit "
+            "(to look up density_g_per_ml) "
+            f"or the '{ITEM_UNIT}' sentinel "
+            f"(to look up average_weight_per_unit).\n\n"
+            "Optional for mass units.",
+        ),
+    ] = None
+
+
+class ConvertQuantityResponse(BaseModel):
+    """Response model for the ``GET /v1/convert-quantity`` endpoint."""
+
+    model_config = ConfigDict(
+        json_schema_extra={"examples": [{"quantity_g": 2000}]}
+    )
+
+    quantity_g: Annotated[float, Field(description="The quantity converted to grams")]

@@ -33,19 +33,216 @@ async def _get_units_entries(lang: str) -> off.TaxonomyLangLabelType:
     return units_list
 
 
-async def get_units(lang: str, include_synonyms: bool = False) -> list[types.Unit]:
-    """Get the list of units available in the Open Food Facts units taxonomy"""
+async def get_units(
+    lang: str,
+    include_synonyms: bool = False,
+    ingredient_id: str | None = None,
+) -> list[types.Unit]:
+    """Get the list of units available for a recipe quantity.
+
+    The returned units depend on the ingredient's taxonomy properties:
+
+    * Units whose ``standard_unit`` is ``"g"`` are **always** returned.
+    * If the ingredient (or any of its parents) defines a positive
+      ``density_g_per_ml``, units whose ``standard_unit`` is ``"ml"`` are
+      also returned.
+    * If the ingredient (or any of its parents) defines a positive
+      ``average_weight_per_unit``, the synthetic ``item`` unit (for
+      countable ingredients like "3 eggs") is also returned.
+
+    When no ``ingredient_id`` is provided, all ``g`` and ``ml`` units are
+    returned (no filtering, no ``item``) — this is the fallback used by
+    clients that just want the full unit list.
+
+    An unknown ``ingredient_id`` (not in the ingredients taxonomy) is
+    treated leniently: only ``g`` units are returned, without raising.
+
+    :param lang: the language code used to localize unit labels.
+    :param include_synonyms: when ``True``, populate the ``synonyms`` field.
+    :param ingredient_id: taxonomy id of the ingredient, used to determine
+        which unit families (g, ml, item) are relevant.
+    """
     lang = two_letter_lang_code(lang)
     _units = await _get_units_entries(lang)
-    return [
-        types.Unit(
-            id=unit_id,
-            label=unit_label,
-            synonyms=unit_synonyms if include_synonyms else None,
-            standard_unit=standard_unit,
+
+    # Without an ingredient, return all g/ml taxonomy units (no filtering).
+    if ingredient_id is None:
+        return [
+            types.Unit(
+                id=unit_id,
+                label=unit_label,
+                synonyms=unit_synonyms if include_synonyms else None,
+                standard_unit=standard_unit,
+            )
+            for unit_id, unit_label, unit_synonyms, (standard_unit,) in _units
+        ]
+
+    # Read the ingredient's properties (density + average weight per unit).
+    # An unknown ingredient is treated leniently (both resolve to False),
+    # so only g units are returned.
+    has_density = await _ingredient_has_density(ingredient_id)
+    has_avg_weight = await _ingredient_has_avg_weight(ingredient_id)
+
+    # Build the filtered list: g always, ml only with density, item only with avg weight.
+    result: list[types.Unit] = []
+    for unit_id, unit_label, unit_synonyms, (standard_unit,) in _units:
+        if standard_unit == "g":
+            result.append(
+                types.Unit(
+                    id=unit_id,
+                    label=unit_label,
+                    synonyms=unit_synonyms if include_synonyms else None,
+                    standard_unit=standard_unit,
+                )
+            )
+        elif standard_unit == "ml" and has_density:
+            result.append(
+                types.Unit(
+                    id=unit_id,
+                    label=unit_label,
+                    synonyms=unit_synonyms if include_synonyms else None,
+                    standard_unit=standard_unit,
+                )
+            )
+
+    # Add the synthetic 'item' unit when the ingredient defines a positive
+    # average_weight_per_unit (countable ingredients like "3 eggs").
+    #
+    # Its label is the ingredient's name in the requested language (and its
+    # synonyms the ingredient's own synonyms), instead of the literal
+    # ``ITEM_UNIT`` sentinel, so that:
+    # * the unit reads naturally ("3 eggs" rather than "3 item"), and
+    # * the client unit selector can match it by the ingredient name/synonyms.
+    # has_avg_weight being True implies the ingredient is known, so the
+    # lookup below cannot raise UnknownIngredientError.
+    if has_avg_weight:
+        item_label, item_synonyms = await _ingredient_lang_label_and_synonyms(
+            ingredient_id, lang
         )
-        for unit_id, unit_label, unit_synonyms, (standard_unit,) in _units
-    ]
+        result.append(
+            types.Unit(
+                id=types.ITEM_UNIT,
+                label=item_label,
+                synonyms=list(item_synonyms) if include_synonyms else None,
+                standard_unit=None,
+            )
+        )
+
+    # Keep units sorted by id (the synthetic 'item' sorts alphabetically).
+    result.sort(key=lambda u: u.id)
+    return result
+
+
+@async_lru_cache(maxsize=200)
+async def _ingredient_average_weight_per_unit(ingredient_id: str) -> float | None:
+    """Read the ``average_weight_per_unit`` property of an ingredient.
+
+    Walks up the parent hierarchy (closest first) and returns the value from
+    the first node that defines it, so that specific ingredient variants
+    (e.g. ``en:chicken-egg``) inherit the property from their parent
+    (e.g. ``en:egg``).
+
+    Returns the value as a positive float, or ``None`` when the property is
+    absent (or does not parse to a positive number) on the node and all of
+    its parents.
+
+    :raises exceptions.UnknownIngredientError: if ``ingredient_id`` is not in
+        the ingredients taxonomy.
+    """
+    ingredients_taxonomy = await off.get_ingredients_taxonomy()
+    if ingredient_id not in ingredients_taxonomy:
+        raise exceptions.UnknownIngredientError(
+            f"Ingredient '{ingredient_id}' is not a known ingredient."
+        )
+    return off._walk_up_numeric_property(
+        off._node_chain(ingredients_taxonomy[ingredient_id]),
+        "average_weight_per_unit",
+    )
+
+
+@async_lru_cache(maxsize=200)
+async def _ingredient_density_g_per_ml(ingredient_id: str) -> float | None:
+    """Read the ``density_g_per_ml`` property of an ingredient.
+
+    Walks up the parent hierarchy (closest first) and returns the value from
+    the first node that defines it, mirroring
+    :func:`_ingredient_average_weight_per_unit`.
+
+    Returns the value as a positive float, or ``None`` when the property is
+    absent (or does not parse to a positive number) on the node and all of
+    its parents.
+
+    :raises exceptions.UnknownIngredientError: if ``ingredient_id`` is not in
+        the ingredients taxonomy.
+    """
+    ingredients_taxonomy = await off.get_ingredients_taxonomy()
+    if ingredient_id not in ingredients_taxonomy:
+        raise exceptions.UnknownIngredientError(
+            f"Ingredient '{ingredient_id}' is not a known ingredient."
+        )
+    return off._walk_up_numeric_property(
+        off._node_chain(ingredients_taxonomy[ingredient_id]),
+        "density_g_per_ml",
+    )
+
+
+async def _ingredient_has_density(ingredient_id: str) -> bool:
+    """Check if the ingredient defines a positive ``density_g_per_ml``.
+
+    Returns ``False`` for unknown ingredients (treated leniently — only ``g``
+    units are relevant when the ingredient is not in the taxonomy).
+    """
+    if not await _ingredient_is_known(ingredient_id):
+        return False
+    density = await _ingredient_density_g_per_ml(ingredient_id)
+    return density is not None and density > 0
+
+
+async def _ingredient_has_avg_weight(ingredient_id: str) -> bool:
+    """Check if the ingredient defines a positive ``average_weight_per_unit``.
+
+    Returns ``False`` for unknown ingredients (treated leniently — only ``g``
+    units are relevant when the ingredient is not in the taxonomy).
+    """
+    if not await _ingredient_is_known(ingredient_id):
+        return False
+    avg_weight = await _ingredient_average_weight_per_unit(ingredient_id)
+    return avg_weight is not None and avg_weight > 0
+
+
+@async_lru_cache(maxsize=200)
+async def _ingredient_is_known(ingredient_id: str) -> bool:
+    """Check if the ingredient id exists in the ingredients taxonomy."""
+    ingredients_taxonomy = await off.get_ingredients_taxonomy()
+    return ingredient_id in ingredients_taxonomy
+
+
+@async_lru_cache(maxsize=200)
+async def _ingredient_lang_label_and_synonyms(
+    ingredient_id: str, lang: str
+) -> tuple[str, tuple[str, ...]]:
+    """Localized label and synonyms of an ingredient for ``lang``.
+
+    Falls back to the ``xx`` neutral language then to English (and finally to
+    the ingredient id for the label), mirroring
+    :func:`off.taxonomy_lang_label_and_synonyms`.
+
+    Used to give the synthetic ``item`` unit a meaningful label — the
+    ingredient's name — and searchable synonyms, instead of the literal
+    ``ITEM_UNIT`` sentinel, so that countable quantities such as "3 eggs"
+    read naturally and can be matched by name in the client unit selector.
+
+    :raises exceptions.UnknownIngredientError: if ``ingredient_id`` is not in
+        the ingredients taxonomy.
+    """
+    ingredients_taxonomy = await off.get_ingredients_taxonomy()
+    if ingredient_id not in ingredients_taxonomy:
+        raise exceptions.UnknownIngredientError(
+            f"Ingredient '{ingredient_id}' is not a known ingredient."
+        )
+    node = ingredients_taxonomy[ingredient_id]
+    (_id, label, synonyms, _props) = off.taxonomy_lang_label_and_synonyms(lang, [node])[0]
+    return label, tuple(synonyms)
 
 
 def _normalize_unit_name(name: str) -> str:
@@ -108,117 +305,152 @@ async def _resolve_unit_name(name: str, lang: str) -> str | None:
     return name_to_id.get(_normalize_unit_name(name))
 
 
-async def recompute_quantity(
-    quantity_g: float,
-    old_value: float,
-    old_unit: str,
-    new_value: float,
-    new_unit: str,
-    lang: str,
-) -> tuple[float, float, str]:
-    """Recompute the quantity in grams after the user edited an ingredient's value/unit.
+async def resolve_unit_to_taxonomy_item(
+    unit_name: str | None, lang: str, ingredient_id: str | None = None
+) -> types.TaxonomyItem:
+    """Resolve a raw unit string (as parsed from a recipe) into a TaxonomyItem.
 
-    Given the previous ``(value, unit, grams)`` and the new ``(value, unit)``,
-    returns ``(new_quantity_g, new_value, new_unit)``.
+    Used to turn the ``quantity`` unit extracted from the recipe text into the
+    structured ``TaxonomyItem`` stored on :class:`types.RecipeIngredient`,
+    consistent with how origins and labels are resolved.
 
-    Units may be given either as a taxonomy id (e.g. ``xx:kg``),
-    as a localized unit name (e.g. ``"kg"``) resolved through ``lang``
-    (and the neutral ``xx`` language), or as the ``{types.ITEM_UNIT}`` sentinel
-    for countable ingredients.
-    The ``new_unit`` is only resolved when its conversion factor is actually
-    needed (the unit cancels out in a plain cross-multiplication).
-    The ``old_unit`` is only resolved when the units differ but share the same
-    standard unit (so the grams can be cross-multiplied through it),
-    otherwise it is only compared as-is to detect an unchanged unit.
+    Resolution order:
 
-    We do our best to recompute it in a simple manner,
-    but some unit conversions will require calling the Open Food Facts parse API
-    (not yet implemented).
+    * ``None`` or blank -> the synthetic ``item`` unit
+      ``{id: ITEM_UNIT, label: <ingredient name>, is_in_taxonomy: True}``, the
+      unit used for countable ingredients (e.g. "3 eggs") that have no
+      measurable mass/volume unit. The label is the ingredient's name in
+      ``lang`` (so "3 eggs" reads naturally instead of "3 item"); it falls back
+      to the ``ITEM_UNIT`` sentinel when the ingredient is unknown or not
+      provided.
+    * a known taxonomy id (e.g. ``xx:kg``) or a localized unit name resolvable
+      through ``lang`` (e.g. ``"kg"``, ``"tasse"``) -> ``{id, label, True}``
+      with the label localized in ``lang``.
+    * an unresolvable unit string -> a free-text entry
+      ``{id: None, label: <raw>, is_in_taxonomy: False}`` so the user still
+      sees what was parsed.
+
+    :param unit_name: the raw unit string from the parser, or ``None``.
+    :param lang: the language code used to resolve names and localize labels.
+    :param ingredient_id: taxonomy id of the ingredient, used only to label
+        the synthetic ``item`` unit with the ingredient's name. Optional and
+        ignored for actual unit names.
     """
     lang = two_letter_lang_code(lang)
-    # Case 1: the unit did not change -> cross-multiplication (the unit cancels out).
-    if new_unit == old_unit:
-        if old_value != 0:
-            return quantity_g * (new_value / old_value), new_value, new_unit
-        # A zero old value cannot be cross-multiplied. Fall back to the mass
-        # conversion factor of the (unchanged) unit when it is a mass unit, so
-        # that e.g. editing "0 kg" -> "2 kg" still yields 2000 g.
-        # TODO: for non-mass units, call the Open Food Facts parse API to
-        # recover the quantity in grams.
-        new_quantity_g = await _quantity_from_mass_unit(new_value, new_unit, lang)
-        if new_quantity_g is not None:
-            return new_quantity_g, new_value, new_unit
-        raise exceptions.UnitConversionNotSupportedError(
-            f"Cannot recompute the quantity from a zero old value with unit '{new_unit}'."
+    # No unit: countable ingredient.
+    if not unit_name or not unit_name.strip():
+        # Use the ingredient's localized name as the label (instead of the
+        # literal ``ITEM_UNIT`` sentinel) so countable quantities read
+        # naturally ("3 eggs" rather than "3 item"). Falls back to the
+        # sentinel when the ingredient is unknown or not provided.
+        item_label = types.ITEM_UNIT
+        if ingredient_id and await _ingredient_is_known(ingredient_id):
+            item_label, _ = await _ingredient_lang_label_and_synonyms(ingredient_id, lang)
+        return types.TaxonomyItem(
+            id=types.ITEM_UNIT, label=item_label, is_in_taxonomy=True
         )
-
-    # The unit changed: we need the new unit's conversion info from the taxonomy.
-    # ``types.ITEM_UNIT`` is a countable sentinel with no conversion factor.
-    if new_unit == types.ITEM_UNIT:
-        # TODO: call the Open Food Facts parse API to convert to a countable unit.
-        raise exceptions.UnitConversionNotSupportedError(
-            f"Converting to the countable unit '{types.ITEM_UNIT}' is not supported yet."
+    unit_name = unit_name.strip()
+    # Build an id -> localized label map from the units list for this language.
+    units_entries = await _get_units_entries(lang)
+    id_to_label = {unit_id: unit_label for unit_id, unit_label, _, _ in units_entries}
+    # Try resolving as a taxonomy id first.
+    if unit_name in id_to_label:
+        return types.TaxonomyItem(
+            id=unit_name, label=id_to_label[unit_name], is_in_taxonomy=True
         )
-
-    # Resolve the new unit's standard_unit and conversion factor up front (needed for case 2 and case 3)
-    # Raises UnknownUnitError if the new unit is not a resolvable name.
-    new_standard_unit, new_factor = await _unit_conversion(new_unit, lang)
-
-    # Case 2: the old and new units share the same standard_unit (e.g. both are
-    # mass, or both are volume) and the previous value is non-zero. Because both
-    # units live in the same dimension, the (unknown) density cancels out: the
-    # grams scale in the same proportion as the conversion factors, so we can
-    # cross-multiply through the standard unit.
-    #   new_quantity_g = quantity_g * (new_value * new_factor) / (old_value * old_factor)
-    # This is what makes e.g. "2 cups" -> "500 ml" computable without a density.
-    if old_value != 0 and old_unit != types.ITEM_UNIT:
-        old_standard_unit, old_factor = await _safe_unit_conversion(old_unit, lang)
-        if (
-            old_standard_unit is not None
-            and old_standard_unit == new_standard_unit
-            and old_factor is not None
-            and new_factor is not None
-        ):
-            return (
-                quantity_g * (new_value * new_factor) / (old_value * old_factor),
-                new_value,
-                new_unit,
-            )
-
-    # Case 3: the new unit is a mass unit -> absolute grams (new_value * factor).
-    # Fallback when the previous value is zero or the old unit has no usable
-    # conversion factor (e.g. ``item``, an unknown unit, or a different dimension).
-    if new_standard_unit == "g" and new_factor is not None:
-        return new_value * new_factor, new_value, new_unit
-
-    # Case 4: any other unit change (e.g. volume <-> mass).
-    # TODO: call the Open Food Facts parse API to convert the unit.
-    raise exceptions.UnitConversionNotSupportedError(
-        f"Converting from unit '{old_unit}' to unit '{new_unit}' is not supported yet."
-    )
+    # Then try resolving as a localized unit name (label or synonym).
+    resolved_id = await _resolve_unit_name(unit_name, lang)
+    if resolved_id is not None:
+        return types.TaxonomyItem(
+            id=resolved_id, label=id_to_label[resolved_id], is_in_taxonomy=True
+        )
+    # Unresolvable: keep as a free-text entry so the user still sees the value.
+    return types.TaxonomyItem(id=None, label=unit_name, is_in_taxonomy=False)
 
 
-async def _quantity_from_mass_unit(value: float, unit_id: str, lang: str) -> float | None:
-    """Compute the quantity in grams for a mass unit, or ``None`` if not a mass unit.
+async def convert_to_g(
+    value: float,
+    unit: str,
+    ingredient_id: str | None = None,
+) -> float:
+    """Convert a quantity given as ``(value, unit)`` to grams.
 
-    Returns ``value * conversion_factor`` when ``unit_id`` is a taxonomy unit
-    whose ``standard_unit`` is ``"g"`` and that defines a ``conversion_factor``.
-    Returns ``None`` for the ``item`` sentinel
-    or any non-mass (e.g. volume) unit.
+    A stateless, absolute conversion that relies solely on the OFF taxonomies.
 
-    ``unit_id`` may be a taxonomy id or a localized unit name;
-    names are resolved to their taxonomy id using ``lang`` (and the neutral ``xx`` language).
+    :param value: the numeric quantity (must be >= 0).
+    :param unit: a unit taxonomy id (e.g. ``xx:kg``) or the ``item`` sentinel
+        for countable ingredients.
+    :param ingredient_id: taxonomy id of the ingredient. Required when the
+        unit is a volume or ``item`` unit (to look up density / average
+        weight); ignored for mass units.
 
-    :raises exceptions.UnknownUnitError: if ``unit_id`` is not in the units taxonomy
-        (neither a known id nor a resolvable name)
-        and is not the ``item`` sentinel.
+    :raises exceptions.UnknownUnitError: if ``unit`` is neither a known
+        taxonomy unit nor the ``item`` sentinel, or if its ``standard_unit``
+        is neither ``"g"`` nor ``"ml"`` (i.e. not a unit relevant for recipes).
+    :raises exceptions.UnknownIngredientError: if ``ingredient_id`` is
+        provided but not found in the ingredients taxonomy.
+    :raises exceptions.UnitConversionNotSupportedError: if a required
+        property (``conversion_factor``, ``density_g_per_ml``,
+        ``average_weight_per_unit``) is missing, or if ``ingredient_id`` is
+        not provided for a volume or ``item`` conversion.
     """
-    if unit_id == types.ITEM_UNIT:
-        return None
-    standard_unit, conversion_factor = await _unit_conversion(unit_id, lang)
-    if standard_unit == "g" and conversion_factor is not None:
+    # Zero of anything is zero grams — skip all validation.
+    if value == 0:
+        return 0.0
+
+    # Countable unit: convert via the ingredient's average weight per unit.
+    if unit == types.ITEM_UNIT:
+        if ingredient_id is None:
+            raise exceptions.UnitConversionNotSupportedError(
+                f"Converting to '{types.ITEM_UNIT}' requires an ingredient_id "
+                f"(to look up its average_weight_per_unit). "
+                f"Please add the ingredient_id parameter."
+            )
+        avg_weight = await _ingredient_average_weight_per_unit(ingredient_id)
+        if avg_weight is None:
+            raise exceptions.UnitConversionNotSupportedError(
+                f"Ingredient '{ingredient_id}' (and its parents) does not define "
+                f"a positive average_weight_per_unit; cannot convert '{types.ITEM_UNIT}' to grams."
+            )
+        return value * avg_weight
+
+    # Resolve the unit's standard_unit and conversion factor from the taxonomy.
+    # Raises UnknownUnitError if the unit is not a known taxonomy id.
+    standard_unit, conversion_factor = await _unit_conversion(unit, lang="en")
+
+    # Mass unit: absolute grams.
+    if standard_unit == "g":
+        if conversion_factor is None:
+            raise exceptions.UnitConversionNotSupportedError(
+                f"Unit '{unit}' has a 'g' standard_unit but no conversion_factor."
+            )
         return value * conversion_factor
-    return None
+
+    # Volume unit: grams = value * factor * density.
+    if standard_unit == "ml":
+        if conversion_factor is None:
+            raise exceptions.UnitConversionNotSupportedError(
+                f"Unit '{unit}' has an 'ml' standard_unit but no conversion_factor."
+            )
+        if ingredient_id is None:
+            raise exceptions.UnitConversionNotSupportedError(
+                f"Converting a volume unit ('{unit}') to grams requires an "
+                f"ingredient_id (to look up its density_g_per_ml). "
+                f"Please add the ingredient_id parameter."
+            )
+        density = await _ingredient_density_g_per_ml(ingredient_id)
+        if density is None:
+            raise exceptions.UnitConversionNotSupportedError(
+                f"Ingredient '{ingredient_id}' (and its parents) does not define "
+                f"a positive density_g_per_ml; cannot convert volume to grams."
+            )
+        return value * conversion_factor * density
+
+    # Any other standard_unit (e.g. 'kJ') is not relevant for recipes.
+    raise exceptions.UnknownUnitError(
+        f"Unit '{unit}' (standard_unit '{standard_unit}') is not a known "
+        f"unit for a recipe (only 'g', 'ml' and 'item' are supported)."
+    )
 
 
 async def _unit_conversion(unit_id: str, lang: str) -> tuple[str | None, float | None]:
@@ -243,22 +475,6 @@ async def _unit_conversion(unit_id: str, lang: str) -> tuple[str | None, float |
     factor_raw = off._property_value(node, "conversion_factor")
     conversion_factor = float(factor_raw) if factor_raw is not None else None
     return standard_unit, conversion_factor
-
-
-async def _safe_unit_conversion(unit_id: str, lang: str) -> tuple[str | None, float | None]:
-    """Like :func:`_unit_conversion` but returns ``(None, None)`` instead of raising.
-
-    Used for the *old* unit in :func:`recompute_quantity`: it may be the
-    ``item`` sentinel or an unknown / unresolvable name,
-    in which case the same-standard-unit optimization simply does not apply
-    and we fall back to the other cases.
-    """
-    if unit_id == types.ITEM_UNIT:
-        return None, None
-    try:
-        return await _unit_conversion(unit_id, lang)
-    except exceptions.UnknownUnitError:
-        return None, None
 
 
 async def warmup(lang: str) -> None:

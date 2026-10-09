@@ -48,6 +48,9 @@
 		"ingredient_name": "Nome do ingrediente",
 		"ingredient_name_placeholder": "ex.: Tomate",
 		"weight": "Peso (g)",
+		"quantity": "Quantity",
+		"unit": "Unit",
+		"grams": "Grams",
 		"codified_ingredient": "Codificado",
 		"labels": "Selos e certificados",
 		"seasonality": "Sazonalidade",
@@ -74,6 +77,8 @@
 		"ingredient_not_accounted_tooltip": "Não encontramos correspondência em nossa base de impacto para este ingrediente",
 		"ingredient_zero_quantity": "Zero quantity",
 		"ingredient_zero_quantity_tooltip": "This ingredient's quantity is 0g, so it cannot be taken into account in the calculation.",
+		"ingredient_conversion_error": "Conversion error",
+		"ingredient_conversion_error_tooltip": "The quantity could not be converted to grams for this unit. Try a different unit or quantity.",
 		"ingredient_scorable": "Este ingrediente pode ser contabilizado no Green-Score"
 	},
 	"homepage": {
@@ -126,6 +131,7 @@
 		"recipe_text": "Insira cada ingrediente numa nova linha com a sua quantidade (ex.: 200g de farinha, 3 ovos, 100g de açúcar).",
 		"codified_ingredient": "Ingrediente padronizado da base de dados do Open Food Facts / Agribalyse.",
 		"weight": "Quantidade líquida do ingrediente em gramas.",
+		"grams": "Quantity in grams, used for the green-score computation(computed)",
 		"labels": "Certificações oficiais (ex.: Biológico, Comércio Justo) que concedem bónus ao Green-Score.",
 		"seasonality": "Marque se as frutas e legumes são da época para obter um bónus ambiental.",
 		"origin": "Origem geográfica do ingrediente, utilizada para avaliar o impacto do transporte.",

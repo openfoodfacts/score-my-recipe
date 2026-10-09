@@ -161,9 +161,22 @@ async def get_units(
 ) -> types.UnitsResponse:
     """Get the list of units available in the Open Food Facts units taxonomy
 
-    Note: as the list is not too big, we let clients handle suggestions to users
+    Note: as the list is not too big, we let clients handle suggestions to users.
+
+    When ``ingredient_id`` is provided, the returned units are narrowed to
+    those relevant for that ingredient (``g`` always, ``ml`` if the ingredient
+    has a density, ``item`` if it has an average weight per unit).
     """
-    unit_list = await units.get_units(filter_query.lang, filter_query.include_synonyms)
+    try:
+        unit_list = await units.get_units(
+            filter_query.lang,
+            filter_query.include_synonyms,
+            filter_query.ingredient_id,
+        )
+    except exceptions.UnknownUnitError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    except exceptions.UnknownIngredientError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
     response.headers["Cache-Control"] = "max-age=86400"
     return types.UnitsResponse(units=unit_list)
 
@@ -197,34 +210,28 @@ async def green_score(request: types.GreenScoreRequest) -> types.GreenScoreRespo
     )
 
 
-@app.post("/v1/recompute-quantity")
-@types.async_validate_model
-async def recompute_quantity(
-    request: types.RecomputeQuantityRequest,
-) -> types.RecomputeQuantityResponse:
-    """Recompute the quantity in grams after the user edited an ingredient's value/unit.
+@app.get("/v1/convert-quantity", response_model_exclude_none=True)
+async def convert_quantity(
+    filter_query: Annotated[types.ConvertQuantityRequest, Query()], response: Response
+) -> types.ConvertQuantityResponse:
+    """Convert a quantity given as ``(value, unit)`` to grams.
 
-    This is useful to let user change the value of a recipe item in a natural fashion
-    (eg. change 1 egg to 3 eggs)
-    while keeping the equivalent "g" conversion for green-score computation.
+    For some conversions, ingredient is needed.
 
-    A best effort is done to also allow changing the unit,
-    but currently, only new units that can be converted to grams are supported.
-
-    Units may be given as a taxonomy id, a localized unit name (resolved using
-    ``lang``) or the ``item`` sentinel for countable ingredients.
+    Getting the quantities in grams is needed for green-score computation,
+    and possibly other scores.
     """
     try:
-        quantity_g, value, unit = await units.recompute_quantity(
-            request.quantity_g,
-            request.old_value,
-            request.old_unit,
-            request.new_value,
-            request.new_unit,
-            request.lang,
+        quantity_g = await units.convert_to_g(
+            filter_query.value,
+            filter_query.unit,
+            filter_query.ingredient_id,
         )
     except exceptions.UnknownUnitError as exc:
         raise HTTPException(status_code=422, detail=str(exc))
+    except exceptions.UnknownIngredientError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
     except exceptions.UnitConversionNotSupportedError as exc:
         raise HTTPException(status_code=422, detail=str(exc))
-    return types.RecomputeQuantityResponse(quantity_g=quantity_g, value=value, unit=unit)
+    response.headers["Cache-Control"] = "max-age=86400"
+    return types.ConvertQuantityResponse(quantity_g=quantity_g)

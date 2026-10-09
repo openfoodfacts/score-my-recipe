@@ -15,6 +15,7 @@ type Origin = components['schemas']['Origin'];
 type SuggestedIngredient = components['schemas']['SuggestedIngredient'];
 type Country = components['schemas']['Country'];
 type CountriesResponse = components['schemas']['CountriesResponse'];
+type UnitsResponse = components['schemas']['UnitsResponse'];
 
 const API_BASE_URL = env.PUBLIC_RECIPE_API_URL ?? '';
 
@@ -40,17 +41,26 @@ export async function getMatchingTags(
 	const values = {
 		ingredients: getIngredientsTaxonomy(),
 		labels: getLabelsTaxonomy(),
-		countries: getCountriesTaxonomy()
+		countries: getCountriesTaxonomy(),
+		units: getUnitsTaxonomy()
 	};
 	if (Object.hasOwn(values, tagtype)) {
 		const list = await values[tagtype as keyof typeof values];
+		// Empty query: return all items (up to limit). Used by short-value
+		// taxonomies like units (minChars=0) to show every option on focus.
+		if (query.trim() === '') {
+			return { suggestions: list.slice(0, limit), matched_synonyms: {} };
+		}
+		// Units have short labels/synonyms (e.g. "g", "kg", "l"), so a lower
+		// minimum match length is needed than for ingredients/labels/countries.
+		const minMatchCharLength = tagtype === 'units' ? 1 : 3;
 		const fuse = new Fuse(list, {
 			// search both the canonical label and the synonyms so that
 			// alternative names also yield a match
 			keys: ['label', 'synonyms'],
 			includeScore: true,
 			includeMatches: true,
-			minMatchCharLength: 3,
+			minMatchCharLength,
 			ignoreDiacritics: true
 		});
 		const results = fuse
@@ -227,7 +237,7 @@ export const COUNTRIES_TAXONOMY: Record<string, TaxonomyItem[]> = {
 /**
  * Get the current locale key ('en' or 'fr')
  */
-function getLocaleKey(): 'en' | 'fr' {
+export function getLocaleKey(): 'en' | 'fr' {
 	const locale = getLocale();
 	return locale.startsWith('fr') ? 'fr' : 'en';
 }
@@ -333,4 +343,93 @@ export async function getCountries(lang: string): Promise<Country[]> {
 
 	const data = (await response.json()) as CountriesResponse;
 	return data.countries.filter((country) => country.country_code != null);
+}
+
+/**
+ * The id of the synthetic ``item`` unit, used for countable ingredients
+ * (e.g. "3 eggs"). Mirrors the backend ``types.ITEM_UNIT`` sentinel.
+ */
+export const ITEM_UNIT_ID = 'item';
+
+/**
+ * Cache for the units taxonomy, keyed by language code.
+ *
+ * The units list is small and changes rarely, so it is fetched once per
+ * language and reused across all ingredient lines.
+ */
+const unitsCache: Record<string, TaxonomyItem[]> = {};
+
+/**
+ * Fetch the list of units (mass and volume) from the backend, with synonyms
+ * for client-side matching.
+ *
+ * This is the unfiltered fallback (all g/ml units, no ``item``) used by the
+ * Tags component when no ingredient is selected yet. The synthetic ``item``
+ * unit is never added here — it only comes from the backend via
+ * :func:`getCompatibleUnits` when the selected ingredient has a positive
+ * ``average_weight_per_unit``.
+ *
+ * @returns The list of unit TaxonomyItems (taxonomy g/ml units only).
+ * @throws {Error} If the backend responds with a non-2xx status code.
+ */
+export async function getUnitsTaxonomy(): Promise<TaxonomyItem[]> {
+	const lang = getLocaleKey();
+	if (unitsCache[lang]) {
+		return unitsCache[lang];
+	}
+	const params = new URLSearchParams({ lang, include_synonyms: 'true' });
+	const response = await fetch(`${API_BASE_URL}/v1/units?${params.toString()}`);
+	if (!response.ok) {
+		throw new Error(`Failed to fetch units: ${response.statusText}`);
+	}
+	const data = (await response.json()) as UnitsResponse;
+	// Map the backend Unit to the frontend TaxonomyItem shape.
+	const units: TaxonomyItem[] = data.units.map((unit) => ({
+		id: unit.id,
+		label: unit.label,
+		isInTaxonomy: true,
+		synonyms: unit.synonyms ?? []
+	}));
+	unitsCache[lang] = units;
+	return units;
+}
+
+/**
+ * Fetch the list of units compatible with a given ingredient.
+ *
+ * The backend returns ``g`` units always, ``ml`` units when the ingredient
+ * has a positive ``density_g_per_ml``, and the synthetic ``item`` unit when
+ * the ingredient has a positive ``average_weight_per_unit``.
+ *
+ * When no ingredient id is provided, callers should fall back to
+ * :func:`getUnitsTaxonomy` (the full unfiltered list).
+ *
+ * @param lang - The language code for the unit labels.
+ * @param ingredientId - Optional taxonomy id of the ingredient, used to
+ *   determine which unit families (g, ml, item) are relevant.
+ * @returns The list of compatible unit TaxonomyItems (with synonyms for matching).
+ * @throws {Error} If the backend responds with a non-2xx status code.
+ */
+export async function getCompatibleUnits(
+	lang: string,
+	ingredientId?: string | null
+): Promise<TaxonomyItem[]> {
+	const params = new URLSearchParams({
+		lang,
+		include_synonyms: 'true'
+	});
+	if (ingredientId) {
+		params.set('ingredient_id', ingredientId);
+	}
+	const response = await fetch(`${API_BASE_URL}/v1/units?${params.toString()}`);
+	if (!response.ok) {
+		throw new Error(`Failed to fetch compatible units: ${response.statusText}`);
+	}
+	const data = (await response.json()) as UnitsResponse;
+	return data.units.map((unit) => ({
+		id: unit.id,
+		label: unit.label,
+		isInTaxonomy: true,
+		synonyms: unit.synonyms ?? []
+	}));
 }
