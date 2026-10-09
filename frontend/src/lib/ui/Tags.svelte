@@ -46,8 +46,9 @@
 		// options appear as soon as the input is focused.
 		minChars?: number;
 		// Optional function to override how a tag's label is displayed, both for
-		// selected tags and autocomplete suggestions. Used to substitute the label
-		// of the synthetic 'item' unit with the ingredient name at render time.
+		// selected tags and autocomplete suggestions. Defaults to the tag's own
+		// ``label`` (the backend already localizes unit labels, including the
+		// synthetic 'item' unit, so no client-side substitution is needed).
 		formatLabel?: (tag: TaxonomyItem) => string;
 		// Classes applied to the autocomplete dropdown (suggestion list)
 		// container, so its width can be decoupled from the widget width. Defaults

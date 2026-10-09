@@ -213,8 +213,8 @@ def _mock_ingredients_taxonomy():
     nodes = [
         create_taxonomy_node(
             id="en:egg",
-            names={"en": "egg", "xx": "egg"},
-            synonyms={"en": ["eggs"]},
+            names={"en": "egg", "xx": "egg", "fr": "œuf"},
+            synonyms={"en": ["eggs"], "fr": ["œufs"]},
             properties={"average_weight_per_unit": {"en": "50"}},
         ),
         create_taxonomy_node(
@@ -382,19 +382,36 @@ async def test_get_units_unknown_ingredient_returns_g_only(mock_units_and_ingred
 
 @pytest.mark.asyncio
 async def test_get_units_item_unit_has_no_standard_unit(mock_units_and_ingredients):
-    """The synthetic item unit has standard_unit=None."""
+    """The synthetic item unit has standard_unit=None and is labelled with
+    the ingredient's name in the requested language (here 'egg' in English)."""
     result = await units.get_units("en", ingredient_id="en:egg")
     item_unit = next(unit for unit in result if unit.id == types.ITEM_UNIT)
     assert item_unit.standard_unit is None
-    assert item_unit.label == types.ITEM_UNIT
+    assert item_unit.label == "egg"
 
 
 @pytest.mark.asyncio
-async def test_get_units_item_unit_synonyms_empty_when_requested(mock_units_and_ingredients):
-    """When include_synonyms=true, the item unit gets an empty synonyms list."""
+async def test_get_units_item_unit_label_localized(mock_units_and_ingredients):
+    """The item unit label follows the requested language (here 'œuf' in fr)."""
+    result = await units.get_units("fr", ingredient_id="en:egg")
+    item_unit = next(unit for unit in result if unit.id == types.ITEM_UNIT)
+    assert item_unit.label == "œuf"
+
+
+@pytest.mark.asyncio
+async def test_get_units_item_unit_synonyms_from_ingredient(mock_units_and_ingredients):
+    """When include_synonyms=true, the item unit synonyms are the ingredient's."""
     result = await units.get_units("en", include_synonyms=True, ingredient_id="en:egg")
     item_unit = next(unit for unit in result if unit.id == types.ITEM_UNIT)
-    assert item_unit.synonyms == []
+    assert item_unit.synonyms == ["eggs"]
+
+
+@pytest.mark.asyncio
+async def test_get_units_item_unit_synonyms_localized(mock_units_and_ingredients):
+    """The item unit synonyms follow the requested language (here fr 'œufs')."""
+    result = await units.get_units("fr", include_synonyms=True, ingredient_id="en:egg")
+    item_unit = next(unit for unit in result if unit.id == types.ITEM_UNIT)
+    assert item_unit.synonyms == ["œufs"]
 
 
 @pytest.mark.asyncio
@@ -429,6 +446,21 @@ def test_get_units_api_with_ingredient_returns_item(mock_units_and_ingredients):
     assert "en:gram" in ids
     # no ml units (egg has no density)
     assert "en:cup" not in ids
+
+
+def test_get_units_api_item_labelled_with_ingredient_name(mock_units_and_ingredients):
+    """The /v1/units endpoint labels the item unit with the ingredient name
+    and its synonyms (so the client can match it by name)."""
+    response = client.get(
+        "/v1/units",
+        params={"lang": "en", "ingredient_id": "en:egg", "include_synonyms": "true"},
+    )
+    assert response.status_code == 200
+    item_unit = next(
+        unit for unit in response.json()["units"] if unit["id"] == "item"
+    )
+    assert item_unit["label"] == "egg"
+    assert item_unit["synonyms"] == ["eggs"]
 
 
 def test_get_units_api_with_density_returns_ml(mock_units_and_ingredients):

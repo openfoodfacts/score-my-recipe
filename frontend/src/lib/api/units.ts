@@ -39,26 +39,3 @@ export function unitToApiString(unit: TaxonomyItem | null): string {
 	if (unit.id !== null) return unit.id;
 	return unit.label;
 }
-
-/**
- * Display label for a unit TaxonomyItem.
- *
- * The synthetic ``item`` unit (for countable ingredients) is shown as the
- * ingredient name instead of the literal 'item', so that "3 eggs" reads
- * naturally as "3" + "eggs". Falls back to the codified ingredient label,
- * then to 'item' when the name is empty (e.g. a fresh empty line).
- *
- * @param unit - The unit to format.
- * @param ingredientName - The ingredient's display name (used for the item unit).
- * @param codifiedIngredientLabel - Optional codified ingredient label as fallback.
- */
-export function formatUnitLabel(
-	unit: TaxonomyItem,
-	ingredientName: string,
-	codifiedIngredientLabel?: string | null
-): string {
-	if (unit.id === ITEM_UNIT_ID) {
-		return ingredientName || codifiedIngredientLabel || ITEM_UNIT_ID;
-	}
-	return unit.label;
-}

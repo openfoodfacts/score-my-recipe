@@ -6,7 +6,13 @@ from fastapi.testclient import TestClient
 from api.api import app
 from api import types
 from api.types import OFFIngredient
-from tests.helpers import build_mock_units_taxonomy, patch_units_taxonomy
+from tests.helpers import (
+    build_mock_units_taxonomy,
+    create_taxonomy,
+    create_taxonomy_node,
+    patch_ingredients_taxonomy,
+    patch_units_taxonomy,
+)
 
 client = TestClient(app)
 
@@ -275,9 +281,29 @@ def test_parse_text_unresolvable_unit_becomes_free_text(mock_off_parse_text):
     assert ingredient["quantity_value"] == 2.0
 
 
+def _mock_ingredients_taxonomy_with_egg():
+    """Mock ingredients taxonomy with a single ``en:egg`` node.
+
+    Carries an ``average_weight_per_unit`` (so the ``item`` unit is relevant)
+    and English/French names + synonyms, so the ``item`` unit can be labelled
+    with the ingredient name.
+    """
+    return create_taxonomy(
+        [
+            create_taxonomy_node(
+                id="en:egg",
+                names={"en": "egg", "xx": "egg", "fr": "œuf"},
+                synonyms={"en": ["eggs"], "fr": ["œufs"]},
+                properties={"average_weight_per_unit": {"en": "50"}},
+            ),
+        ]
+    )
+
+
 @pytest.mark.asyncio
 async def test_off_ingredient_to_recipe_ingredient_no_unit_returns_item():
-    """An ingredient without a unit resolves to the synthetic 'item' unit."""
+    """An ingredient without a unit resolves to the synthetic 'item' unit,
+    labelled with the ingredient's name (so '3 eggs' reads naturally)."""
     from api.recipes import off_ingredient_to_recipe_ingredient
 
     off_ingredient = OFFIngredient(
@@ -287,10 +313,13 @@ async def test_off_ingredient_to_recipe_ingredient_no_unit_returns_item():
         quantity_g=150.0,
         is_in_taxonomy=1,
     )
-    with patch_units_taxonomy(build_mock_units_taxonomy()):
+    with (
+        patch_units_taxonomy(build_mock_units_taxonomy()),
+        patch_ingredients_taxonomy(_mock_ingredients_taxonomy_with_egg()),
+    ):
         ingredient = await off_ingredient_to_recipe_ingredient(off_ingredient, "en")
     assert ingredient.quantity_unit == types.TaxonomyItem(
-        id="item", label="item", is_in_taxonomy=True
+        id="item", label="egg", is_in_taxonomy=True
     )
     assert ingredient.quantity_value == 3.0
 
@@ -307,10 +336,14 @@ async def test_off_ingredient_to_recipe_ingredient_none_quantity_returns_item():
         quantity_g=None,
         is_in_taxonomy=1,
     )
-    with patch_units_taxonomy(build_mock_units_taxonomy()):
+    with (
+        patch_units_taxonomy(build_mock_units_taxonomy()),
+        patch_ingredients_taxonomy(_mock_ingredients_taxonomy_with_egg()),
+    ):
         ingredient = await off_ingredient_to_recipe_ingredient(off_ingredient, "en")
     assert ingredient.quantity_unit is not None
     assert ingredient.quantity_unit.id == "item"
+    assert ingredient.quantity_unit.label == "egg"
     assert ingredient.quantity_value is None
 
 

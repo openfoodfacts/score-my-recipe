@@ -22,9 +22,8 @@
 	import IconMaterialSymbolsSunnyOutline from '@iconify-svelte/material-symbols/sunny-outline';
 	import IconMaterialSymbolsCloudOutline from '@iconify-svelte/material-symbols/cloud-outline';
 	import type { Ingredient } from '$lib/types/ingredient';
-	import type { IngredientSuggestion, TaxonomyItem } from '$lib/types/ingredient';
+	import type { IngredientSuggestion } from '$lib/types/ingredient';
 	import { isIngredientEmpty, isIngredientNotEmpty } from '$lib/types/ingredient';
-	import { formatUnitLabel as formatUnitLabelFor } from '$lib/api/units';
 	import { createQuantityConvert, createCompatibleUnits } from './quantityConvert.svelte';
 
 	type Props = {
@@ -67,17 +66,6 @@
 	// component stays focused on layout and presentation.
 	const quantityState = createQuantityConvert(ingredient);
 	const unitsState = createCompatibleUnits(ingredient);
-
-	/**
-	 * Display label for a unit TaxonomyItem.
-	 *
-	 * Delegates to the pure helper in ``units.ts``, passing the ingredient's
-	 * name and codified label so the synthetic ``item`` unit renders as the
-	 * ingredient name (e.g. "3 eggs" reads as "3" + "eggs").
-	 */
-	function formatUnitLabel(unit: TaxonomyItem): string {
-		return formatUnitLabelFor(unit, ingredient.name, ingredient.codifiedIngredient?.label);
-	}
 
 	// trigger onNotEmpty when isNoteEmpty becomes true
 	$effect(() => {
@@ -215,7 +203,6 @@
 			}}
 			single={true}
 			minChars={0}
-			formatLabel={formatUnitLabel}
 			selectListClasses="min-w-48"
 			allowedItems={unitsState.compatibleUnits}
 			restrictToSuggestions={true}

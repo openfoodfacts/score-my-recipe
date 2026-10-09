@@ -107,12 +107,23 @@ async def get_units(
 
     # Add the synthetic 'item' unit when the ingredient defines a positive
     # average_weight_per_unit (countable ingredients like "3 eggs").
+    #
+    # Its label is the ingredient's name in the requested language (and its
+    # synonyms the ingredient's own synonyms), instead of the literal
+    # ``ITEM_UNIT`` sentinel, so that:
+    # * the unit reads naturally ("3 eggs" rather than "3 item"), and
+    # * the client unit selector can match it by the ingredient name/synonyms.
+    # has_avg_weight being True implies the ingredient is known, so the
+    # lookup below cannot raise UnknownIngredientError.
     if has_avg_weight:
+        item_label, item_synonyms = await _ingredient_lang_label_and_synonyms(
+            ingredient_id, lang
+        )
         result.append(
             types.Unit(
                 id=types.ITEM_UNIT,
-                label=types.ITEM_UNIT,
-                synonyms=[] if include_synonyms else None,
+                label=item_label,
+                synonyms=list(item_synonyms) if include_synonyms else None,
                 standard_unit=None,
             )
         )
@@ -206,6 +217,34 @@ async def _ingredient_is_known(ingredient_id: str) -> bool:
     return ingredient_id in ingredients_taxonomy
 
 
+@async_lru_cache(maxsize=200)
+async def _ingredient_lang_label_and_synonyms(
+    ingredient_id: str, lang: str
+) -> tuple[str, tuple[str, ...]]:
+    """Localized label and synonyms of an ingredient for ``lang``.
+
+    Falls back to the ``xx`` neutral language then to English (and finally to
+    the ingredient id for the label), mirroring
+    :func:`off.taxonomy_lang_label_and_synonyms`.
+
+    Used to give the synthetic ``item`` unit a meaningful label — the
+    ingredient's name — and searchable synonyms, instead of the literal
+    ``ITEM_UNIT`` sentinel, so that countable quantities such as "3 eggs"
+    read naturally and can be matched by name in the client unit selector.
+
+    :raises exceptions.UnknownIngredientError: if ``ingredient_id`` is not in
+        the ingredients taxonomy.
+    """
+    ingredients_taxonomy = await off.get_ingredients_taxonomy()
+    if ingredient_id not in ingredients_taxonomy:
+        raise exceptions.UnknownIngredientError(
+            f"Ingredient '{ingredient_id}' is not a known ingredient."
+        )
+    node = ingredients_taxonomy[ingredient_id]
+    (_id, label, synonyms, _props) = off.taxonomy_lang_label_and_synonyms(lang, [node])[0]
+    return label, tuple(synonyms)
+
+
 def _normalize_unit_name(name: str) -> str:
     """Normalize a unit name for case- and accent-insensitive lookup.
 
@@ -267,7 +306,7 @@ async def _resolve_unit_name(name: str, lang: str) -> str | None:
 
 
 async def resolve_unit_to_taxonomy_item(
-    unit_name: str | None, lang: str
+    unit_name: str | None, lang: str, ingredient_id: str | None = None
 ) -> types.TaxonomyItem:
     """Resolve a raw unit string (as parsed from a recipe) into a TaxonomyItem.
 
@@ -278,9 +317,12 @@ async def resolve_unit_to_taxonomy_item(
     Resolution order:
 
     * ``None`` or blank -> the synthetic ``item`` unit
-      ``{id: ITEM_UNIT, label: ITEM_UNIT, is_in_taxonomy: True}``, the unit
-      used for countable ingredients (e.g. "3 eggs") that have no measurable
-      mass/volume unit.
+      ``{id: ITEM_UNIT, label: <ingredient name>, is_in_taxonomy: True}``, the
+      unit used for countable ingredients (e.g. "3 eggs") that have no
+      measurable mass/volume unit. The label is the ingredient's name in
+      ``lang`` (so "3 eggs" reads naturally instead of "3 item"); it falls back
+      to the ``ITEM_UNIT`` sentinel when the ingredient is unknown or not
+      provided.
     * a known taxonomy id (e.g. ``xx:kg``) or a localized unit name resolvable
       through ``lang`` (e.g. ``"kg"``, ``"tasse"``) -> ``{id, label, True}``
       with the label localized in ``lang``.
@@ -290,12 +332,22 @@ async def resolve_unit_to_taxonomy_item(
 
     :param unit_name: the raw unit string from the parser, or ``None``.
     :param lang: the language code used to resolve names and localize labels.
+    :param ingredient_id: taxonomy id of the ingredient, used only to label
+        the synthetic ``item`` unit with the ingredient's name. Optional and
+        ignored for actual unit names.
     """
     lang = two_letter_lang_code(lang)
     # No unit: countable ingredient.
     if not unit_name or not unit_name.strip():
+        # Use the ingredient's localized name as the label (instead of the
+        # literal ``ITEM_UNIT`` sentinel) so countable quantities read
+        # naturally ("3 eggs" rather than "3 item"). Falls back to the
+        # sentinel when the ingredient is unknown or not provided.
+        item_label = types.ITEM_UNIT
+        if ingredient_id and await _ingredient_is_known(ingredient_id):
+            item_label, _ = await _ingredient_lang_label_and_synonyms(ingredient_id, lang)
         return types.TaxonomyItem(
-            id=types.ITEM_UNIT, label=types.ITEM_UNIT, is_in_taxonomy=True
+            id=types.ITEM_UNIT, label=item_label, is_in_taxonomy=True
         )
     unit_name = unit_name.strip()
     # Build an id -> localized label map from the units list for this language.

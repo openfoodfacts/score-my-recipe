@@ -45,9 +45,10 @@ def patch_ingredients_taxonomy(taxonomy):
     """Patch ``api.off.get_ingredients_taxonomy`` to return ``taxonomy``.
 
     Also resets the per-ingredient property caches in ``api.units``
-    (``_ingredient_average_weight_per_unit``, ``_ingredient_density_g_per_ml``
-    and ``_ingredient_is_known``) so each test rebuilds them from the
-    provided (mocked) taxonomy instead of a previous run's.
+    (``_ingredient_average_weight_per_unit``, ``_ingredient_density_g_per_ml``,
+    ``_ingredient_is_known`` and ``_ingredient_lang_label_and_synonyms``) so
+    each test rebuilds them from the provided (mocked) taxonomy instead of a
+    previous run's.
     """
     import api.units as units
 
@@ -55,6 +56,7 @@ def patch_ingredients_taxonomy(taxonomy):
         "_ingredient_average_weight_per_unit",
         "_ingredient_density_g_per_ml",
         "_ingredient_is_known",
+        "_ingredient_lang_label_and_synonyms",
     ):
         getattr(units, cache_name).cache_clear()
     try:
@@ -66,6 +68,7 @@ def patch_ingredients_taxonomy(taxonomy):
             "_ingredient_average_weight_per_unit",
             "_ingredient_density_g_per_ml",
             "_ingredient_is_known",
+            "_ingredient_lang_label_and_synonyms",
         ):
             getattr(units, cache_name).cache_clear()
 
