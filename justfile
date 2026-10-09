@@ -8,6 +8,7 @@ set dotenv-required := true
 
 just_frontend := "cd frontend && just"
 just_server := "cd server && just"
+just_e2e := "cd e2e && just"
 
 # this help
 [default]
@@ -105,3 +106,8 @@ check-openapi:
 test:
     {{ just_server }} test
     {{ just_frontend }} test
+
+# End to end testing (Playwright, Chromium)
+[group('quality')]
+e2e:
+    {{ just_e2e }} install_and_test

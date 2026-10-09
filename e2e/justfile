@@ -1,0 +1,42 @@
+
+# ===========================================
+# End to end testing (e2e)
+# ===========================================
+
+# Run end-to-end integration tests (Playwright, Chromium)
+# Installs e2e deps + Chromium on first run.
+[group('quality')]
+install:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Source nvm (unset npm_config_prefix to avoid nvm incompatibility)
+    unset npm_config_prefix
+    if [ -f ../frontend/local-nvm.sh ]; then . ../frontend/local-nvm.sh; fi
+    echo "=== Installing e2e deps ==="
+    pnpm install --frozen-lockfile 2>/dev/null || pnpm install
+    echo "=== Installing Chromium (if needed) ==="
+    npx playwright install chromium
+
+[group('quality')]
+test:
+    echo "=== Running e2e tests ==="
+    npx playwright test
+
+[group('quality')]
+install_and_test:
+    @just install
+    @just test
+
+[group('quality')]
+refresh_test_data: refresh_test_taxonomy refresh_api_data
+
+
+# Refresh taxonomy snapshots (network required)
+refresh_test_taxonomy:
+    echo "=== Refreshing taxonomy snapshots ==="
+    bash ../server/tests/data/update_taxonomies.sh
+
+# Re-capture the parse_text fixture (network required)
+refresh_api_data:
+    echo "=== Re-capturing the api responses for tests ==="
+    cd ../server && uv run python tests/data/capture_parse_text.py

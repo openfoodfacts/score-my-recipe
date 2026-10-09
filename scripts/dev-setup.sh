@@ -130,6 +130,27 @@ frontend_setup() {
   fi
 }
 
+# ─── E2E Setup ────────────────────────────────────────────────────────────────
+
+e2e_setup() {
+  info "Setting up e2e tests..."
+
+  cd "$REPO_ROOT/frontend"
+  # nvm is already sourced from frontend_setup; just use it
+  nvm use 2>/dev/null || true
+
+  # Install e2e dependencies
+  cd "$REPO_ROOT/e2e"
+  info "Installing e2e dependencies..."
+  pnpm install --frozen-lockfile 2>/dev/null || pnpm install
+  ok "e2e dependencies installed"
+
+  # Install Playwright Chromium browser
+  info "Installing Playwright Chromium..."
+  npx playwright install chromium
+  ok "Chromium installed for Playwright"
+}
+
 # ─── Main ──────────────────────────────────────────────────────────────────────
 
 
@@ -149,6 +170,7 @@ case "${1:-full}" in
     just_setup
     frontend_setup
     server_setup
+    e2e_setup
     ;;
   *)
     echo "Usage: $0 [just|frontend|server|full|all]"
