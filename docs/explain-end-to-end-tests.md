@@ -1,1 +1,1 @@
-e2e/README.md
+../e2e/README.md
