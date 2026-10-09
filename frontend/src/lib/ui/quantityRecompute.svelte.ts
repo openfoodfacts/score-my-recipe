@@ -13,7 +13,7 @@
  * @see https://svelte.dev/docs/svelte/$state  — runes in .svelte.ts modules
  * @see https://svelte.dev/docs/svelte/$effect — cleanup via returned function
  */
-import type { Ingredient, TaxonomyItem } from '$lib/types/ingredient';
+import { isIngredientEmpty, type Ingredient, type TaxonomyItem } from '$lib/types/ingredient';
 import { recomputeQuantity } from '$lib/api/recipe';
 import { getCompatibleUnits, getLocaleKey } from '$lib/api/taxonomy';
 import { GRAM_UNIT_ID, isGramUnit, unitToApiString } from '$lib/api/units';
@@ -61,8 +61,15 @@ export function createQuantityRecompute(ingredient: Ingredient) {
 	 *
 	 * Also updates the reference state so the next non-gram recompute has
 	 * the correct baseline.
+	 *
 	 */
 	$effect(() => {
+		// Empty placeholder lines are skipped:
+		// writing the weight would make the line count as "non-empty"
+		// which in turn would trigger the addition of a new empty line
+		// and so one without end.
+		if (isIngredientEmpty(ingredient)) return;
+
 		if (isGramUnit(ingredient.quantityUnit)) {
 			ingredient.weight = ingredient.quantityValue;
 			refQuantityG = ingredient.quantityValue ?? 0;
@@ -84,6 +91,12 @@ export function createQuantityRecompute(ingredient: Ingredient) {
 		const currentValue = ingredient.quantityValue;
 		const currentUnit = ingredient.quantityUnit;
 		const currentUnitStr = unitToApiString(currentUnit);
+
+		// Empty placeholder lines are skipped:
+		// writing the weight would make the line count as "non-empty"
+		// which in turn would trigger the addition of a new empty line
+		// and so one without end.
+		if (isIngredientEmpty(ingredient)) return;
 
 		// Skip the gram-unit shortcut (handled by the local $effect above)
 		if (isGramUnit(currentUnit)) return;
