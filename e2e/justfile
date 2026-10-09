@@ -23,16 +23,15 @@ install:
     set -euo pipefail
     # Source nvm (unset npm_config_prefix to avoid nvm incompatibility)
     unset npm_config_prefix
-    if [ -f ../frontend/local-nvm.sh ]; then . ../frontend/local-nvm.sh; fi
     echo "=== Installing e2e deps ==="
-    pnpm install --frozen-lockfile 2>/dev/null || pnpm install
+    {{ use_nvm }} && pnpm install --frozen-lockfile 2>/dev/null || pnpm install
     echo "=== Installing Chromium (if needed) ==="
-    npx playwright install chromium
+    {{ use_nvm }} && npx playwright install chromium
 
 [group('quality')]
 test:
     echo "=== Running e2e tests ==="
-    npx playwright test
+    {{ use_nvm }} && npx playwright test
 
 [group('quality')]
 install_and_test:
