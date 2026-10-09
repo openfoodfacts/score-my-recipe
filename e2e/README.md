@@ -10,16 +10,17 @@ but they insure we don't inadvertandly break some important feature.
 
 ## How it works
 
-Playwright's `webServer` starts `start-servers.sh`, which launches two processes:
+Playwright's `webServer` launches two processes, each with its own readiness
+check so tests start only after both are ready (the backend is checked first):
 
-1. **Backend** — `server/tests/integration_server.py` runs the real FastAPI app
-   on port `8800`, with the OpenFoodFacts external dependency mocked so tests
-   are deterministic and fully offline:
+1. **Backend** — `start-backend.sh` runs `server/tests/integration_server.py`,
+   the real FastAPI app on port `8800`, with the OpenFoodFacts external
+   dependency mocked so tests are deterministic and fully offline:
    - `parse_text` returns a recorded fixture
      (`server/tests/data/parse_text_recipe.json`) instead of calling live OFF.
    - Taxonomies are read from pinned snapshots
      (`server/tests/data/taxonomies/*.json`) via `SCORE_MY_RECIPE_CACHE_DIR`.
-2. **Frontend** — `vite dev` on port `5174`, with
+2. **Frontend** — `start-frontend.sh` runs `vite dev` on port `5174`, with
    `PUBLIC_RECIPE_API_URL=http://localhost:8800` pointing at the test backend.
 
 Everything else (HTTP layer, ingredient mapping, green-score computation, CORS)
@@ -62,8 +63,9 @@ new score is correct.
 ```
 e2e/
 ├── eslint.config.mjs        # ESLint flat config (TypeScript)
-├── playwright.config.ts     # Playwright config (webServer, Chromium project)
-├── start-servers.sh         # Launches backend (8800) + frontend (5174)
+├── playwright.config.ts     # Playwright config (webServer array, Chromium project)
+├── start-backend.sh         # Launches the backend (8800)
+├── start-frontend.sh        # Launches the frontend dev server (5174)
 ├── tests/
 │   └── recipe-score.spec.ts # the integration test
 ├── tsconfig.json            # TypeScript config (type-checking)
