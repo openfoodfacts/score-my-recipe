@@ -43,7 +43,6 @@ os.environ["SCORE_MY_RECIPE_AGRIBALYSE_CSV_PATH"] = str(DATA_DIR / "agribalyse.c
 
 import uvicorn  # noqa: E402
 
-import api.recipes as recipes  # noqa: E402
 import api.types as types  # noqa: E402
 from api.api import app  # noqa: E402
 
