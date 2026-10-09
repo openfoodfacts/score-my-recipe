@@ -77,6 +77,8 @@
 		"ingredient_not_accounted_tooltip": "Nous n'avons pas trouvé de correspondance dans notre base de données d'impact pour cet ingrédient",
 		"ingredient_zero_quantity": "Zero quantity",
 		"ingredient_zero_quantity_tooltip": "This ingredient's quantity is 0g, so it cannot be taken into account in the calculation.",
+		"ingredient_conversion_error": "Conversion error",
+		"ingredient_conversion_error_tooltip": "The quantity could not be converted to grams for this unit. Try a different unit or quantity.",
 		"ingredient_scorable": "Cet ingrédient peut être comptabilisé dans le green-score"
 	},
 	"homepage": {

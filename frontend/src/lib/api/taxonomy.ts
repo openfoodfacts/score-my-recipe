@@ -237,7 +237,7 @@ export const COUNTRIES_TAXONOMY: Record<string, TaxonomyItem[]> = {
 /**
  * Get the current locale key ('en' or 'fr')
  */
-function getLocaleKey(): 'en' | 'fr' {
+export function getLocaleKey(): 'en' | 'fr' {
 	const locale = getLocale();
 	return locale.startsWith('fr') ? 'fr' : 'en';
 }
@@ -394,4 +394,46 @@ export async function getUnitsTaxonomy(): Promise<TaxonomyItem[]> {
 	units.push({ id: ITEM_UNIT_ID, label: ITEM_UNIT_ID, isInTaxonomy: true, synonyms: [] });
 	unitsCache[lang] = units;
 	return units;
+}
+
+/**
+ * Fetch the list of units compatible with a given source unit, optionally
+ * filtered by ingredient (to determine if the synthetic ``item`` unit is a
+ * valid target).
+ *
+ * When the source unit or ingredient is not provided, callers should fall
+ * back to :func:`getUnitsTaxonomy` (the full unfiltered list).
+ *
+ * @param lang - The language code for the unit labels.
+ * @param compatibleWithUnit - The source unit (a taxonomy id, a localized
+ *   unit name, or the ``item`` sentinel).
+ * @param ingredientId - Optional taxonomy id of the ingredient, used to
+ *   determine if the ``item`` unit is a compatible target.
+ * @returns The list of compatible unit TaxonomyItems (with synonyms for matching).
+ * @throws {Error} If the backend responds with a non-2xx status code.
+ */
+export async function getCompatibleUnits(
+	lang: string,
+	compatibleWithUnit: string,
+	ingredientId?: string | null
+): Promise<TaxonomyItem[]> {
+	const params = new URLSearchParams({
+		lang,
+		include_synonyms: 'true',
+		compatible_with_unit: compatibleWithUnit
+	});
+	if (ingredientId) {
+		params.set('ingredient_id', ingredientId);
+	}
+	const response = await fetch(`${API_BASE_URL}/v1/units?${params.toString()}`);
+	if (!response.ok) {
+		throw new Error(`Failed to fetch compatible units: ${response.statusText}`);
+	}
+	const data = (await response.json()) as UnitsResponse;
+	return data.units.map((unit) => ({
+		id: unit.id,
+		label: unit.label,
+		isInTaxonomy: true,
+		synonyms: unit.synonyms ?? []
+	}));
 }

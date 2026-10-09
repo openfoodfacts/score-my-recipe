@@ -14,6 +14,7 @@
 -->
 <script lang="ts">
 	import { _ } from '$lib/i18n';
+	import { onDestroy } from 'svelte';
 	import Tags from './Tags.svelte';
 	import HelperTooltip from './HelperTooltip.svelte';
 	import IconMdiDelete from '@iconify-svelte/mdi/delete';
@@ -24,11 +25,15 @@
 	import type { Ingredient } from '$lib/types/ingredient';
 	import type { IngredientSuggestion, TaxonomyItem } from '$lib/types/ingredient';
 	import { isIngredientEmpty, isIngredientNotEmpty } from '$lib/types/ingredient';
-	import { ITEM_UNIT_ID } from '$lib/api/taxonomy';
+	import { ITEM_UNIT_ID, getCompatibleUnits, getLocaleKey } from '$lib/api/taxonomy';
+	import { recomputeQuantity } from '$lib/api/recipe';
 
 	/** Taxonomy id of the gram unit — the only unit for which grams track the
 	 * quantity value live (identity, not a transformation). */
 	const GRAM_UNIT_ID = 'en:gram';
+
+	/** Debounce delay (ms) before firing the recompute-quantity API call. */
+	const RECOMPUTE_DELAY = 400;
 
 	type Props = {
 		// The ingredient data object (bindable): name, weight, etc.
@@ -64,20 +69,195 @@
 		isIngredientNotEmpty(ingredient) && (ingredient.weight === 0 || ingredient.weight == null)
 	);
 
+	// --- Reference state -------------------------------------------------------
+	// The last known-good (quantity_g, value, unit) from which the current grams
+	// were derived. Initialized from the parsed ingredient on mount, and updated
+	// after each successful recompute (and by the gram-unit local effect below).
+	// This is the "old" state sent to the recompute API on the next edit.
+	let refQuantityG = $state(ingredient.weight ?? 0);
+	let refValue = $state(ingredient.quantityValue ?? 0);
+	let refUnit = $state(unitToApiString(ingredient.quantityUnit));
+
+	// --- Recompute state -------------------------------------------------------
+	let isRecomputing = $state(false);
+	let recomputeError = $state(false);
+	let recomputeController: AbortController | null = null;
+	let recomputeTimer: ReturnType<typeof setTimeout> | null = null;
+
+	// --- Compatible units -----------------------------------------------------
+	// The filtered list of units compatible with the current ingredient's unit.
+	// When null, the Tags component falls back to fetching all units.
+	let compatibleUnits = $state<TaxonomyItem[] | null>(null);
+
+	/**
+	 * Convert a TaxonomyItem unit to the string expected by the recompute API.
+	 *
+	 * Taxonomy units send their id, the ``item`` sentinel sends ``item``, and
+	 * free-text entries (id null) send their label so the backend can attempt
+	 * to resolve it.
+	 */
+	function unitToApiString(unit: TaxonomyItem | null): string {
+		if (!unit) return ITEM_UNIT_ID;
+		if (unit.id !== null) return unit.id;
+		return unit.label;
+	}
+
 	/**
 	 * Keep the grams (weight) in sync with the quantity value when the unit is
-	 * the gram unit. This is the only live conversion: for any other unit (kg,
-	 * ml, cup, item…), grams stay frozen (the parser's quantity_g, or 0) — unit
-	 * transformations are deferred to a later step.
+	 * the gram unit. This is the only live conversion (no API call): for the
+	 * gram unit, grams *are* the quantity value.
 	 *
-	 * Writing ``ingredient.weight`` here does not re-trigger this effect
-	 * because ``weight`` is not read (only ``quantityUnit`` and
-	 * ``quantityValue`` are), so there is no update cycle.
+	 * Also updates the reference state so the next non-gram recompute has the
+	 * correct baseline.
 	 */
 	$effect(() => {
 		if (ingredient.quantityUnit?.id === GRAM_UNIT_ID) {
 			ingredient.weight = ingredient.quantityValue;
+			refQuantityG = ingredient.quantityValue ?? 0;
+			refValue = ingredient.quantityValue ?? 0;
+			refUnit = GRAM_UNIT_ID;
 		}
+	});
+
+	/**
+	 * Debounced recompute-quantity effect.
+	 *
+	 * Fires when the user changes the quantity value or the unit (except for
+	 * the gram unit, handled by the local effect above). Skips when the current
+	 * values match the reference state (nothing to recompute). When the quantity
+	 * is cleared (null), sets grams to 0 immediately without an API call.
+	 */
+	$effect(() => {
+		const currentValue = ingredient.quantityValue;
+		const currentUnit = ingredient.quantityUnit;
+		const currentUnitStr = unitToApiString(currentUnit);
+
+		// Skip the gram-unit shortcut (handled by the local $effect above)
+		if (currentUnit?.id === GRAM_UNIT_ID) return;
+
+		// Cleared quantity: skip the API call, set grams to 0
+		if (currentValue === null) {
+			if (recomputeTimer) {
+				clearTimeout(recomputeTimer);
+				recomputeTimer = null;
+			}
+			ingredient.weight = 0;
+			refQuantityG = 0;
+			refValue = 0;
+			refUnit = currentUnitStr;
+			recomputeError = false;
+			return;
+		}
+
+		// Skip if nothing changed from the reference state
+		if (currentValue === refValue && currentUnitStr === refUnit) return;
+
+		// Debounce the recompute
+		if (recomputeTimer) clearTimeout(recomputeTimer);
+		recomputeTimer = setTimeout(() => {
+			recomputeTimer = null;
+			void doRecompute();
+		}, RECOMPUTE_DELAY);
+	});
+
+	/**
+	 * Perform the recompute-quantity API call.
+	 *
+	 * Aborts any in-flight request, sends the reference state as "old" and the
+	 * current values as "new". On success, updates the grams and reference
+	 * state. On 422 (unsupported conversion), sets the error indicator and
+	 * keeps grams frozen at the last good value. On abort (superseded by a
+	 * newer request), does nothing.
+	 */
+	async function doRecompute() {
+		recomputeController?.abort();
+
+		const newValue = ingredient.quantityValue ?? 0;
+		const newUnit = unitToApiString(ingredient.quantityUnit);
+
+		// Guard: nothing to recompute
+		if (newValue === refValue && newUnit === refUnit) return;
+
+		const controller = new AbortController();
+		recomputeController = controller;
+		isRecomputing = true;
+		recomputeError = false;
+
+		try {
+			const response = await recomputeQuantity(
+				{
+					lang: getLocaleKey(),
+					quantityG: refQuantityG,
+					oldValue: refValue,
+					oldUnit: refUnit,
+					newValue,
+					newUnit
+				},
+				controller.signal
+			);
+
+			// Only apply if this is still the latest request
+			if (recomputeController !== controller) return;
+
+			ingredient.weight = response.quantityG;
+			refQuantityG = response.quantityG;
+			refValue = response.value;
+			refUnit = response.unit;
+			recomputeError = false;
+		} catch (e) {
+			if (e instanceof DOMException && e.name === 'AbortError') return;
+			// Only set error if this is still the latest request
+			if (recomputeController !== controller) return;
+			recomputeError = true;
+			// Grams stay frozen at the last good value (refQuantityG / ingredient.weight)
+		} finally {
+			if (recomputeController === controller) {
+				recomputeController = null;
+				isRecomputing = false;
+			}
+		}
+	}
+
+	/**
+	 * Fetch compatible units whenever the source unit or codified ingredient
+	 * changes. Falls back to null (all units) when the source unit is null.
+	 */
+	$effect(() => {
+		const unit = ingredient.quantityUnit;
+		// codifiedIngredient?.id is string | null | undefined; normalize to string | null
+		const codifiedId = ingredient.codifiedIngredient?.id ?? null;
+
+		const sourceUnit = unit ? unitToApiString(unit) : null;
+
+		if (sourceUnit === null) {
+			compatibleUnits = null;
+			return;
+		}
+
+		// Fetch compatible units (async — the state updates when the fetch completes)
+		void fetchCompatibleUnits(sourceUnit, codifiedId);
+	});
+
+	/**
+	 * Fetch the compatible units list from the backend and update the state.
+	 *
+	 * On error, falls back to null (all units) so the user is not stuck with
+	 * an empty dropdown.
+	 */
+	async function fetchCompatibleUnits(sourceUnit: string, ingredientId: string | null) {
+		try {
+			const units = await getCompatibleUnits(getLocaleKey(), sourceUnit, ingredientId);
+			compatibleUnits = units;
+		} catch (e) {
+			console.error('Failed to fetch compatible units', e);
+			compatibleUnits = null;
+		}
+	}
+
+	// Clean up pending timers and in-flight requests on component destroy
+	onDestroy(() => {
+		if (recomputeTimer) clearTimeout(recomputeTimer);
+		recomputeController?.abort();
 	});
 
 	/**
@@ -233,17 +413,27 @@
 			minChars={0}
 			formatLabel={formatUnitLabel}
 			selectListClasses="min-w-48"
+			allowedItems={compatibleUnits}
+			restrictToSuggestions={true}
 		/>
 	</div>
 
-	<!-- Grams (non-editable display, frozen except for the gram unit) -->
+	<!-- Grams (non-editable display, recomputed via the API for non-gram units) -->
 	<div class="flex w-20 flex-col">
 		<label class="label py-1">
 			<span class="flex items-center gap-1.5">
-				<span class="label-text text-xs" class:text-error={isZeroWeight}
+				<span
+					class="label-text text-xs"
+					class:text-error={recomputeError || (!isRecomputing && isZeroWeight)}
 					>{$_('recipe.grams', { default: 'Grams' })}</span
 				>
-				{#if isZeroWeight}
+				{#if recomputeError}
+					<!-- Screen-reader status: the conversion error is otherwise conveyed
+					     only by colour + icon, so expose it as text here. -->
+					<span class="sr-only">
+						{$_('recipe.ingredient_conversion_error', { default: 'Conversion error' })}
+					</span>
+				{:else if !isRecomputing && isZeroWeight}
 					<!-- Screen-reader status: the zero-quantity state is otherwise
 					     conveyed only by colour + icon, so expose it as text here. -->
 					<span class="sr-only">
@@ -254,11 +444,27 @@
 					tip={$_('helpers.grams', {
 						default:
 							'Quantity in grams, used for the green-score computation. ' +
-							'For non-gram units it is frozen from the parsed value (no conversion yet).'
+							'Recomputed from the quantity and unit via the API for non-gram units.'
 					})}
 					ariaLabel={$_('helpers.more_info', { default: 'More information' })}
 				/>
-				{#if isZeroWeight}
+				{#if recomputeError}
+					<HelperTooltip
+						tip={$_('recipe.ingredient_conversion_error_tooltip', {
+							default:
+								'The quantity could not be converted to grams for this unit. ' +
+								'Try a different unit or quantity.'
+						})}
+						ariaLabel={$_('helpers.more_info', { default: 'More information' })}
+					>
+						{#snippet icon()}
+							<IconMdiAlertOutline
+								class="text-error h-4 w-4 shrink-0 transition-colors duration-200"
+								aria-hidden="true"
+							/>
+						{/snippet}
+					</HelperTooltip>
+				{:else if !isRecomputing && isZeroWeight}
 					<HelperTooltip
 						tip={$_('recipe.ingredient_zero_quantity_tooltip', {
 							default:
@@ -278,11 +484,17 @@
 		</label>
 		<div
 			id="ingredient-grams-{ingredient.id}"
-			class="flex h-10 w-full items-center text-sm {isZeroWeight
+			class="flex h-10 w-full items-center text-sm {recomputeError
 				? 'text-error'
-				: 'text-base-content/70'}"
+				: !isRecomputing && isZeroWeight
+					? 'text-error'
+					: 'text-base-content/70'}"
 		>
-			{ingredient.weight ?? 0}
+			{#if isRecomputing}
+				<span class="loading loading-spinner loading-sm"></span>
+			{:else}
+				{ingredient.weight ?? 0}
+			{/if}
 		</div>
 	</div>
 

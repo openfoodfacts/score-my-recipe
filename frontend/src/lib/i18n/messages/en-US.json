@@ -77,6 +77,8 @@
 		"ingredient_not_accounted_tooltip": "We could not find a correspondence in our impact database for this ingredient",
 		"ingredient_zero_quantity": "Zero quantity",
 		"ingredient_zero_quantity_tooltip": "This ingredient's quantity is 0g, so it cannot be taken into account in the calculation.",
+		"ingredient_conversion_error": "Conversion error",
+		"ingredient_conversion_error_tooltip": "The quantity could not be converted to grams for this unit. Try a different unit or quantity.",
 		"ingredient_scorable": "This ingredient can be counted in the green score"
 	},
 	"homepage": {
@@ -129,7 +131,7 @@
 		"recipe_text": "Enter each ingredient on a new line with its quantity (e.g. 200g flour, 3 eggs, 100g sugar).",
 		"codified_ingredient": "Standardized ingredient from the Open Food Facts / Agribalyse database.",
 		"weight": "Net quantity of the ingredient in grams.",
-		"grams": "Quantity in grams, used for the green-score computation. For non-gram units it is frozen from the parsed value (no conversion yet).",
+		"grams": "Quantity in grams, used for the green-score computation. Recomputed from the quantity and unit via the API for non-gram units.",
 		"labels": "Official certifications (e.g. Organic, Label Rouge, Fair Trade) that grant Green-Score bonuses.",
 		"seasonality": "Check if seasonal fruits and vegetables are produced in season for a score bonus.",
 		"origin": "Geographical origin of the ingredient, used to evaluate transportation impact.",

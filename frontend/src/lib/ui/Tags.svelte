@@ -23,6 +23,7 @@
 	import type { Snippet } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import debounce from 'lodash.debounce';
+	import Fuse from 'fuse.js';
 	import { getMatchingTags } from '$lib/api/taxonomy';
 	import { findMatchingSuggestion } from '$lib/utils/taxonomyMatch';
 	import type { TaxonomyItem } from '$lib/types/ingredient';
@@ -54,6 +55,15 @@
 		// selector, pass a wider/explicit width (e.g. `min-w-48`) so the
 		// suggestion labels stay fully readable.
 		selectListClasses?: string;
+		// When provided, the autocomplete uses this list as its suggestion source
+		// (filtered locally with Fuse) instead of fetching from the taxonomy API.
+		// Used by the unit selector to show only units compatible with the
+		// current ingredient's unit.
+		allowedItems?: TaxonomyItem[] | null;
+		// When true, only entries that match a suggestion (by label or synonym)
+		// are accepted. Non-matching typed values are silently ignored (no tag
+		// added, the text stays in the input so the user can correct it).
+		restrictToSuggestions?: boolean;
 	};
 
 	type Suggestion = {
@@ -70,7 +80,9 @@
 		invalid = false,
 		minChars = 3,
 		formatLabel = (tag: TaxonomyItem) => tag.label,
-		selectListClasses = 'w-full'
+		selectListClasses = 'w-full',
+		allowedItems = null,
+		restrictToSuggestions = false
 	}: Props = $props();
 
 	// Border treatment mirrors the focus state: red when invalid, otherwise the
@@ -103,6 +115,30 @@
 
 	async function rawFetchSuggestions(value: string): Promise<void> {
 		const q = value.trim();
+
+		// When allowedItems is provided, filter them locally with Fuse
+		// instead of fetching from the taxonomy API. Used by the unit
+		// selector to show only compatible units.
+		if (allowedItems) {
+			if (q.length < minChars) {
+				currentSuggestions = allowedItems.slice(0, 30).map((item) => ({ item }));
+				return;
+			}
+			const fuse = new Fuse(allowedItems, {
+				keys: ['label', 'synonyms'],
+				includeScore: true,
+				minMatchCharLength: 1,
+				ignoreDiacritics: true
+			});
+			const results = fuse
+				.search(q)
+				.sort((a, b) => (a.score ?? 0) - (b.score ?? 0))
+				.slice(0, 30);
+			currentSuggestions = results.map((r) => ({ item: r.item }));
+			return;
+		}
+
+		// Default: fetch from the taxonomy API
 		if (q.length < minChars) {
 			currentSuggestions = [];
 			return;
@@ -124,9 +160,12 @@
 		return () => fetchSuggestions?.cancel?.();
 	});
 
-	// fetch suggestion as soon as inputValue changes
+	// fetch suggestion as soon as inputValue changes, or when the allowed
+	// items list changes (e.g. the compatible units are re-fetched)
 	$effect(() => {
 		if (fetchSuggestions) {
+			// Read allowedItems so the effect re-runs when it changes
+			void allowedItems;
 			fetchSuggestions(activeSearchValue);
 		}
 	});
@@ -161,6 +200,15 @@
 
 	/**
 	 * Add a tag from the input field, either from the current suggestions or the typed value.
+	 *
+	 * When a suggestion is highlighted in the autocomplete dropdown, it is used
+	 * directly. Otherwise, the typed value is matched against the suggestions
+	 * (by label or synonym) so that a free-typed value that exactly matches a
+	 * suggestion is resolved to its full taxonomy item.
+	 *
+	 * When ``restrictToSuggestions`` is true, non-matching typed values are
+	 * silently ignored (the text stays in the input so the user can correct it).
+	 * When false, they create a free-text tag (id null).
 	 */
 	function addTagInput() {
 		if (autoCompleteIndex !== -1 && currentSuggestions[autoCompleteIndex]) {
@@ -171,11 +219,27 @@
 		if (newValue.trim() === '') {
 			return;
 		}
-		// If we selected from suggestions, we have the full item object; otherwise create a new one
-		const tag =
-			autoCompleteIndex !== -1 && currentSuggestions[autoCompleteIndex]
-				? currentSuggestions[autoCompleteIndex].item
-				: tagFromStrValue(newValue);
+		// If we selected from suggestions, we have the full item object
+		let tag: TaxonomyItem;
+		if (autoCompleteIndex !== -1 && currentSuggestions[autoCompleteIndex]) {
+			tag = currentSuggestions[autoCompleteIndex].item;
+		} else {
+			// Try matching the typed value against the suggestions (by label
+			// or synonym) so a free-typed value resolves to its taxonomy item
+			// when it exactly matches one.
+			const matched = findMatchingSuggestion(
+				newValue,
+				currentSuggestions.map((s) => s.item)
+			);
+			if (matched) {
+				tag = matched;
+			} else if (restrictToSuggestions) {
+				// Silently ignore: keep the text in the input so the user can correct it
+				return;
+			} else {
+				tag = tagFromStrValue(newValue);
+			}
+		}
 		newValue = '';
 		autoCompleteIndex = -1;
 		addTag(tag);
@@ -287,6 +351,9 @@
 	 * `null` (and `isInTaxonomy` to false): the tag must not keep being matched
 	 * against the old taxonomy node.
 	 *
+	 * When ``restrictToSuggestions`` is true, non-matching values cancel the
+	 * edit instead of creating a free-text tag.
+	 *
 	 * An empty value, an unchanged label, or a value already resolved to the
 	 * current item simply cancels the edit.
 	 * @param index - Index of the tag being edited.
@@ -310,8 +377,14 @@
 			// resolved to a (different) taxonomy item
 			applyEdit(index, matched);
 		} else if (!matched && trimmedValue !== '' && trimmedValue !== originalTag.label) {
-			// genuine free-text value not in the suggestions: reset the id to null
-			applyEdit(index, { id: null, label: trimmedValue, isInTaxonomy: false });
+			// genuine free-text value not in the suggestions
+			if (restrictToSuggestions) {
+				// Silently cancel: don't create a free-text tag
+				cancelEdit();
+			} else {
+				// reset the id to null
+				applyEdit(index, { id: null, label: trimmedValue, isInTaxonomy: false });
+			}
 		} else {
 			// empty, unchanged, or already resolved to the current item: cancel
 			editingIndex = -1;

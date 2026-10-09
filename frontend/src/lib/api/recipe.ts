@@ -24,6 +24,12 @@ export type GreenScoreRequest = components['schemas']['GreenScoreRequest'];
 /** Response schema for the green-score computation endpoint. */
 export type GreenScoreResponse = components['schemas']['GreenScoreResponse'];
 
+/** Request body schema for the recompute-quantity endpoint. */
+export type RecomputeQuantityRequest = components['schemas']['RecomputeQuantityRequest'];
+
+/** Response schema for the recompute-quantity endpoint. */
+export type RecomputeQuantityResponse = components['schemas']['RecomputeQuantityResponse'];
+
 /** Single origin schema from the `get_origins` endpoint. */
 export type Origin = components['schemas']['Origin'];
 
@@ -193,4 +199,36 @@ export async function getOrigins(lang: string): Promise<Origin[]> {
 
 	const data = (await response.json()) as OriginsResponse;
 	return data.origins;
+}
+
+/**
+ * Recompute the quantity in grams after the user edited an ingredient's
+ * value or unit.
+ *
+ * Sends the previous ``(quantity_g, value, unit)`` (the reference state) and
+ * the new ``(value, unit)`` to the backend, which returns the recomputed
+ * grams alongside the echoed value and unit.
+ *
+ * @param params - The recompute request (old + new state, language).
+ * @param signal - Optional abort signal to cancel the in-flight request.
+ * @returns The recomputed ``(quantityG, value, unit)``.
+ * @throws {Error} If the backend responds with a non-2xx status code
+ *   (HTTP 422 for unsupported unit conversions).
+ */
+export async function recomputeQuantity(
+	params: RecomputeQuantityRequest,
+	signal?: AbortSignal
+): Promise<RecomputeQuantityResponse> {
+	const response = await fetch(`${API_BASE_URL}/v1/recompute-quantity`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(params),
+		signal
+	});
+
+	if (!response.ok) {
+		throw new Error(`Error ${response.status}: ${response.statusText}`);
+	}
+
+	return (await response.json()) as RecomputeQuantityResponse;
 }
