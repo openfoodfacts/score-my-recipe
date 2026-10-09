@@ -131,7 +131,7 @@
 		"recipe_text": "Gib jede Zutat in einer neuen Zeile mit Mengenangabe ein (z. B. 200g Mehl, 3 Eier, 100g Zucker).",
 		"codified_ingredient": "Standardisierte Zutat aus der Datenbank von Open Food Facts / Agribalyse.",
 		"weight": "Nettogewicht der Zutat in Gramm.",
-		"grams": "Quantity in grams, used for the green-score computation(computed)"
+		"grams": "Quantity in grams, used for the green-score computation(computed)",
 		"labels": "Offizielle Siegel (z. B. Bio, Fair Trade), die Boni für den Green-Score einbringen.",
 		"seasonality": "Gib an, ob Obst und Gemüse saisonal angebaut wurden, um einen Umweltbonus zu erhalten.",
 		"origin": "Geografische Herkunft der Zutat zur Bewertung der Transportauswirkungen.",

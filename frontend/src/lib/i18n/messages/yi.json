@@ -131,7 +131,7 @@
 		"recipe_text": "Enter each ingredient on a new line with its quantity (e.g. 200g flour, 3 eggs, 100g sugar).",
 		"codified_ingredient": "Standardized ingredient from the Open Food Facts / Agribalyse database.",
 		"weight": "Net quantity of the ingredient in grams.",
-		"grams": "Quantity in grams, used for the green-score computation(computed)"
+		"grams": "Quantity in grams, used for the green-score computation(computed)",
 		"labels": "Official certifications (e.g. Organic, Label Rouge, Fair Trade) that grant Green-Score bonuses.",
 		"seasonality": "Check if seasonal fruits and vegetables are produced in season for a score bonus.",
 		"origin": "Geographical origin of the ingredient, used to evaluate transportation impact.",

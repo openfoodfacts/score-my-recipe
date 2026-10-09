@@ -131,7 +131,7 @@
 		"recipe_text": "Insira cada ingrediente numa nova linha com a sua quantidade (ex.: 200g de farinha, 3 ovos, 100g de açúcar).",
 		"codified_ingredient": "Ingrediente padronizado da base de dados do Open Food Facts / Agribalyse.",
 		"weight": "Quantidade líquida do ingrediente em gramas.",
-		"grams": "Quantity in grams, used for the green-score computation(computed)"
+		"grams": "Quantity in grams, used for the green-score computation(computed)",
 		"labels": "Certificações oficiais (ex.: Biológico, Comércio Justo) que concedem bónus ao Green-Score.",
 		"seasonality": "Marque se as frutas e legumes são da época para obter um bónus ambiental.",
 		"origin": "Origem geográfica do ingrediente, utilizada para avaliar o impacto do transporte.",
