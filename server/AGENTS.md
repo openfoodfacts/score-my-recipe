@@ -48,6 +48,12 @@ No PR should be opened with errors.
 ```text
 api/                  # API related code
 tests/                # tests (using pytest)
+├── data/             # fixtures for integration tests
+│   ├── taxonomies/   # pinned OFF taxonomy snapshots (offline-safe)
+│   ├── parse_text_recipe.json  # recorded parse_text response
+│   ├── update_taxonomies.sh    # refresh taxonomy snapshots (network)
+│   └── capture_parse_text.py   # re-capture parse_text fixture (network)
+└── integration_server.py       # e2e backend entrypoint (OFF mocked)
 ```
 
 ---
@@ -71,3 +77,26 @@ Always add tests to the code you generate.
 Think about edge cases.
 
 Still try to keep the tests easy to maintain. As for code, add comments to help reader (see coding style).
+
+---
+
+## Integration tests (e2e)
+
+The end-to-end suite lives in `e2e/` (Playwright) and starts this backend via
+`tests/integration_server.py`. That entrypoint patches `api.recipes.off.parse_text`
+with a recorded fixture and points `SCORE_MY_RECIPE_CACHE_DIR` at the pinned
+taxonomy snapshots in `tests/data/taxonomies/`, so the whole stack runs offline.
+
+To refresh the pinned data (network required):
+
+```bash
+# Refresh taxonomy snapshots
+bash tests/data/update_taxonomies.sh
+
+# Re-capture the parse_text fixture
+uv run python tests/data/capture_parse_text.py
+```
+
+If the pinned green-score letter grade changes after a refresh, update
+`EXPECTED_LETTER_GRADE` in `e2e/tests/recipe-score.spec.ts` after verifying the
+new score is correct.

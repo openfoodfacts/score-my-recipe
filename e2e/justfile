@@ -1,0 +1,70 @@
+# e2e commands (Playwright integration tests)
+
+# prefer bash
+set shell := ["bash", "-uc"]
+
+# Set up nvm (uses e2e/.nvmrc) — mirrors the frontend's local-nvm.sh
+use_nvm := "export NVM_DIR=\"${NVM_DIR:-$HOME/.nvm}\"; [ -s \"$NVM_DIR/nvm.sh\" ] && . \"$NVM_DIR/nvm.sh\"; [ -e ../frontend/local-nvm.sh ] && . ../frontend/local-nvm.sh; nvm use"
+
+# this help
+[default]
+help:
+    @just --list
+
+# ===========================================
+# End to end testing (e2e)
+# ===========================================
+
+# Run end-to-end integration tests (Playwright, Chromium)
+# Installs e2e deps + Chromium on first run.
+[group('quality')]
+install:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Source nvm (unset npm_config_prefix to avoid nvm incompatibility)
+    unset npm_config_prefix
+    echo "=== Installing e2e deps ==="
+    {{ use_nvm }} && pnpm install --frozen-lockfile 2>/dev/null || pnpm install
+    echo "=== Installing Chromium (if needed) ==="
+    {{ use_nvm }} && npx playwright install chromium
+
+[group('quality')]
+test:
+    echo "=== Running e2e tests ==="
+    {{ use_nvm }} && npx playwright test
+
+[group('quality')]
+install_and_test:
+    @just install
+    @just test
+
+# ===========================================
+# QUALITY
+# ===========================================
+
+# Lint (auto-format with prettier)
+[group('quality')]
+lint:
+    {{ use_nvm }} && pnpm format
+
+# Quality checks (type-check + lint check)
+[group('quality')]
+check:
+    @echo "pnpm check ======================================"
+    {{ use_nvm }} && pnpm check
+    @echo "pnpm lint ======================================"
+    {{ use_nvm }} && pnpm lint
+
+[group('quality')]
+refresh_test_data: refresh_test_taxonomy refresh_api_data
+
+
+# Refresh taxonomy snapshots (network required)
+refresh_test_taxonomy:
+    echo "=== Refreshing taxonomy snapshots ==="
+    bash ../server/tests/data/update_taxonomies.sh
+
+# Re-capture the parse_text fixture (network required)
+refresh_api_data:
+    echo "=== Re-capturing the api responses for tests ==="
+    cd ../server && uv run python tests/data/capture_parse_text.py

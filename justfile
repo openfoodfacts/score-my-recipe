@@ -8,6 +8,7 @@ set dotenv-required := true
 
 just_frontend := "cd frontend && just"
 just_server := "cd server && just"
+just_e2e := "cd e2e && just"
 
 # this help
 [default]
@@ -80,6 +81,9 @@ lint:
     @echo "::group::Frontend lint"
     {{ just_frontend }} lint
     @echo "::endgroup::"
+    @echo "::group::E2E lint"
+    {{ just_e2e }} lint
+    @echo "::endgroup::"
 
 # Quality Checks
 [group('quality')]
@@ -89,6 +93,9 @@ check:
     @echo "::endgroup::"
     @echo "::group::Frontend check"
     {{ just_frontend }} check
+    @echo "::endgroup::"
+    @echo "::group::E2E check"
+    {{ just_e2e }} check
     @echo "::endgroup::"
     @echo "::group::openapi check"
     @just check-openapi
@@ -105,3 +112,8 @@ check-openapi:
 test:
     {{ just_server }} test
     {{ just_frontend }} test
+
+# End to end testing (Playwright, Chromium)
+[group('quality')]
+e2e:
+    {{ just_e2e }} install_and_test
