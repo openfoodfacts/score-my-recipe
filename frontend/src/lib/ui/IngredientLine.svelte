@@ -25,7 +25,7 @@
 	import type { IngredientSuggestion, TaxonomyItem } from '$lib/types/ingredient';
 	import { isIngredientEmpty, isIngredientNotEmpty } from '$lib/types/ingredient';
 	import { formatUnitLabel as formatUnitLabelFor } from '$lib/api/units';
-	import { createQuantityRecompute, createCompatibleUnits } from './quantityRecompute.svelte';
+	import { createQuantityConvert, createCompatibleUnits } from './quantityConvert.svelte';
 
 	type Props = {
 		// The ingredient data object (bindable): name, weight, etc.
@@ -61,11 +61,11 @@
 		isIngredientNotEmpty(ingredient) && (ingredient.weight === 0 || ingredient.weight == null)
 	);
 
-	// --- Quantity recompute + compatible units (extracted) -------------------
-	// The recompute lifecycle (debounce, abort, reference state) and the
+	// --- Quantity convert + compatible units (extracted) --------------------
+	// The convert lifecycle (debounce, abort, last-converted guard) and the
 	// compatible-units fetching live in a dedicated runes module so this
 	// component stays focused on layout and presentation.
-	const quantityState = createQuantityRecompute(ingredient);
+	const quantityState = createQuantityConvert(ingredient);
 	const unitsState = createCompatibleUnits(ingredient);
 
 	/**
@@ -222,23 +222,23 @@
 		/>
 	</div>
 
-	<!-- Grams (non-editable display, recomputed via the API for non-gram units) -->
+	<!-- Grams (non-editable display, converted via the API for non-gram units) -->
 	<div class="flex w-20 flex-col">
 		<label class="label py-1">
 			<span class="flex items-center gap-1.5">
 				<span
 					class="label-text text-xs"
-					class:text-error={quantityState.recomputeError ||
-						(!quantityState.isRecomputing && isZeroWeight)}
+					class:text-error={quantityState.convertError ||
+						(!quantityState.isConverting && isZeroWeight)}
 					>{$_('recipe.grams', { default: 'Grams' })}</span
 				>
-				{#if quantityState.recomputeError}
+				{#if quantityState.convertError}
 					<!-- Screen-reader status: the conversion error is otherwise conveyed
 					     only by colour + icon, so expose it as text here. -->
 					<span class="sr-only">
 						{$_('recipe.ingredient_conversion_error', { default: 'Conversion error' })}
 					</span>
-				{:else if !quantityState.isRecomputing && isZeroWeight}
+				{:else if !quantityState.isConverting && isZeroWeight}
 					<!-- Screen-reader status: the zero-quantity state is otherwise
 					     conveyed only by colour + icon, so expose it as text here. -->
 					<span class="sr-only">
@@ -249,11 +249,11 @@
 					tip={$_('helpers.grams', {
 						default:
 							'Quantity in grams, used for the green-score computation. ' +
-							'Recomputed from the quantity and unit via the API for non-gram units.'
+							'Converted from the quantity and unit via the API for non-gram units.'
 					})}
 					ariaLabel={$_('helpers.more_info', { default: 'More information' })}
 				/>
-				{#if quantityState.recomputeError}
+				{#if quantityState.convertError}
 					<HelperTooltip
 						tip={$_('recipe.ingredient_conversion_error_tooltip', {
 							default:
@@ -269,7 +269,7 @@
 							/>
 						{/snippet}
 					</HelperTooltip>
-				{:else if !quantityState.isRecomputing && isZeroWeight}
+				{:else if !quantityState.isConverting && isZeroWeight}
 					<HelperTooltip
 						tip={$_('recipe.ingredient_zero_quantity_tooltip', {
 							default:
@@ -289,13 +289,13 @@
 		</label>
 		<div
 			id="ingredient-grams-{ingredient.id}"
-			class="flex h-10 w-full items-center text-sm {quantityState.recomputeError
+			class="flex h-10 w-full items-center text-sm {quantityState.convertError
 				? 'text-error'
-				: !quantityState.isRecomputing && isZeroWeight
+				: !quantityState.isConverting && isZeroWeight
 					? 'text-error'
 					: 'text-base-content/70'}"
 		>
-			{#if quantityState.isRecomputing}
+			{#if quantityState.isConverting}
 				<span class="loading loading-spinner loading-sm"></span>
 			{:else}
 				{ingredient.weight ?? 0}

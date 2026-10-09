@@ -24,11 +24,8 @@ export type GreenScoreRequest = components['schemas']['GreenScoreRequest'];
 /** Response schema for the green-score computation endpoint. */
 export type GreenScoreResponse = components['schemas']['GreenScoreResponse'];
 
-/** Request body schema for the recompute-quantity endpoint. */
-export type RecomputeQuantityRequest = components['schemas']['RecomputeQuantityRequest'];
-
-/** Response schema for the recompute-quantity endpoint. */
-export type RecomputeQuantityResponse = components['schemas']['RecomputeQuantityResponse'];
+/** Response schema for the convert quantity endpoint. */
+export type ConvertQuantityResponse = components['schemas']['ConvertQuantityResponse'];
 
 /** Single origin schema from the `get_origins` endpoint. */
 export type Origin = components['schemas']['Origin'];
@@ -202,27 +199,38 @@ export async function getOrigins(lang: string): Promise<Origin[]> {
 }
 
 /**
- * Recompute the quantity in grams after the user edited an ingredient's
- * value or unit.
+ * Convert a quantity given as ``(value, unit)`` to grams.
  *
- * Sends the previous ``(quantity_g, value, unit)`` (the reference state) and
- * the new ``(value, unit)`` to the backend, which returns the recomputed
- * grams alongside the echoed value and unit.
+ * Stateless GET endpoint: the backend converts the quantity using the OFF
+ * taxonomies (conversion factors, densities, average weights). An
+ * ``ingredientId`` is required for volume units (to look up density) and
+ * for the ``item`` sentinel (to look up average weight per unit); it is
+ * optional for mass units.
  *
- * @param params - The recompute request (old + new state, language).
+ * The response is cacheable (Cache-Control: max-age=86400), so repeated
+ * requests with the same parameters hit the browser cache.
+ *
+ * @param value - The numeric quantity (must be >= 0).
+ * @param unit - A unit taxonomy id (e.g. ``xx:kg``) or the ``item`` sentinel.
+ * @param ingredientId - Taxonomy id of the ingredient (required for volume
+ *   and ``item`` units; ignored for mass units).
  * @param signal - Optional abort signal to cancel the in-flight request.
- * @returns The recomputed ``(quantityG, value, unit)``.
+ * @returns The quantity converted to grams.
  * @throws {Error} If the backend responds with a non-2xx status code
- *   (HTTP 422 for unsupported unit conversions).
+ *   (HTTP 422 when the conversion is not supported, e.g. a volume unit
+ *   without an ``ingredientId`` or an ingredient lacking density).
  */
-export async function recomputeQuantity(
-	params: RecomputeQuantityRequest,
+export async function convertToG(
+	value: number,
+	unit: string,
+	ingredientId?: string | null,
 	signal?: AbortSignal
-): Promise<RecomputeQuantityResponse> {
-	const response = await fetch(`${API_BASE_URL}/v1/recompute-quantity`, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify(params),
+): Promise<number> {
+	const params = new URLSearchParams({ value: String(value), unit });
+	if (ingredientId) {
+		params.set('ingredient_id', ingredientId);
+	}
+	const response = await fetch(`${API_BASE_URL}/v1/convert-quantity?${params.toString()}`, {
 		signal
 	});
 
@@ -230,5 +238,6 @@ export async function recomputeQuantity(
 		throw new Error(`Error ${response.status}: ${response.statusText}`);
 	}
 
-	return (await response.json()) as RecomputeQuantityResponse;
+	const data = (await response.json()) as ConvertQuantityResponse;
+	return data.quantity_g;
 }

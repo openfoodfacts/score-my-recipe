@@ -3,7 +3,7 @@
  *
  * Pure functions and constants for converting between the frontend
  * TaxonomyItem representation of quantity units and the strings expected
- * by the recompute-quantity API.
+ * by the convert-quantity API.
  *
  * These helpers contain no reactive state and no side effects, so they can
  * be imported from any module or unit-tested in isolation.
@@ -28,7 +28,7 @@ export function isGramUnit(unit: TaxonomyItem | null): boolean {
 }
 
 /**
- * Convert a TaxonomyItem unit to the string expected by the recompute API.
+ * Convert a TaxonomyItem unit to the string expected by the convert API.
  *
  * Taxonomy units send their id, the ``item`` sentinel sends ``item``, and
  * free-text entries (id null) send their label so the backend can attempt

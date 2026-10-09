@@ -240,6 +240,31 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	'/v1/convert-quantity': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Convert Quantity
+		 * @description Convert a quantity given as ``(value, unit)`` to grams.
+		 *
+		 *     For some conversions, ingredient is needed.
+		 *
+		 *     Getting the quantities in grams is needed for green-score computation,
+		 *     and possibly other scores.
+		 */
+		get: operations['convert_quantity_v1_convert_quantity_get'];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -253,6 +278,20 @@ export interface components {
 		 * @enum {string}
 		 */
 		AccountedWeights: 'scorable' | 'total';
+		/**
+		 * ConvertQuantityResponse
+		 * @description Response model for the ``GET /v1/convert-quantity`` endpoint.
+		 * @example {
+		 *       "quantity_g": 2000
+		 *     }
+		 */
+		ConvertQuantityResponse: {
+			/**
+			 * Quantity G
+			 * @description The quantity converted to grams
+			 */
+			quantity_g: number;
+		};
 		/**
 		 * CountriesResponse
 		 * @description Response model for get_countries endpoint
@@ -1343,6 +1382,48 @@ export interface operations {
 				};
 				content: {
 					'application/json': components['schemas']['RecomputeQuantityResponse'];
+				};
+			};
+			/** @description Validation Error */
+			422: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					'application/json': components['schemas']['HTTPValidationError'];
+				};
+			};
+		};
+	};
+	convert_quantity_v1_convert_quantity_get: {
+		parameters: {
+			query: {
+				/** @description Numeric value of the quantity */
+				value: number;
+				/** @description Unit taxonomy id (e.g. 'xx:kg') or the 'item' sentinel for countable ingredients. */
+				unit: string;
+				/**
+				 * @description Taxonomy id of the ingredient.
+				 *
+				 *     Required when the unit is a volume unit (to look up density_g_per_ml) or the 'item' sentinel (to look up average_weight_per_unit).
+				 *
+				 *     Optional for mass units.
+				 */
+				ingredient_id?: string | null;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description Successful Response */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					'application/json': components['schemas']['ConvertQuantityResponse'];
 				};
 			};
 			/** @description Validation Error */

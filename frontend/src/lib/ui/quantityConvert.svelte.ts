@@ -1,5 +1,5 @@
 /**
- * @fileoverview Reactive quantity-recompute and compatible-units logic.
+ * @fileoverview Reactive quantity-convert and compatible-units logic.
  *
  * Extracted from IngredientLine.svelte to keep the component focused on
  * layout and presentation.
@@ -14,20 +14,21 @@
  * @see https://svelte.dev/docs/svelte/$effect — cleanup via returned function
  */
 import { isIngredientEmpty, type Ingredient, type TaxonomyItem } from '$lib/types/ingredient';
-import { recomputeQuantity } from '$lib/api/recipe';
+import { convertToG } from '$lib/api/recipe';
 import { getCompatibleUnits, getLocaleKey } from '$lib/api/taxonomy';
 import { GRAM_UNIT_ID, isGramUnit, unitToApiString } from '$lib/api/units';
 
-/** Debounce delay (ms) before firing the recompute-quantity API call. */
-const RECOMPUTE_DELAY = 400;
+/** Debounce delay (ms) before firing the convert-quantity API call. */
+const CONVERT_DELAY = 400;
 
 /**
- * Owns the reference state and recompute lifecycle for a single
- * ingredient's quantity→grams conversion.
+ * Owns the convert lifecycle for a single ingredient's
+ * quantity→grams conversion.
  *
- * Keeps the last known-good ``(quantity_g, value, unit)`` as reference
- * state, debounces API calls on value/unit changes (except the gram unit,
- * which is an identity), and aborts superseded requests.
+ * Keeps the last converted ``(value, unit, ingredient_id)`` as a lightweight
+ * guard to skip redundant API calls, debounces API calls on value/unit/
+ * ingredient changes (except the gram unit, which is an identity), and aborts
+ * superseded requests.
  *
  * The returned object exposes reactive getters that the component can read
  * in its template for the loading/error UI.  Reactivity is preserved
@@ -35,33 +36,32 @@ const RECOMPUTE_DELAY = 400;
  * tracks the underlying ``$state`` signals.
  *
  * @param ingredient - The bindable ingredient object (mutated in place).
- * @returns Reactive getters for ``isRecomputing`` and ``recomputeError``.
+ * @returns Reactive getters for ``isConverting`` and ``convertError``.
  */
-export function createQuantityRecompute(ingredient: Ingredient) {
-	// --- Reference state ---------------------------------------------------
-	// The last known-good (quantity_g, value, unit) from which the current
-	// grams were derived. Initialized from the parsed ingredient on mount,
-	// and updated after each successful recompute (and by the gram-unit
-	// local effect below). This is the "old" state sent to the recompute
-	// API on the next edit.
-	let refQuantityG = $state(ingredient.weight ?? 0);
-	let refValue = $state(ingredient.quantityValue ?? 0);
-	let refUnit = $state(unitToApiString(ingredient.quantityUnit));
+export function createQuantityConvert(ingredient: Ingredient) {
+	// --- Last-converted guard ------------------------------------------------
+	// The last (value, unit, ingredient_id) that was converted (or handled
+	// locally). Initialized from the parsed ingredient so the first render
+	// preserves the parser's quantity_g without an unnecessary API call.
+	// Updated after each successful convert (and by the gram-unit local effect
+	// and the null-quantity shortcut below).
+	let lastValue = $state<number | null>(ingredient.quantityValue);
+	let lastUnit = $state<string | null>(unitToApiString(ingredient.quantityUnit));
+	let lastIngredientId = $state<string | null>(ingredient.codifiedIngredient?.id ?? null);
 
-	// --- Recompute state ---------------------------------------------------
-	let isRecomputing = $state(false);
-	let recomputeError = $state(false);
-	let recomputeController: AbortController | null = null;
-	let recomputeTimer: ReturnType<typeof setTimeout> | null = null;
+	// --- Convert state -------------------------------------------------------
+	let isConverting = $state(false);
+	let convertError = $state(false);
+	let convertController: AbortController | null = null;
+	let convertTimer: ReturnType<typeof setTimeout> | null = null;
 
 	/**
 	 * Keep the grams (weight) in sync with the quantity value when the unit
 	 * is the gram unit. This is the only live conversion (no API call): for
 	 * the gram unit, grams *are* the quantity value.
 	 *
-	 * Also updates the reference state so the next non-gram recompute has
-	 * the correct baseline.
-	 *
+	 * Also updates the last-converted guard so the next non-gram convert
+	 * has the correct baseline.
 	 */
 	$effect(() => {
 		// Empty placeholder lines are skipped:
@@ -72,25 +72,26 @@ export function createQuantityRecompute(ingredient: Ingredient) {
 
 		if (isGramUnit(ingredient.quantityUnit)) {
 			ingredient.weight = ingredient.quantityValue;
-			refQuantityG = ingredient.quantityValue ?? 0;
-			refValue = ingredient.quantityValue ?? 0;
-			refUnit = GRAM_UNIT_ID;
+			lastValue = ingredient.quantityValue;
+			lastUnit = GRAM_UNIT_ID;
+			lastIngredientId = ingredient.codifiedIngredient?.id ?? null;
 		}
 	});
 
 	/**
-	 * Debounced recompute-quantity effect.
+	 * Debounced convert-quantity effect.
 	 *
-	 * Fires when the user changes the quantity value or the unit (except
-	 * for the gram unit, handled by the local effect above). Skips when
-	 * the current values match the reference state (nothing to recompute).
-	 * When the quantity is cleared (null), sets grams to 0 immediately
-	 * without an API call.
+	 * Fires when the user changes the quantity value, the unit, or the
+	 * codified ingredient (except for the gram unit, handled by the local
+	 * effect above). Skips when the current values match the last-converted
+	 * state (nothing to convert). When the quantity is cleared (null), sets
+	 * grams to 0 immediately without an API call.
 	 */
 	$effect(() => {
 		const currentValue = ingredient.quantityValue;
 		const currentUnit = ingredient.quantityUnit;
 		const currentUnitStr = unitToApiString(currentUnit);
+		const currentIngredientId = ingredient.codifiedIngredient?.id ?? null;
 
 		// Empty placeholder lines are skipped:
 		// writing the weight would make the line count as "non-empty"
@@ -103,83 +104,79 @@ export function createQuantityRecompute(ingredient: Ingredient) {
 
 		// Cleared quantity: skip the API call, set grams to 0
 		if (currentValue === null) {
-			if (recomputeTimer) {
-				clearTimeout(recomputeTimer);
-				recomputeTimer = null;
+			if (convertTimer) {
+				clearTimeout(convertTimer);
+				convertTimer = null;
 			}
 			ingredient.weight = 0;
-			refQuantityG = 0;
-			refValue = 0;
-			refUnit = currentUnitStr;
-			recomputeError = false;
+			lastValue = null;
+			lastUnit = currentUnitStr;
+			lastIngredientId = currentIngredientId;
+			convertError = false;
 			return;
 		}
 
-		// Skip if nothing changed from the reference state
-		if (currentValue === refValue && currentUnitStr === refUnit) return;
+		// Skip if nothing changed from the last-converted state
+		if (
+			currentValue === lastValue &&
+			currentUnitStr === lastUnit &&
+			currentIngredientId === lastIngredientId
+		)
+			return;
 
-		// Debounce the recompute
-		if (recomputeTimer) clearTimeout(recomputeTimer);
-		recomputeTimer = setTimeout(() => {
-			recomputeTimer = null;
-			void doRecompute();
-		}, RECOMPUTE_DELAY);
+		// Debounce the conversion
+		if (convertTimer) clearTimeout(convertTimer);
+		convertTimer = setTimeout(() => {
+			convertTimer = null;
+			void doConvert();
+		}, CONVERT_DELAY);
 	});
 
 	/**
-	 * Perform the recompute-quantity API call.
+	 * Perform the convert-quantity API call.
 	 *
-	 * Aborts any in-flight request, sends the reference state as "old" and
-	 * the current values as "new". On success, updates the grams and
-	 * reference state. On 422 (unsupported conversion), sets the error
-	 * indicator and keeps grams frozen at the last good value. On abort
-	 * (superseded by a newer request), does nothing.
+	 * Aborts any in-flight request, sends the current ``(value, unit,
+	 * ingredient_id)`` to the stateless convert-to-g endpoint. On success,
+	 * updates the grams and the last-converted guard. On 422 (unsupported
+	 * conversion), sets the error indicator and keeps grams frozen at the
+	 * last good value. On abort (superseded by a newer request), does nothing.
 	 */
-	async function doRecompute() {
-		recomputeController?.abort();
+	async function doConvert() {
+		convertController?.abort();
 
-		const newValue = ingredient.quantityValue ?? 0;
-		const newUnit = unitToApiString(ingredient.quantityUnit);
+		const value = ingredient.quantityValue ?? 0;
+		const unit = unitToApiString(ingredient.quantityUnit);
+		const ingredientId = ingredient.codifiedIngredient?.id ?? null;
 
-		// Guard: nothing to recompute
-		if (newValue === refValue && newUnit === refUnit) return;
+		// Guard: nothing to convert
+		if (value === lastValue && unit === lastUnit && ingredientId === lastIngredientId) return;
 
 		const controller = new AbortController();
-		recomputeController = controller;
-		isRecomputing = true;
-		recomputeError = false;
+		convertController = controller;
+		isConverting = true;
+		convertError = false;
 
 		try {
-			const response = await recomputeQuantity(
-				{
-					lang: getLocaleKey(),
-					quantityG: refQuantityG,
-					oldValue: refValue,
-					oldUnit: refUnit,
-					newValue,
-					newUnit
-				},
-				controller.signal
-			);
+			const quantityG = await convertToG(value, unit, ingredientId, controller.signal);
 
 			// Only apply if this is still the latest request
-			if (recomputeController !== controller) return;
+			if (convertController !== controller) return;
 
-			ingredient.weight = response.quantityG;
-			refQuantityG = response.quantityG;
-			refValue = response.value;
-			refUnit = response.unit;
-			recomputeError = false;
+			ingredient.weight = quantityG;
+			lastValue = value;
+			lastUnit = unit;
+			lastIngredientId = ingredientId;
+			convertError = false;
 		} catch (e) {
 			if (e instanceof DOMException && e.name === 'AbortError') return;
 			// Only set error if this is still the latest request
-			if (recomputeController !== controller) return;
-			recomputeError = true;
-			// Grams stay frozen at the last good value (refQuantityG / ingredient.weight)
+			if (convertController !== controller) return;
+			convertError = true;
+			// Grams stay frozen at the last good value (ingredient.weight)
 		} finally {
-			if (recomputeController === controller) {
-				recomputeController = null;
-				isRecomputing = false;
+			if (convertController === controller) {
+				convertController = null;
+				isConverting = false;
 			}
 		}
 	}
@@ -189,17 +186,17 @@ export function createQuantityRecompute(ingredient: Ingredient) {
 	// and the returned cleanup function fires on destroy.
 	$effect(() => {
 		return () => {
-			if (recomputeTimer) clearTimeout(recomputeTimer);
-			recomputeController?.abort();
+			if (convertTimer) clearTimeout(convertTimer);
+			convertController?.abort();
 		};
 	});
 
 	return {
-		get isRecomputing() {
-			return isRecomputing;
+		get isConverting() {
+			return isConverting;
 		},
-		get recomputeError() {
-			return recomputeError;
+		get convertError() {
+			return convertError;
 		}
 	};
 }
