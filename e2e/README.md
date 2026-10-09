@@ -4,6 +4,10 @@ This package runs the **real** frontend and **real** backend together in a
 browser (Playwright, Chromium) and drives a representative user flow:
 French UI → parse a recipe → see the green score.
 
+We don't want to test many scenarios,
+(e2e tests are expensive),
+but they insure we don't inadvertandly break some important feature.
+
 ## How it works
 
 Playwright's `webServer` starts `start-servers.sh`, which launches two processes:
