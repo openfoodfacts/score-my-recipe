@@ -211,39 +211,6 @@ async def green_score(request: types.GreenScoreRequest) -> types.GreenScoreRespo
     )
 
 
-@app.post("/v1/recompute-quantity")
-@types.async_validate_model
-async def recompute_quantity(
-    request: types.RecomputeQuantityRequest,
-) -> types.RecomputeQuantityResponse:
-    """Recompute the quantity in grams after the user edited an ingredient's value/unit.
-
-    This is useful to let user change the value of a recipe item in a natural fashion
-    (eg. change 1 egg to 3 eggs)
-    while keeping the equivalent "g" conversion for green-score computation.
-
-    A best effort is done to also allow changing the unit,
-    but currently, only new units that can be converted to grams are supported.
-
-    Units may be given as a taxonomy id, a localized unit name (resolved using
-    ``lang``) or the ``item`` sentinel for countable ingredients.
-    """
-    try:
-        quantity_g, value, unit = await units.recompute_quantity(
-            request.quantity_g,
-            request.old_value,
-            request.old_unit,
-            request.new_value,
-            request.new_unit,
-            request.lang,
-        )
-    except exceptions.UnknownUnitError as exc:
-        raise HTTPException(status_code=422, detail=str(exc))
-    except exceptions.UnitConversionNotSupportedError as exc:
-        raise HTTPException(status_code=422, detail=str(exc))
-    return types.RecomputeQuantityResponse(quantity_g=quantity_g, value=value, unit=unit)
-
-
 @app.get("/v1/convert-quantity", response_model_exclude_none=True)
 async def convert_quantity(
     filter_query: Annotated[types.ConvertQuantityRequest, Query()], response: Response

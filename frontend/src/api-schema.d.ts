@@ -210,36 +210,6 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
-	'/v1/recompute-quantity': {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		get?: never;
-		put?: never;
-		/**
-		 * Recompute Quantity
-		 * @description Recompute the quantity in grams after the user edited an ingredient's value/unit.
-		 *
-		 *     This is useful to let user change the value of a recipe item in a natural fashion
-		 *     (eg. change 1 egg to 3 eggs)
-		 *     while keeping the equivalent "g" conversion for green-score computation.
-		 *
-		 *     A best effort is done to also allow changing the unit,
-		 *     but currently, only new units that can be converted to grams are supported.
-		 *
-		 *     Units may be given as a taxonomy id, a localized unit name (resolved using
-		 *     ``lang``) or the ``item`` sentinel for countable ingredients.
-		 */
-		post: operations['recompute_quantity_v1_recompute_quantity_post'];
-		delete?: never;
-		options?: never;
-		head?: never;
-		patch?: never;
-		trace?: never;
-	};
 	'/v1/convert-quantity': {
 		parameters: {
 			query?: never;
@@ -771,84 +741,6 @@ export interface components {
 			ingredients: components['schemas']['RecipeIngredient'][];
 		};
 		/**
-		 * RecomputeQuantityRequest
-		 * @description Request body for the ``POST /v1/recompute-quantity`` endpoint.
-		 *
-		 *     Each unit (``old_unit`` / ``new_unit``) may be given either as a unit id
-		 *     from the OFF units taxonomy (e.g. ``xx:kg``), as a localized unit name
-		 *     resolvable through the units taxonomy (e.g. ``"kg"``, ``"tasse"``), or as
-		 *     the ``item`` sentinel for countable ingredients (e.g. "1 egg").
-		 * @example {
-		 *       "lang": "en",
-		 *       "new_unit": "kg",
-		 *       "new_value": 2,
-		 *       "old_unit": "g",
-		 *       "old_value": 2000,
-		 *       "quantity_g": 2000
-		 *     }
-		 */
-		RecomputeQuantityRequest: {
-			/**
-			 * Lang
-			 * @description Language for the request (2 or 5 letter code)
-			 */
-			lang: string;
-			/**
-			 * Quantityg
-			 * @description Previous quantity in grams
-			 */
-			quantityG: number;
-			/**
-			 * Oldvalue
-			 * @description Previous numeric value of the quantity
-			 */
-			oldValue: number;
-			/**
-			 * Oldunit
-			 * @description Previous unit (unit name, taxonomy id or 'item')
-			 */
-			oldUnit: string;
-			/**
-			 * Newvalue
-			 * @description New numeric value of the quantity
-			 */
-			newValue: number;
-			/**
-			 * Newunit
-			 * @description New unit (unit name, taxonomy id or 'item')
-			 */
-			newUnit: string;
-		};
-		/**
-		 * RecomputeQuantityResponse
-		 * @description Response model for the ``POST /v1/recompute-quantity`` endpoint.
-		 *
-		 *     The ``unit`` field echoes the ``new_unit`` sent in the request (it may be a
-		 *     unit name, a taxonomy id or ``{ITEM_UNIT}``).
-		 * @example {
-		 *       "quantityG": 2000,
-		 *       "unit": "kg",
-		 *       "value": 2
-		 *     }
-		 */
-		RecomputeQuantityResponse: {
-			/**
-			 * Quantityg
-			 * @description New quantity in grams
-			 */
-			quantityG: number;
-			/**
-			 * Value
-			 * @description New numeric value of the quantity
-			 */
-			value: number;
-			/**
-			 * Unit
-			 * @description New unit, echoed from the request (unit name, taxonomy id or 'item')
-			 */
-			unit: string;
-		};
-		/**
 		 * ScoredIngredient
 		 * @description An ingredient alternative with its matching Agribalyse row code.
 		 *
@@ -1349,39 +1241,6 @@ export interface operations {
 				};
 				content: {
 					'application/json': components['schemas']['GreenScoreResponse'];
-				};
-			};
-			/** @description Validation Error */
-			422: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					'application/json': components['schemas']['HTTPValidationError'];
-				};
-			};
-		};
-	};
-	recompute_quantity_v1_recompute_quantity_post: {
-		parameters: {
-			query?: never;
-			header?: never;
-			path?: never;
-			cookie?: never;
-		};
-		requestBody: {
-			content: {
-				'application/json': components['schemas']['RecomputeQuantityRequest'];
-			};
-		};
-		responses: {
-			/** @description Successful Response */
-			200: {
-				headers: {
-					[name: string]: unknown;
-				};
-				content: {
-					'application/json': components['schemas']['RecomputeQuantityResponse'];
 				};
 			};
 			/** @description Validation Error */
