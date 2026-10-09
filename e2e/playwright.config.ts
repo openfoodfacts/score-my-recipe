@@ -31,7 +31,7 @@ export default defineConfig({
 	webServer: {
 		command: 'bash start-servers.sh',
 		url: 'http://localhost:5174',
-		reuseExistingServer: !process.env.CI,
+		reuseExistingServer: false,
 		timeout: 60_000
 	}
 });
