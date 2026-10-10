@@ -260,7 +260,9 @@ export async function getIngredientsTaxonomy(
 		label: ingredient.label,
 		isInTaxonomy: true,
 		synonyms: ingredient.synonyms ?? [],
-		hasEfScore: ingredient.has_ef_score
+		hasEfScore: ingredient.has_ef_score,
+		is_fresh_plant: ingredient.is_fresh_plant,
+		is_in_season: ingredient.is_in_season
 	}));
 }
 

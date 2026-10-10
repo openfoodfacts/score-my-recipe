@@ -81,8 +81,8 @@ export function apiIngredientToIngredient(apiIngredient: RecipeIngredient): Ingr
 		codifiedIngredient: taxonomyItem,
 		labels,
 		origin,
-		isFreshPlant: false,
-		isInSeason: false
+		isFreshPlant: apiIngredient.is_fresh_plant ?? false,
+		isInSeason: apiIngredient.is_in_season ?? false
 	};
 }
 

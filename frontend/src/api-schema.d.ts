@@ -618,6 +618,16 @@ export interface components {
 			 * @description Notes about the ingredient
 			 */
 			notes?: string[] | null;
+			/**
+			 * Is In Season
+			 * @description Whether the ingredient is in season
+			 */
+			is_in_season?: boolean | null;
+			/**
+			 * Is Fresh Plant
+			 * @description Whether the ingredient is a fresh plant
+			 */
+			is_fresh_plant?: boolean | null;
 		};
 		/**
 		 * RecipeIngredientInput
@@ -889,6 +899,10 @@ export interface components {
 			 * @description Whether the ingredient resolves to an Agribalyse row with an EF score, i.e. whether it can be scored in the green-score computation.
 			 */
 			has_ef_score: boolean;
+			/** Is Fresh Plant */
+			is_fresh_plant?: boolean | null;
+			/** Is In Season */
+			is_in_season?: boolean | null;
 		};
 		/**
 		 * TaxonomyItem

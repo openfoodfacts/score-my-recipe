@@ -85,6 +85,21 @@
 			ingredient.isInSeason = false;
 		}
 	}
+
+	function handleCodifiedIngredientChange(newTags: IngredientSuggestion[]) {
+		const tag = newTags[0] ?? null;
+		ingredient.codifiedIngredient = tag;
+
+		// Reset or Prefill based on the new ingredient
+		if (tag) {
+			const suggestion = tag as IngredientSuggestion;
+			ingredient.isFreshPlant = suggestion.is_fresh_plant ?? false;
+			ingredient.isInSeason = suggestion.is_in_season ?? false;
+		} else {
+			ingredient.isFreshPlant = false;
+			ingredient.isInSeason = false;
+		}
+	}
 </script>
 
 <div class="flex flex-col gap-2 rounded-lg p-3 sm:flex-row sm:items-start">
@@ -133,9 +148,7 @@
 			tagtype="ingredients"
 			id="ingredient-codified-{ingredient.id}"
 			tags={ingredient.codifiedIngredient ? [ingredient.codifiedIngredient] : []}
-			onChange={(newTags) => {
-				ingredient.codifiedIngredient = newTags[0] ?? null;
-			}}
+			onChange={handleCodifiedIngredientChange}
 			single={true}
 			invalid={isMissing}
 		>

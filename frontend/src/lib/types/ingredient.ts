@@ -47,6 +47,9 @@ export type IngredientType = TaxonomyItem;
 export interface IngredientSuggestion extends TaxonomyItem {
 	/** Whether the ingredient has an EF score (is scorable in the green-score). */
 	hasEfScore: boolean;
+
+	is_fresh_plant?: boolean | null;
+	is_in_season?: boolean | null;
 }
 
 /**
