@@ -15,7 +15,7 @@ import { ITEM_UNIT_ID } from '$lib/api/taxonomy';
  * Taxonomy id of the gram unit — the only unit for which grams track the
  * quantity value live (identity, not a transformation).
  */
-export const GRAM_UNIT_ID = 'en:gram';
+export const GRAM_UNIT_ID = 'xx:g';
 
 /**
  * Whether the given unit is the gram unit.
