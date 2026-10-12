@@ -409,12 +409,14 @@ export async function getUnitsTaxonomy(): Promise<TaxonomyItem[]> {
  * @param lang - The language code for the unit labels.
  * @param ingredientId - Optional taxonomy id of the ingredient, used to
  *   determine which unit families (g, ml, item) are relevant.
+ * @param signal - Optional abort signal to cancel the in-flight request.
  * @returns The list of compatible unit TaxonomyItems (with synonyms for matching).
  * @throws {Error} If the backend responds with a non-2xx status code.
  */
 export async function getCompatibleUnits(
 	lang: string,
-	ingredientId?: string | null
+	ingredientId?: string | null,
+	signal?: AbortSignal
 ): Promise<TaxonomyItem[]> {
 	const params = new URLSearchParams({
 		lang,
@@ -423,7 +425,9 @@ export async function getCompatibleUnits(
 	if (ingredientId) {
 		params.set('ingredient_id', ingredientId);
 	}
-	const response = await fetch(`${API_BASE_URL}/v1/units?${params.toString()}`);
+	const response = await fetch(`${API_BASE_URL}/v1/units?${params.toString()}`, {
+		signal
+	});
 	if (!response.ok) {
 		throw new Error(`Failed to fetch compatible units: ${response.statusText}`);
 	}

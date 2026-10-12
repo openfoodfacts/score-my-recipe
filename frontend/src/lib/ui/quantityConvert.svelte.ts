@@ -222,37 +222,77 @@ export function createCompatibleUnits(ingredient: Ingredient) {
 	// When null, the Tags component falls back to fetching all units.
 	let compatibleUnits = $state<TaxonomyItem[] | null>(null);
 
+	// AbortController for the in-flight compatible-units request.
+	// to handle concurrency with edits
+	let compatibleUnitsController: AbortController | null = null;
+
 	/**
-	 * Fetch the compatible units list from the backend and update the state.
+	 * Fetch the compatible units list from the backend and upda	te the state.
 	 *
-	 * On error, falls back to null (all units) so the user is not stuck
-	 * with an empty dropdown.
+	 * Handles concurrency with edits
+	 *
+	 * error (including abort),
+	 * falls back to null (all units) so the user is not stuck with an
+	 * empty dropdown.
 	 */
-	async function fetchCompatibleUnits(ingredientId: string | null) {
+	async function fetchCompatibleUnits(ingredientId: string) {
+		// Abort any in-flight request
+		compatibleUnitsController?.abort();
+
+		const controller = new AbortController();
+		compatibleUnitsController = controller;
+
 		try {
-			const units = await getCompatibleUnits(getLocaleKey(), ingredientId);
+			const units = await getCompatibleUnits(getLocaleKey(), ingredientId, controller.signal);
+
+			// Only apply if this is still the latest request
+			if (compatibleUnitsController !== controller) return;
+
 			compatibleUnits = units;
 		} catch (e) {
+			// Ignore aborts — the request was superseded or invalidated.
+			if (e instanceof DOMException && e.name === 'AbortError') return;
 			console.error('Failed to fetch compatible units', e);
+			// Only apply the fallback if this is still the latest request.
+			if (compatibleUnitsController !== controller) return;
 			compatibleUnits = null;
+		} finally {
+			if (compatibleUnitsController === controller) {
+				compatibleUnitsController = null;
+			}
 		}
 	}
 
 	/**
 	 * Fetch compatible units whenever the codified ingredient changes.
-	 * Falls back to null (all units) when no ingredient id is available.
+	 * Falls back to null (all units) when no ingredient id is available,
+	 * and aborts any pending request so a late response cannot
+	 * repopulate the list after the ingredient is cleared.
 	 */
 	$effect(() => {
 		// codifiedIngredient?.id is string | null | undefined; normalize to string | null
 		const codifiedId = ingredient.codifiedIngredient?.id ?? null;
 
 		if (codifiedId === null) {
+			// Invalidate any in-flight request so a stale response
+			// cannot repopulate units after the ingredient is cleared.
+			compatibleUnitsController?.abort();
+			compatibleUnitsController = null;
 			compatibleUnits = null;
 			return;
 		}
 
 		// Fetch compatible units (async — the state updates when the fetch completes)
 		void fetchCompatibleUnits(codifiedId);
+	});
+
+	// Clean up in-flight requests on component destroy.
+	// This $effect has no tracked dependencies, so it runs once on mount
+	// and the returned cleanup function fires on destroy.
+	$effect(() => {
+		return () => {
+			compatibleUnitsController?.abort();
+		};
 	});
 
 	return {
