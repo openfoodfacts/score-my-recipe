@@ -4,7 +4,7 @@
 set shell := ["bash", "-uc"]
 
 # Set up nvm (uses e2e/.nvmrc) — mirrors the frontend's local-nvm.sh
-use_nvm := "export NVM_DIR=\"${NVM_DIR:-$HOME/.nvm}\"; [ -s \"$NVM_DIR/nvm.sh\" ] && . \"$NVM_DIR/nvm.sh\"; [ -e ../frontend/local-nvm.sh ] && . ../frontend/local-nvm.sh; nvm use"
+use_nvm := "unset npm_config_prefix; export NVM_DIR=\"${NVM_DIR:-$HOME/.nvm}\"; [ -s \"$NVM_DIR/nvm.sh\" ] && . \"$NVM_DIR/nvm.sh\"; [ -e ../frontend/local-nvm.sh ] && . ../frontend/local-nvm.sh; nvm use"
 
 # this help
 [default]
@@ -21,8 +21,6 @@ help:
 install:
     #!/usr/bin/env bash
     set -euo pipefail
-    # Source nvm (unset npm_config_prefix to avoid nvm incompatibility)
-    unset npm_config_prefix
     echo "=== Installing e2e deps ==="
     {{ use_nvm }} && pnpm install --frozen-lockfile 2>/dev/null || pnpm install
     echo "=== Installing Chromium (if needed) ==="

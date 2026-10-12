@@ -15,6 +15,11 @@ cd "$REPO_ROOT/frontend"
 # Source nvm if the helper exists (sets up the correct Node/pnpm version).
 # Unset npm_config_prefix first: nvm is incompatible with it (it is inherited
 # from the parent shell that launched Playwright).
-if [ -f ./local-nvm.sh ]; then unset npm_config_prefix; . ./local-nvm.sh; fi
+unset npm_config_prefix
+export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+[ -e ./local-nvm.sh ] && . ./local-nvm.sh
+nvm use
+
 export PUBLIC_RECIPE_API_URL=http://localhost:8800
 exec pnpm dev --port 5174 --strictPort
