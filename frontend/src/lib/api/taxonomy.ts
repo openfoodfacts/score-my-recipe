@@ -38,14 +38,16 @@ export async function getMatchingTags(
 	limit = 30
 ): Promise<TaxonomySuggestionResponse> {
 	// temporary simulation
-	const values = {
-		ingredients: getIngredientsTaxonomy(),
-		labels: getLabelsTaxonomy(),
-		countries: getCountriesTaxonomy(),
-		units: getUnitsTaxonomy()
+	// Dispatch map of loaders so only the requested taxonomy is fetched,
+	// instead of firing all four requests on every call.
+	const taxonomyLoaders: Record<string, () => Promise<TaxonomyItem[]>> = {
+		ingredients: () => getIngredientsTaxonomy(),
+		labels: () => getLabelsTaxonomy(),
+		countries: () => getCountriesTaxonomy(),
+		units: () => getUnitsTaxonomy()
 	};
-	if (Object.hasOwn(values, tagtype)) {
-		const list = await values[tagtype as keyof typeof values];
+	if (Object.hasOwn(taxonomyLoaders, tagtype)) {
+		const list = await taxonomyLoaders[tagtype]();
 		// Empty query: return all items (up to limit). Used by short-value
 		// taxonomies like units (minChars=0) to show every option on focus.
 		if (query.trim() === '') {
