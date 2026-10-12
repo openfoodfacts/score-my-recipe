@@ -102,14 +102,14 @@ export function createQuantityConvert(ingredient: Ingredient) {
 		// Skip the gram-unit shortcut (handled by the local $effect above)
 		if (isGramUnit(currentUnit)) return;
 
-		// Cleared quantity: skip the API call, set grams to 0
-		if (currentValue === null) {
+		// Cleared quantity: skip the API call, set grams to null
+		if (currentValue == null || currentUnitStr == null) {
 			if (convertTimer) {
 				clearTimeout(convertTimer);
 				convertTimer = null;
 			}
-			ingredient.weight = 0;
-			lastValue = null;
+			ingredient.weight = null;
+			lastValue = currentValue;
 			lastUnit = currentUnitStr;
 			lastIngredientId = currentIngredientId;
 			convertError = false;
@@ -148,6 +148,10 @@ export function createQuantityConvert(ingredient: Ingredient) {
 		const unit = unitToApiString(ingredient.quantityUnit);
 		const ingredientId = ingredient.codifiedIngredient?.id ?? null;
 
+		// No unit selected: nothing to convert (the $effect guards this,
+		// but be defensive against a race between the timer and a unit clear).
+		if (unit === null) return;
+
 		// Guard: nothing to convert
 		if (value === lastValue && unit === lastUnit && ingredientId === lastIngredientId) return;
 
@@ -172,7 +176,7 @@ export function createQuantityConvert(ingredient: Ingredient) {
 			// Only set error if this is still the latest request
 			if (convertController !== controller) return;
 			convertError = true;
-			// Grams stay frozen at the last good value (ingredient.weight)
+			ingredient.weight = null; // unknown grams value
 		} finally {
 			if (convertController === controller) {
 				convertController = null;
