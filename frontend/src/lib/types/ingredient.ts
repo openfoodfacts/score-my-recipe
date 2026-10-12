@@ -110,12 +110,12 @@ export function createEmptyIngredient(): Ingredient {
 export function isIngredientEmpty(ingredient: Ingredient): boolean {
 	// isFreshPlant and isInSeason are default-false flags that don't make a
 	// line "non-empty", so they are excluded from the emptiness check.
+	// Note: weight is not tested because it is derived from quantityValue and quantityUnit, and is not user-editable.
 	return (
 		ingredient.name.trim() === '' &&
-		ingredient.weight === null &&
-		ingredient.quantityValue === null &&
-		ingredient.quantityUnit === null &&
-		ingredient.codifiedIngredient === null &&
+		ingredient.quantityValue == null &&
+		ingredient.quantityUnit == null &&
+		ingredient.codifiedIngredient == null &&
 		ingredient.labels.length === 0 &&
 		ingredient.origin === null
 	);
