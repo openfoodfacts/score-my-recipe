@@ -177,9 +177,7 @@ def _property_value(node: taxonomy.TaxonomyNode, prop: str) -> Optional[str]:
     return str(raw)
 
 
-def _walk_up_numeric_property(
-    nodes: Iterable[taxonomy.TaxonomyNode], prop: str
-) -> Optional[float]:
+def _walk_up_numeric_property(nodes: Iterable[taxonomy.TaxonomyNode], prop: str) -> Optional[float]:
     """Read a numeric property from a node chain, returning the first match.
 
     Walks ``nodes`` (closest first, as produced by :func:`_node_chain`)

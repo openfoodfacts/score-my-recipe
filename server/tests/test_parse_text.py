@@ -266,9 +266,7 @@ def test_parse_text_resolves_known_unit_name(mock_off_parse_text):
 
 def test_parse_text_unresolvable_unit_becomes_free_text(mock_off_parse_text):
     """A parsed unit not in the taxonomy becomes a free-text TaxonomyItem."""
-    response = client.post(
-        "/v1/parse_text", json={"text": "oignons 2 units", "lang": "fr"}
-    )
+    response = client.post("/v1/parse_text", json={"text": "oignons 2 units", "lang": "fr"})
     assert response.status_code == 200
     # The mock returns two ingredients; the second (oignons) has unit "units".
     ingredient = response.json()["ingredients"][1]

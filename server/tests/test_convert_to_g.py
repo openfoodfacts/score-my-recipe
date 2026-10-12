@@ -214,9 +214,7 @@ async def test_volume_unit_ingredient_without_density_raises(mock_taxonomies):
 async def test_volume_unit_missing_conversion_factor_raises(mock_taxonomies):
     """A volume unit without conversion_factor raises."""
     with pytest.raises(exceptions.UnitConversionNotSupportedError, match="conversion_factor"):
-        await units.convert_to_g(
-            value=200, unit="en:pint", ingredient_id="en:milk"
-        )
+        await units.convert_to_g(value=200, unit="en:pint", ingredient_id="en:milk")
 
 
 # --- item unit conversion ---------------------------------------------------
@@ -240,9 +238,7 @@ async def test_item_unit_without_ingredient_raises(mock_taxonomies):
 @pytest.mark.asyncio
 async def test_item_unit_ingredient_without_avg_weight_raises(mock_taxonomies):
     """Item conversion with an ingredient lacking avg_weight raises."""
-    with pytest.raises(
-        exceptions.UnitConversionNotSupportedError, match="average_weight_per_unit"
-    ):
+    with pytest.raises(exceptions.UnitConversionNotSupportedError, match="average_weight_per_unit"):
         await units.convert_to_g(value=3, unit="item", ingredient_id="en:water")
 
 
@@ -259,9 +255,7 @@ async def test_item_unit_inherits_avg_weight_from_parent(mock_taxonomies):
 @pytest.mark.asyncio
 async def test_volume_unit_inherits_density_from_parent(mock_taxonomies):
     """en:whole-milk (child of en:milk) inherits density_g_per_ml."""
-    result = await units.convert_to_g(
-        value=200, unit="en:cup", ingredient_id="en:whole-milk"
-    )
+    result = await units.convert_to_g(value=200, unit="en:cup", ingredient_id="en:whole-milk")
     assert result == pytest.approx(49440)
 
 
@@ -321,9 +315,7 @@ async def test_mass_unit_missing_conversion_factor_raises(mock_taxonomies):
 
 def test_api_mass_unit(mock_taxonomies):
     """GET /v1/convert-quantity with a mass unit returns 200."""
-    response = client.get(
-        "/v1/convert-quantity", params={"value": 2, "unit": "xx:kg"}
-    )
+    response = client.get("/v1/convert-quantity", params={"value": 2, "unit": "xx:kg"})
     assert response.status_code == 200
     assert response.json()["quantity_g"] == pytest.approx(2000)
 
@@ -350,33 +342,25 @@ def test_api_item_unit(mock_taxonomies):
 
 def test_api_volume_without_ingredient_returns_422(mock_taxonomies):
     """Volume conversion without ingredient_id returns 422."""
-    response = client.get(
-        "/v1/convert-quantity", params={"value": 200, "unit": "en:cup"}
-    )
+    response = client.get("/v1/convert-quantity", params={"value": 200, "unit": "en:cup"})
     assert response.status_code == 422
 
 
 def test_api_item_without_ingredient_returns_422(mock_taxonomies):
     """Item conversion without ingredient_id returns 422."""
-    response = client.get(
-        "/v1/convert-quantity", params={"value": 3, "unit": "item"}
-    )
+    response = client.get("/v1/convert-quantity", params={"value": 3, "unit": "item"})
     assert response.status_code == 422
 
 
 def test_api_unknown_unit_returns_422(mock_taxonomies):
     """An unknown unit returns 422."""
-    response = client.get(
-        "/v1/convert-quantity", params={"value": 2, "unit": "en:nonexistent"}
-    )
+    response = client.get("/v1/convert-quantity", params={"value": 2, "unit": "en:nonexistent"})
     assert response.status_code == 422
 
 
 def test_api_non_g_ml_unit_returns_422(mock_taxonomies):
     """A non-g/ml unit returns 422."""
-    response = client.get(
-        "/v1/convert-quantity", params={"value": 2, "unit": "en:kilojoule"}
-    )
+    response = client.get("/v1/convert-quantity", params={"value": 2, "unit": "en:kilojoule"})
     assert response.status_code == 422
 
 
@@ -391,42 +375,32 @@ def test_api_unknown_ingredient_returns_422(mock_taxonomies):
 
 def test_api_zero_value_returns_200(mock_taxonomies):
     """value=0 returns 200 with quantity_g=0."""
-    response = client.get(
-        "/v1/convert-quantity", params={"value": 0, "unit": "xx:kg"}
-    )
+    response = client.get("/v1/convert-quantity", params={"value": 0, "unit": "xx:kg"})
     assert response.status_code == 200
     assert response.json()["quantity_g"] == 0
 
 
 def test_api_negative_value_returns_422(mock_taxonomies):
     """A negative value is rejected by validation (422)."""
-    response = client.get(
-        "/v1/convert-quantity", params={"value": -5, "unit": "xx:kg"}
-    )
+    response = client.get("/v1/convert-quantity", params={"value": -5, "unit": "xx:kg"})
     assert response.status_code == 422
 
 
 def test_api_missing_value_returns_422(mock_taxonomies):
     """A missing required value param returns 422."""
-    response = client.get(
-        "/v1/convert-quantity", params={"unit": "xx:kg"}
-    )
+    response = client.get("/v1/convert-quantity", params={"unit": "xx:kg"})
     assert response.status_code == 422
 
 
 def test_api_missing_unit_returns_422(mock_taxonomies):
     """A missing required unit param returns 422."""
-    response = client.get(
-        "/v1/convert-quantity", params={"value": 2}
-    )
+    response = client.get("/v1/convert-quantity", params={"value": 2})
     assert response.status_code == 422
 
 
 def test_api_cache_control_header(mock_taxonomies):
     """The endpoint sets a 1-day Cache-Control header."""
-    response = client.get(
-        "/v1/convert-quantity", params={"value": 2, "unit": "xx:kg"}
-    )
+    response = client.get("/v1/convert-quantity", params={"value": 2, "unit": "xx:kg"})
     assert response.status_code == 200
     assert response.headers["Cache-Control"] == "max-age=86400"
 

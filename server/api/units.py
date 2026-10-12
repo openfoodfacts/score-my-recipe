@@ -116,9 +116,7 @@ async def get_units(
     # has_avg_weight being True implies the ingredient is known, so the
     # lookup below cannot raise UnknownIngredientError.
     if has_avg_weight:
-        item_label, item_synonyms = await _ingredient_lang_label_and_synonyms(
-            ingredient_id, lang
-        )
+        item_label, item_synonyms = await _ingredient_lang_label_and_synonyms(ingredient_id, lang)
         result.append(
             types.Unit(
                 id=types.ITEM_UNIT,
@@ -346,18 +344,14 @@ async def resolve_unit_to_taxonomy_item(
         item_label = types.ITEM_UNIT
         if ingredient_id and await _ingredient_is_known(ingredient_id):
             item_label, _ = await _ingredient_lang_label_and_synonyms(ingredient_id, lang)
-        return types.TaxonomyItem(
-            id=types.ITEM_UNIT, label=item_label, is_in_taxonomy=True
-        )
+        return types.TaxonomyItem(id=types.ITEM_UNIT, label=item_label, is_in_taxonomy=True)
     unit_name = unit_name.strip()
     # Build an id -> localized label map from the units list for this language.
     units_entries = await _get_units_entries(lang)
     id_to_label = {unit_id: unit_label for unit_id, unit_label, _, _ in units_entries}
     # Try resolving as a taxonomy id first.
     if unit_name in id_to_label:
-        return types.TaxonomyItem(
-            id=unit_name, label=id_to_label[unit_name], is_in_taxonomy=True
-        )
+        return types.TaxonomyItem(id=unit_name, label=id_to_label[unit_name], is_in_taxonomy=True)
     # Then try resolving as a localized unit name (label or synonym).
     resolved_id = await _resolve_unit_name(unit_name, lang)
     if resolved_id is not None:

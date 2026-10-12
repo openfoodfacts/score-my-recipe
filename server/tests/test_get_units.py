@@ -7,7 +7,6 @@ property (mirroring the real OFF units taxonomy where ``standard_unit`` is store
 as a language -> value dict, e.g. ``{"en": "ml"}``).
 """
 
-
 import pytest
 from fastapi.testclient import TestClient
 
@@ -437,9 +436,7 @@ async def test_get_units_item_sorted_alphabetically(mock_units_and_ingredients):
 
 def test_get_units_api_with_ingredient_returns_item(mock_units_and_ingredients):
     """The /v1/units endpoint adds item when ingredient has avg_weight_per_unit."""
-    response = client.get(
-        "/v1/units", params={"lang": "en", "ingredient_id": "en:egg"}
-    )
+    response = client.get("/v1/units", params={"lang": "en", "ingredient_id": "en:egg"})
     assert response.status_code == 200
     ids = [unit["id"] for unit in response.json()["units"]]
     assert "item" in ids
@@ -456,18 +453,14 @@ def test_get_units_api_item_labelled_with_ingredient_name(mock_units_and_ingredi
         params={"lang": "en", "ingredient_id": "en:egg", "include_synonyms": "true"},
     )
     assert response.status_code == 200
-    item_unit = next(
-        unit for unit in response.json()["units"] if unit["id"] == "item"
-    )
+    item_unit = next(unit for unit in response.json()["units"] if unit["id"] == "item")
     assert item_unit["label"] == "egg"
     assert item_unit["synonyms"] == ["eggs"]
 
 
 def test_get_units_api_with_density_returns_ml(mock_units_and_ingredients):
     """The /v1/units endpoint returns ml units when ingredient has density."""
-    response = client.get(
-        "/v1/units", params={"lang": "en", "ingredient_id": "en:milk"}
-    )
+    response = client.get("/v1/units", params={"lang": "en", "ingredient_id": "en:milk"})
     assert response.status_code == 200
     ids = [unit["id"] for unit in response.json()["units"]]
     assert "en:cup" in ids
@@ -477,9 +470,7 @@ def test_get_units_api_with_density_returns_ml(mock_units_and_ingredients):
 
 def test_get_units_api_with_both_returns_g_ml_item(mock_units_and_ingredients):
     """The /v1/units endpoint returns g + ml + item for an ingredient with both."""
-    response = client.get(
-        "/v1/units", params={"lang": "en", "ingredient_id": "en:flour"}
-    )
+    response = client.get("/v1/units", params={"lang": "en", "ingredient_id": "en:flour"})
     assert response.status_code == 200
     ids = [unit["id"] for unit in response.json()["units"]]
     assert ids == ["en:cup", "en:gram", "en:kilogram", "en:litre", "item"]
@@ -487,9 +478,7 @@ def test_get_units_api_with_both_returns_g_ml_item(mock_units_and_ingredients):
 
 def test_get_units_api_unknown_ingredient_returns_g_only(mock_units_and_ingredients):
     """An unknown ingredient id returns only g units (HTTP 200, not 422)."""
-    response = client.get(
-        "/v1/units", params={"lang": "en", "ingredient_id": "en:nonexistent"}
-    )
+    response = client.get("/v1/units", params={"lang": "en", "ingredient_id": "en:nonexistent"})
     assert response.status_code == 200
     ids = [unit["id"] for unit in response.json()["units"]]
     assert ids == ["en:gram", "en:kilogram"]

@@ -818,8 +818,7 @@ class GreenScoreResponse(CamelModel):
 
 
 class ConvertQuantityRequest(BaseModel):
-    """Query parameters for the ``GET /v1/convert-quantity`` endpoint.
-    """
+    """Query parameters for the ``GET /v1/convert-quantity`` endpoint."""
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -856,8 +855,6 @@ class ConvertQuantityRequest(BaseModel):
 class ConvertQuantityResponse(BaseModel):
     """Response model for the ``GET /v1/convert-quantity`` endpoint."""
 
-    model_config = ConfigDict(
-        json_schema_extra={"examples": [{"quantity_g": 2000}]}
-    )
+    model_config = ConfigDict(json_schema_extra={"examples": [{"quantity_g": 2000}]})
 
     quantity_g: Annotated[float, Field(description="The quantity converted to grams")]

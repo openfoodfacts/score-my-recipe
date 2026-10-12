@@ -74,9 +74,7 @@ async def off_ingredient_to_recipe_ingredient(
     # (a taxonomy unit, a free-text entry, or the 'item' sentinel).
     # The ingredient id lets the 'item' sentinel be labelled with the
     # ingredient's name (e.g. "3 eggs" rather than "3 item").
-    quantity_unit = await units.resolve_unit_to_taxonomy_item(
-        raw_unit, lang, off_ingredient.id
-    )
+    quantity_unit = await units.resolve_unit_to_taxonomy_item(raw_unit, lang, off_ingredient.id)
     ingredient = types.RecipeIngredient(
         taxonomy_id=off_ingredient.id,
         codified_ingredient=off_ingredient.text,
