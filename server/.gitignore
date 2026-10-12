@@ -1,5 +1,5 @@
-# data
-data/
+# data (top-level runtime data only — not tests/data which holds committed fixtures)
+/data/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
