@@ -4,8 +4,14 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 // Mocking $lib/i18n avoids the real svelte-i18n initialization, and mocking
 // $lib/offLink skips its top-level `await` so the taxonomy module loads
 // synchronously and deterministically in the test runner.
+// Make getLocale a controllable vi.fn so getLocaleKey can be tested with
+// different locales (en/fr).
+const i18nMocks = vi.hoisted(() => ({
+	getLocale: vi.fn(() => 'en-US')
+}));
+
 vi.mock('$lib/i18n', () => ({
-	getLocale: () => 'en-US'
+	getLocale: i18nMocks.getLocale
 }));
 
 vi.mock('$lib/offLink', () => ({
@@ -24,7 +30,7 @@ vi.mock('@openfoodfacts/openfoodfacts-nodejs', () => ({
 	}
 }));
 
-import { getMatchingTags } from './taxonomy';
+import { getMatchingTags, getCompatibleUnits, getLocaleKey, ITEM_UNIT_ID } from './taxonomy';
 
 /** Ingredients taxonomy returned by the (mocked) backend. */
 const ingredientsBody = {
@@ -43,6 +49,16 @@ const labelsBody = {
 	]
 };
 
+/** Units taxonomy returned by the (mocked) backend. */
+const unitsBody = {
+	units: [
+		{ id: 'xx:g', label: 'g', synonyms: ['gram', 'grams'] },
+		{ id: 'xx:kg', label: 'kg', synonyms: ['kilogram', 'kilograms'] },
+		{ id: 'xx:ml', label: 'ml', synonyms: ['millilitre', 'milliliter'] },
+		{ id: 'item', label: 'item', synonyms: [] }
+	]
+};
+
 /** Build a fake ok Response for the given JSON body. */
 function jsonResponse(body: unknown) {
 	return {
@@ -55,6 +71,7 @@ function jsonResponse(body: unknown) {
 
 beforeEach(() => {
 	offMocks.getTaxonomySuggestions.mockReset();
+	i18nMocks.getLocale.mockReturnValue('en-US');
 
 	// Route the taxonomy fetches to controlled JSON payloads.
 	vi.stubGlobal(
@@ -63,6 +80,7 @@ beforeEach(() => {
 			if (url.includes('/v1/ingredients')) return jsonResponse(ingredientsBody);
 			if (url.includes('/v1/labels')) return jsonResponse(labelsBody);
 			if (url.includes('/v1/origins')) return jsonResponse({ origins: [] });
+			if (url.includes('/v1/units')) return jsonResponse(unitsBody);
 			throw new Error(`Unexpected fetch: ${url}`);
 		})
 	);
@@ -142,6 +160,129 @@ describe('getMatchingTags (unknown tagtype fallback)', () => {
 		await getMatchingTags('categories', 'x');
 		expect(offMocks.getTaxonomySuggestions).toHaveBeenCalledWith(
 			expect.objectContaining({ limit: '30' })
+		);
+	});
+});
+
+describe('getLocaleKey', () => {
+	it('returns "en" for an English locale', () => {
+		i18nMocks.getLocale.mockReturnValue('en-US');
+		expect(getLocaleKey()).toBe('en');
+	});
+
+	it('returns "fr" for a French locale', () => {
+		i18nMocks.getLocale.mockReturnValue('fr-FR');
+		expect(getLocaleKey()).toBe('fr');
+	});
+
+	it('defaults to "en" for a non-French locale', () => {
+		i18nMocks.getLocale.mockReturnValue('de-DE');
+		expect(getLocaleKey()).toBe('en');
+	});
+});
+
+describe('ITEM_UNIT_ID', () => {
+	it('is the "item" string', () => {
+		expect(ITEM_UNIT_ID).toBe('item');
+	});
+});
+
+describe('getCompatibleUnits', () => {
+	it('fetches units with lang and include_synonyms', async () => {
+		await getCompatibleUnits('en');
+		expect(vi.mocked(fetch).mock.calls[0][0]).toContain('/v1/units?lang=en&include_synonyms=true');
+	});
+
+	it('includes ingredient_id when provided', async () => {
+		await getCompatibleUnits('en', 'en:water');
+		expect(vi.mocked(fetch).mock.calls[0][0]).toContain('ingredient_id=en%3Awater');
+	});
+
+	it('omits ingredient_id when not provided', async () => {
+		await getCompatibleUnits('en');
+		expect(vi.mocked(fetch).mock.calls[0][0]).not.toContain('ingredient_id');
+	});
+
+	it('passes the abort signal through to fetch', async () => {
+		const controller = new AbortController();
+		await getCompatibleUnits('en', undefined, controller.signal);
+		expect(vi.mocked(fetch).mock.calls[0][1]?.signal).toBe(controller.signal);
+	});
+
+	it('maps the response units to TaxonomyItems with synonyms', async () => {
+		const result = await getCompatibleUnits('en');
+		expect(result).toEqual([
+			{ id: 'xx:g', label: 'g', isInTaxonomy: true, synonyms: ['gram', 'grams'] },
+			{ id: 'xx:kg', label: 'kg', isInTaxonomy: true, synonyms: ['kilogram', 'kilograms'] },
+			{ id: 'xx:ml', label: 'ml', isInTaxonomy: true, synonyms: ['millilitre', 'milliliter'] },
+			{ id: 'item', label: 'item', isInTaxonomy: true, synonyms: [] }
+		]);
+	});
+
+	it('defaults synonyms to an empty array when absent', async () => {
+		vi.mocked(fetch).mockResolvedValueOnce(
+			jsonResponse({ units: [{ id: 'xx:g', label: 'g' }] }) as Response
+		);
+		const result = await getCompatibleUnits('en');
+		expect(result[0].synonyms).toEqual([]);
+	});
+
+	it('throws on a non-ok response', async () => {
+		vi.mocked(fetch).mockResolvedValueOnce({
+			ok: false,
+			status: 500,
+			statusText: 'Internal Server Error'
+		} as Response);
+		await expect(getCompatibleUnits('en')).rejects.toThrow(
+			'Failed to fetch compatible units: Internal Server Error'
+		);
+	});
+});
+
+describe('getUnitsTaxonomy', () => {
+	// Reset modules so each test gets a fresh unitsCache, since caching
+	// is module-level state that persists across calls.
+	beforeEach(() => {
+		vi.resetModules();
+	});
+
+	it('fetches units with lang and include_synonyms', async () => {
+		const { getUnitsTaxonomy } = await import('./taxonomy');
+		await getUnitsTaxonomy();
+		expect(fetch).toHaveBeenCalledWith(
+			expect.stringContaining('/v1/units?lang=en&include_synonyms=true')
+		);
+	});
+
+	it('maps the response units to TaxonomyItems', async () => {
+		const { getUnitsTaxonomy } = await import('./taxonomy');
+		const result = await getUnitsTaxonomy();
+		expect(result).toHaveLength(4);
+		expect(result[0]).toEqual({
+			id: 'xx:g',
+			label: 'g',
+			isInTaxonomy: true,
+			synonyms: ['gram', 'grams']
+		});
+	});
+
+	it('caches units per language (second call skips fetch)', async () => {
+		const { getUnitsTaxonomy } = await import('./taxonomy');
+		await getUnitsTaxonomy();
+		vi.mocked(fetch).mockClear();
+		await getUnitsTaxonomy();
+		expect(fetch).not.toHaveBeenCalled();
+	});
+
+	it('throws on a non-ok response', async () => {
+		const { getUnitsTaxonomy } = await import('./taxonomy');
+		vi.mocked(fetch).mockResolvedValueOnce({
+			ok: false,
+			status: 500,
+			statusText: 'Internal Server Error'
+		} as Response);
+		await expect(getUnitsTaxonomy()).rejects.toThrow(
+			'Failed to fetch units: Internal Server Error'
 		);
 	});
 });

@@ -71,7 +71,19 @@ describe('isIngredientEmpty / isIngredientNotEmpty', () => {
 	});
 
 	it('is not empty when only the quantityUnit is set', () => {
-		expect(isIngredientEmpty(ingredient('i1', '', { quantityUnit: { id: 'en:kg', label: 'kg', isInTaxonomy: true } }))).toBe(false);
+		expect(
+			isIngredientEmpty(
+				ingredient('i1', '', { quantityUnit: { id: 'en:kg', label: 'kg', isInTaxonomy: true } })
+			)
+		).toBe(false);
+	});
+
+	it('is not empty when the quantityUnit is a free-text entry (id null)', () => {
+		expect(
+			isIngredientEmpty(
+				ingredient('i1', '', { quantityUnit: { id: null, label: 'splash', isInTaxonomy: false } })
+			)
+		).toBe(false);
 	});
 
 	it('is not empty when only the codified ingredient is set', () => {
@@ -118,7 +130,8 @@ describe('isIngredientEmpty / isIngredientNotEmpty', () => {
 });
 
 describe('ingredientSignature', () => {
-	// Signature layout: id:name:weight:codifiedId:isFreshPlant:isInSeason:originId:labelIds
+	// Signature layout:
+	//   id:name:weight:quantityValue:quantityUnitId:codifiedId:isFreshPlant:isInSeason:originId:labelIds
 
 	it('includes the id and name', () => {
 		expect(ingredientSignature(ingredient('i1', 'apple'))).toContain('i1:apple:');
@@ -141,8 +154,34 @@ describe('ingredientSignature', () => {
 		);
 		expect(withCodified).toContain('en:apple');
 
-		// No codified ingredient -> empty 4th field.
+		// No codified ingredient -> empty 5th field (index 5 in the split).
+		expect(ingredientSignature(ingredient('i1', 'apple')).split(':')[5]).toBe('');
+	});
+
+	it('includes the quantityValue, falling back to empty when null', () => {
+		expect(
+			ingredientSignature(ingredient('i1', 'apple', { quantityValue: 200 })).split(':')[3]
+		).toBe('200');
 		expect(ingredientSignature(ingredient('i1', 'apple')).split(':')[3]).toBe('');
+	});
+
+	it('includes the quantityUnit id, falling back to empty when null', () => {
+		expect(
+			ingredientSignature(
+				ingredient('i1', 'apple', {
+					quantityUnit: { id: 'en:kg', label: 'kg', isInTaxonomy: true }
+				})
+			)
+		).toContain('en:kg');
+		// No unit selected -> the quantityUnit field is empty. Since unit ids
+		// may contain ':', we assert against the full signature instead of split.
+		const noUnit = ingredientSignature(ingredient('i1', 'apple'));
+		const withUnit = ingredientSignature(
+			ingredient('i1', 'apple', {
+				quantityUnit: { id: 'en:kg', label: 'kg', isInTaxonomy: true }
+			})
+		);
+		expect(noUnit).not.toBe(withUnit);
 	});
 
 	it('includes isFreshPlant and isInSeason', () => {
@@ -176,6 +215,20 @@ describe('ingredientSignature', () => {
 	it('changes when a scored-relevant field changes', () => {
 		const base = ingredient('i1', 'apple', { weight: 150 });
 		expect(ingredientSignature(base)).not.toBe(ingredientSignature({ ...base, weight: 200 }));
+	});
+
+	it('changes when the quantityValue changes', () => {
+		const base = ingredient('i1', 'apple', { quantityValue: 200 });
+		expect(ingredientSignature(base)).not.toBe(
+			ingredientSignature({ ...base, quantityValue: 300 })
+		);
+	});
+
+	it('changes when the quantityUnit changes', () => {
+		const kg = { id: 'en:kg', label: 'kg', isInTaxonomy: true };
+		const g = { id: 'xx:g', label: 'g', isInTaxonomy: true };
+		const base = ingredient('i1', 'apple', { quantityUnit: kg });
+		expect(ingredientSignature(base)).not.toBe(ingredientSignature({ ...base, quantityUnit: g }));
 	});
 
 	it('is stable for ingredients with identical relevant fields', () => {

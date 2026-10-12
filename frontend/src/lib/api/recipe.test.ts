@@ -6,6 +6,7 @@ import {
 	parseRecipeText,
 	computeGreenScore,
 	getOrigins,
+	convertToG,
 	type RecipeIngredient
 } from './recipe';
 import { createEmptyIngredient, type Ingredient } from '$lib/types/ingredient';
@@ -376,5 +377,79 @@ describe('getOrigins', () => {
 		vi.mocked(fetch).mockResolvedValue(errorResponse(503, 'Service Unavailable') as Response);
 
 		await expect(getOrigins('en')).rejects.toThrow('Error 503: Service Unavailable');
+	});
+});
+
+describe('convertToG', () => {
+	beforeEach(() => {
+		vi.stubGlobal('fetch', vi.fn());
+	});
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	it('builds the URL with the value and unit query parameters', async () => {
+		const fetchMock = vi.mocked(fetch);
+		fetchMock.mockResolvedValue(okResponse({ quantity_g: 2000 }) as Response);
+
+		await convertToG(2, 'en:kg');
+
+		expect(fetchMock).toHaveBeenCalledTimes(1);
+		expect(fetchMock.mock.calls[0][0]).toContain('/v1/convert-quantity');
+		expect(fetchMock.mock.calls[0][0]).toContain('value=2');
+		expect(fetchMock.mock.calls[0][0]).toContain('unit=en%3Akg');
+	});
+
+	it('includes ingredient_id when an ingredient id is provided', async () => {
+		const fetchMock = vi.mocked(fetch);
+		fetchMock.mockResolvedValue(okResponse({ quantity_g: 240 }) as Response);
+
+		await convertToG(250, 'en:millilitre', 'en:water');
+
+		expect(fetchMock.mock.calls[0][0]).toContain('ingredient_id=en%3Awater');
+	});
+
+	it('omits ingredient_id when no ingredient id is provided', async () => {
+		const fetchMock = vi.mocked(fetch);
+		fetchMock.mockResolvedValue(okResponse({ quantity_g: 2000 }) as Response);
+
+		await convertToG(2, 'en:kg');
+
+		expect(fetchMock.mock.calls[0][0]).not.toContain('ingredient_id');
+	});
+
+	it('omits ingredient_id when the ingredient id is null', async () => {
+		const fetchMock = vi.mocked(fetch);
+		fetchMock.mockResolvedValue(okResponse({ quantity_g: 2000 }) as Response);
+
+		await convertToG(2, 'en:kg', null);
+
+		expect(fetchMock.mock.calls[0][0]).not.toContain('ingredient_id');
+	});
+
+	it('passes the abort signal through to fetch', async () => {
+		const fetchMock = vi.mocked(fetch);
+		fetchMock.mockResolvedValue(okResponse({ quantity_g: 2000 }) as Response);
+
+		const controller = new AbortController();
+		await convertToG(2, 'en:kg', undefined, controller.signal);
+
+		expect(fetchMock.mock.calls[0][1]?.signal).toBe(controller.signal);
+	});
+
+	it('returns the quantity_g from the response', async () => {
+		vi.mocked(fetch).mockResolvedValue(okResponse({ quantity_g: 1500 }) as Response);
+
+		await expect(convertToG(1.5, 'en:kg')).resolves.toBe(1500);
+	});
+
+	it('throws an Error including status and statusText on a non-ok response', async () => {
+		// 422 is returned when the conversion is not supported (e.g. a volume
+		// unit without an ingredient_id, or an ingredient lacking density).
+		vi.mocked(fetch).mockResolvedValue(errorResponse(422, 'Unprocessable Entity') as Response);
+
+		await expect(convertToG(250, 'en:millilitre')).rejects.toThrow(
+			'Error 422: Unprocessable Entity'
+		);
 	});
 });
