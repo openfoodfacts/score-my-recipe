@@ -304,7 +304,7 @@
     "/v1/units": {
       "get": {
         "summary": "Get Units",
-        "description": "Get the list of units available in the Open Food Facts units taxonomy\n\nNote: as the list is not too big, we let clients handle suggestions to users",
+        "description": "Get the list of units available in the Open Food Facts units taxonomy\n\nNote: as the list is not too big, we let clients handle suggestions to users.\n\nWhen ``ingredient_id`` is provided, the returned units are narrowed to\nthose relevant for that ingredient (``g`` always, ``ml`` if the ingredient\nhas a density, ``item`` if it has an average weight per unit).",
         "operationId": "get_units_v1_units_get",
         "parameters": [
           {
@@ -329,6 +329,24 @@
               "title": "Include Synonyms"
             },
             "description": "If true, include the synonyms of each item in the response."
+          },
+          {
+            "name": "ingredient_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Taxonomy id of an ingredient. When provided, the returned units are narrowed to those relevant for that ingredient: ``g`` units are always included, ``ml`` units only if the ingredient defines a positive ``density_g_per_ml``, and the ``item`` unit only if it defines a positive ``average_weight_per_unit``.",
+              "title": "Ingredient Id"
+            },
+            "description": "Taxonomy id of an ingredient. When provided, the returned units are narrowed to those relevant for that ingredient: ``g`` units are always included, ``ml`` units only if the ingredient defines a positive ``density_g_per_ml``, and the ``item`` unit only if it defines a positive ``average_weight_per_unit``."
           }
         ],
         "responses": {
@@ -459,28 +477,61 @@
         }
       }
     },
-    "/v1/recompute-quantity": {
-      "post": {
-        "summary": "Recompute Quantity",
-        "description": "Recompute the quantity in grams after the user edited an ingredient's value/unit.\n\nThis is useful to let user change the value of a recipe item in a natural fashion\n(eg. change 1 egg to 3 eggs)\nwhile keeping the equivalent \"g\" conversion for green-score computation.\n\nA best effort is done to also allow changing the unit,\nbut currently, only new units that can be converted to grams are supported.\n\nUnits may be given as a taxonomy id, a localized unit name (resolved using\n``lang``) or the ``item`` sentinel for countable ingredients.",
-        "operationId": "recompute_quantity_v1_recompute_quantity_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RecomputeQuantityRequest"
-              }
-            }
+    "/v1/convert-quantity": {
+      "get": {
+        "summary": "Convert Quantity",
+        "description": "Convert a quantity given as ``(value, unit)`` to grams.\n\nFor some conversions, ingredient is needed.\n\nGetting the quantities in grams is needed for green-score computation,\nand possibly other scores.",
+        "operationId": "convert_quantity_v1_convert_quantity_get",
+        "parameters": [
+          {
+            "name": "value",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Numeric value of the quantity",
+              "title": "Value"
+            },
+            "description": "Numeric value of the quantity"
           },
-          "required": true
-        },
+          {
+            "name": "unit",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Unit taxonomy id (e.g. 'xx:kg') or the 'item' sentinel for countable ingredients.",
+              "title": "Unit"
+            },
+            "description": "Unit taxonomy id (e.g. 'xx:kg') or the 'item' sentinel for countable ingredients."
+          },
+          {
+            "name": "ingredient_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Taxonomy id of the ingredient.\n\nRequired when the unit is a volume unit (to look up density_g_per_ml) or the 'item' sentinel (to look up average_weight_per_unit).\n\nOptional for mass units.",
+              "title": "Ingredient Id"
+            },
+            "description": "Taxonomy id of the ingredient.\n\nRequired when the unit is a volume unit (to look up density_g_per_ml) or the 'item' sentinel (to look up average_weight_per_unit).\n\nOptional for mass units."
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RecomputeQuantityResponse"
+                  "$ref": "#/components/schemas/ConvertQuantityResponse"
                 }
               }
             }
@@ -509,6 +560,26 @@
         ],
         "title": "AccountedWeights",
         "description": "Accounted weights for the ponderated sum.\n\n* scorable takes the ratio of each ingredient compared to the total weight of ingredients that have an EF score\n* total takes the ratio of each ingredient compared to the total weight of all ingredients, including unmatched ones"
+      },
+      "ConvertQuantityResponse": {
+        "properties": {
+          "quantity_g": {
+            "type": "number",
+            "title": "Quantity G",
+            "description": "The quantity converted to grams"
+          }
+        },
+        "type": "object",
+        "required": [
+          "quantity_g"
+        ],
+        "title": "ConvertQuantityResponse",
+        "description": "Response model for the ``GET /v1/convert-quantity`` endpoint.",
+        "examples": [
+          {
+            "quantity_g": 2000
+          }
+        ]
       },
       "CountriesResponse": {
         "properties": {
@@ -1086,14 +1157,13 @@
           "quantity_unit": {
             "anyOf": [
               {
-                "type": "string"
+                "$ref": "#/components/schemas/TaxonomyItem"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Quantity Unit",
-            "description": "Unit of the quantity"
+            "description": "Unit of the quantity, as a TaxonomyItem. Resolved from the parsed unit string through the units taxonomy (a free-text entry when unresolvable, or the 'item' sentinel for countable ingredients with no unit)."
           },
           "notes": {
             "anyOf": [
@@ -1135,7 +1205,11 @@
               "label": "France"
             },
             "quantity_g": 150.0,
-            "quantity_unit": "kg",
+            "quantity_unit": {
+              "id": "xx:kg",
+              "isInTaxonomy": true,
+              "label": "kilogram"
+            },
             "quantity_value": 0.15,
             "taxonomy_id": "en:apple"
           }
@@ -1288,98 +1362,6 @@
                 "taxonomy_id": "en:wheat-flour"
               }
             ]
-          }
-        ]
-      },
-      "RecomputeQuantityRequest": {
-        "properties": {
-          "lang": {
-            "type": "string",
-            "title": "Lang",
-            "description": "Language for the request (2 or 5 letter code)"
-          },
-          "quantityG": {
-            "type": "number",
-            "minimum": 0.0,
-            "title": "Quantityg",
-            "description": "Previous quantity in grams"
-          },
-          "oldValue": {
-            "type": "number",
-            "minimum": 0.0,
-            "title": "Oldvalue",
-            "description": "Previous numeric value of the quantity"
-          },
-          "oldUnit": {
-            "type": "string",
-            "title": "Oldunit",
-            "description": "Previous unit (unit name, taxonomy id or 'item')"
-          },
-          "newValue": {
-            "type": "number",
-            "minimum": 0.0,
-            "title": "Newvalue",
-            "description": "New numeric value of the quantity"
-          },
-          "newUnit": {
-            "type": "string",
-            "title": "Newunit",
-            "description": "New unit (unit name, taxonomy id or 'item')"
-          }
-        },
-        "type": "object",
-        "required": [
-          "lang",
-          "quantityG",
-          "oldValue",
-          "oldUnit",
-          "newValue",
-          "newUnit"
-        ],
-        "title": "RecomputeQuantityRequest",
-        "description": "Request body for the ``POST /v1/recompute-quantity`` endpoint.\n\nEach unit (``old_unit`` / ``new_unit``) may be given either as a unit id\nfrom the OFF units taxonomy (e.g. ``xx:kg``), as a localized unit name\nresolvable through the units taxonomy (e.g. ``\"kg\"``, ``\"tasse\"``), or as\nthe ``item`` sentinel for countable ingredients (e.g. \"1 egg\").",
-        "examples": [
-          {
-            "lang": "en",
-            "new_unit": "kg",
-            "new_value": 2,
-            "old_unit": "g",
-            "old_value": 2000,
-            "quantity_g": 2000
-          }
-        ]
-      },
-      "RecomputeQuantityResponse": {
-        "properties": {
-          "quantityG": {
-            "type": "number",
-            "title": "Quantityg",
-            "description": "New quantity in grams"
-          },
-          "value": {
-            "type": "number",
-            "title": "Value",
-            "description": "New numeric value of the quantity"
-          },
-          "unit": {
-            "type": "string",
-            "title": "Unit",
-            "description": "New unit, echoed from the request (unit name, taxonomy id or 'item')"
-          }
-        },
-        "type": "object",
-        "required": [
-          "quantityG",
-          "value",
-          "unit"
-        ],
-        "title": "RecomputeQuantityResponse",
-        "description": "Response model for the ``POST /v1/recompute-quantity`` endpoint.\n\nThe ``unit`` field echoes the ``new_unit`` sent in the request (it may be a\nunit name, a taxonomy id or ``{ITEM_UNIT}``).",
-        "examples": [
-          {
-            "quantityG": 2000,
-            "unit": "kg",
-            "value": 2
           }
         ]
       },

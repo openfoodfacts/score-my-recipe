@@ -48,6 +48,9 @@
 		"ingredient_name": "Nome dell'ingrediente",
 		"ingredient_name_placeholder": "es. Pomodoro",
 		"weight": "Peso (g)",
+		"quantity": "Quantity",
+		"unit": "Unit",
+		"grams": "Grams",
 		"codified_ingredient": "Codificato",
 		"labels": "Certificazioni e marchi",
 		"seasonality": "Stagionalità",
@@ -74,6 +77,8 @@
 		"ingredient_not_accounted_tooltip": "Non abbiamo trovato corrispondenze nel nostro database di impatto per questo ingrediente",
 		"ingredient_zero_quantity": "Zero quantity",
 		"ingredient_zero_quantity_tooltip": "This ingredient's quantity is 0g, so it cannot be taken into account in the calculation.",
+		"ingredient_conversion_error": "Conversion error",
+		"ingredient_conversion_error_tooltip": "The quantity could not be converted to grams for this unit. Try a different unit or quantity.",
 		"ingredient_scorable": "Questo ingrediente può essere conteggiato nel Green-Score"
 	},
 	"homepage": {
@@ -126,6 +131,7 @@
 		"recipe_text": "Inserisci ogni ingrediente su una nuova riga con la sua quantità (es. 200g di farina, 3 uova, 100g di zucchero).",
 		"codified_ingredient": "Ingrediente standardizzato proveniente dal database Open Food Facts / Agribalyse.",
 		"weight": "Quantità netta dell'ingrediente in grammi.",
+		"grams": "Quantity in grams, used for the green-score computation(computed)",
 		"labels": "Certificazioni ufficiali (es. Biologico, Fair Trade) che conferiscono bonus al Green-Score.",
 		"seasonality": "Indica se frutta e verdura sono di stagione per ottenere un bonus ambientale.",
 		"origin": "Origine geografica dell'ingrediente, utilizzata per valutare l'impatto del trasporto.",

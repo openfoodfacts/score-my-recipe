@@ -24,6 +24,7 @@
 	import type { Ingredient } from '$lib/types/ingredient';
 	import type { IngredientSuggestion } from '$lib/types/ingredient';
 	import { isIngredientEmpty, isIngredientNotEmpty } from '$lib/types/ingredient';
+	import { createQuantityConvert, createCompatibleUnits } from './quantityConvert.svelte';
 
 	type Props = {
 		// The ingredient data object (bindable): name, weight, etc.
@@ -58,6 +59,13 @@
 	let isZeroWeight = $derived(
 		isIngredientNotEmpty(ingredient) && (ingredient.weight === 0 || ingredient.weight == null)
 	);
+
+	// --- Quantity convert + compatible units (extracted) --------------------
+	// The convert lifecycle (debounce, abort, last-converted guard) and the
+	// compatible-units fetching live in a dedicated runes module so this
+	// component stays focused on layout and presentation.
+	const quantityState = createQuantityConvert(ingredient);
+	const unitsState = createCompatibleUnits(ingredient);
 
 	// trigger onNotEmpty when isNoteEmpty becomes true
 	$effect(() => {
@@ -162,14 +170,62 @@
 		</Tags>
 	</div>
 
-	<!-- Weight -->
-	<div class="flex w-24 flex-col">
-		<label class="label py-1" for="ingredient-weight-{ingredient.id}">
+	<!-- Quantity -->
+	<div class="flex w-20 flex-col">
+		<label class="label py-1" for="ingredient-quantity-{ingredient.id}">
+			<span class="label-text text-xs">
+				{$_('recipe.quantity', { default: 'Quantity' })}
+			</span>
+		</label>
+		<input
+			id="ingredient-quantity-{ingredient.id}"
+			type="number"
+			class="input input-bordered w-full"
+			placeholder="0"
+			bind:value={ingredient.quantityValue}
+			min="0"
+		/>
+	</div>
+
+	<!-- Unit -->
+	<div class="flex w-32 flex-col">
+		<label class="label py-1" for="ingredient-unit-{ingredient.id}">
+			<span class="label-text text-xs">
+				{$_('recipe.unit', { default: 'Unit' })}
+			</span>
+		</label>
+		<Tags
+			tagtype="units"
+			id="ingredient-unit-{ingredient.id}"
+			tags={ingredient.quantityUnit ? [ingredient.quantityUnit] : []}
+			onChange={(newTags) => {
+				ingredient.quantityUnit = newTags[0] ?? null;
+			}}
+			single={true}
+			minChars={0}
+			selectListClasses="min-w-48"
+			allowedItems={unitsState.compatibleUnits}
+			restrictToSuggestions={true}
+		/>
+	</div>
+
+	<!-- Grams (non-editable display, converted via the API for non-gram units) -->
+	<div class="flex w-20 flex-col">
+		<label class="label py-1">
 			<span class="flex items-center gap-1.5">
-				<span class="label-text text-xs" class:text-error={isZeroWeight}
-					>{$_('recipe.weight', { default: 'Weight (g)' })}</span
+				<span
+					class="label-text text-xs"
+					class:text-error={quantityState.convertError ||
+						(!quantityState.isConverting && isZeroWeight)}
+					>{$_('recipe.grams', { default: 'Grams' })}</span
 				>
-				{#if isZeroWeight}
+				{#if quantityState.convertError}
+					<!-- Screen-reader status: the conversion error is otherwise conveyed
+					     only by colour + icon, so expose it as text here. -->
+					<span class="sr-only">
+						{$_('recipe.ingredient_conversion_error', { default: 'Conversion error' })}
+					</span>
+				{:else if !quantityState.isConverting && isZeroWeight}
 					<!-- Screen-reader status: the zero-quantity state is otherwise
 					     conveyed only by colour + icon, so expose it as text here. -->
 					<span class="sr-only">
@@ -177,15 +233,30 @@
 					</span>
 				{/if}
 				<HelperTooltip
-					tip={$_('helpers.weight', {
-						default: 'Net quantity of the ingredient in grams.'
+					tip={$_('helpers.grams', {
+						default:
+							'Quantity in grams, used for the green-score computation. ' +
+							'Converted from the quantity and unit via the API for non-gram units.'
 					})}
 					ariaLabel={$_('helpers.more_info', { default: 'More information' })}
 				/>
-				{#if isZeroWeight}
-					<!-- Stop icon is itself the tooltip trigger (via HelperTooltip's
-					     custom icon snippet) explaining why a 0g quantity cannot be
-					     taken into account in the score computation. -->
+				{#if quantityState.convertError}
+					<HelperTooltip
+						tip={$_('recipe.ingredient_conversion_error_tooltip', {
+							default:
+								'The quantity could not be converted to grams for this unit. ' +
+								'Try a different unit or quantity.'
+						})}
+						ariaLabel={$_('helpers.more_info', { default: 'More information' })}
+					>
+						{#snippet icon()}
+							<IconMdiAlertOutline
+								class="text-error h-4 w-4 shrink-0 transition-colors duration-200"
+								aria-hidden="true"
+							/>
+						{/snippet}
+					</HelperTooltip>
+				{:else if !quantityState.isConverting && isZeroWeight}
 					<HelperTooltip
 						tip={$_('recipe.ingredient_zero_quantity_tooltip', {
 							default:
@@ -203,15 +274,20 @@
 				{/if}
 			</span>
 		</label>
-		<input
-			id="ingredient-weight-{ingredient.id}"
-			type="number"
-			class="input input-bordered w-full"
-			class:input-error={isZeroWeight}
-			placeholder="0"
-			bind:value={ingredient.weight}
-			min="0"
-		/>
+		<div
+			id="ingredient-grams-{ingredient.id}"
+			class="flex h-10 w-full items-center text-sm {quantityState.convertError
+				? 'text-error'
+				: !quantityState.isConverting && isZeroWeight
+					? 'text-error'
+					: 'text-base-content/70'}"
+		>
+			{#if quantityState.isConverting}
+				<span class="loading loading-spinner loading-sm"></span>
+			{:else}
+				{ingredient.weight ?? 0}
+			{/if}
+		</div>
 	</div>
 
 	<!-- Labels -->
