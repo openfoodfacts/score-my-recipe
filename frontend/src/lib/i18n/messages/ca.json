@@ -48,6 +48,9 @@
 		"ingredient_name": "Nom de l'ingredient",
 		"ingredient_name_placeholder": "ex. Tomàquet",
 		"weight": "Pes (g)",
+		"quantity": "Quantity",
+		"unit": "Unit",
+		"grams": "Grams",
 		"codified_ingredient": "Codificat",
 		"labels": "Segells i etiquetes",
 		"seasonality": "De temporada",
@@ -74,6 +77,8 @@
 		"ingredient_not_accounted_tooltip": "No hem trobat correspondència a la nostra base de dades d'impacte per a aquest ingredient",
 		"ingredient_zero_quantity": "Zero quantity",
 		"ingredient_zero_quantity_tooltip": "This ingredient's quantity is 0g, so it cannot be taken into account in the calculation.",
+		"ingredient_conversion_error": "Conversion error",
+		"ingredient_conversion_error_tooltip": "The quantity could not be converted to grams for this unit. Try a different unit or quantity.",
 		"ingredient_scorable": "Aquest ingredient es pot comptabilitzar al Green-Score"
 	},
 	"homepage": {
@@ -126,6 +131,7 @@
 		"recipe_text": "Introdueix cada ingredient en una línia nova amb la seva quantitat (ex. 200g de farina, 3 ous, 100g de sucre).",
 		"codified_ingredient": "Ingredient estandarditzat de la base de dades Open Food Facts / Agribalyse.",
 		"weight": "Quantitat neta de l'ingredient en grams.",
+		"grams": "Quantity in grams, used for the green-score computation(computed)",
 		"labels": "Certificacions oficials (ex. Ecològic, Label Rouge, Comerç Just) que atorguen bonificacions al Green-Score.",
 		"seasonality": "Marca si les fruites i verdures són de temporada per obtenir una bonificació ambiental.",
 		"origin": "Origen geogràfic de l'ingredient, utilitzat per avaluar l'impacte del transport.",

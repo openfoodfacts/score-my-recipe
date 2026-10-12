@@ -24,6 +24,9 @@ export type GreenScoreRequest = components['schemas']['GreenScoreRequest'];
 /** Response schema for the green-score computation endpoint. */
 export type GreenScoreResponse = components['schemas']['GreenScoreResponse'];
 
+/** Response schema for the convert quantity endpoint. */
+export type ConvertQuantityResponse = components['schemas']['ConvertQuantityResponse'];
+
 /** Single origin schema from the `get_origins` endpoint. */
 export type Origin = components['schemas']['Origin'];
 
@@ -78,6 +81,8 @@ export function apiIngredientToIngredient(apiIngredient: RecipeIngredient): Ingr
 		id: generateIngredientId(),
 		name: apiIngredient.codified_ingredient,
 		weight: apiIngredient.quantity_g ?? null,
+		quantityValue: apiIngredient.quantity_value ?? null,
+		quantityUnit: apiIngredient.quantity_unit ?? null,
 		codifiedIngredient: taxonomyItem,
 		labels,
 		origin,
@@ -191,4 +196,48 @@ export async function getOrigins(lang: string): Promise<Origin[]> {
 
 	const data = (await response.json()) as OriginsResponse;
 	return data.origins;
+}
+
+/**
+ * Convert a quantity given as ``(value, unit)`` to grams.
+ *
+ * Stateless GET endpoint: the backend converts the quantity using the OFF
+ * taxonomies (conversion factors, densities, average weights). An
+ * ``ingredientId`` is required for volume units (to look up density) and
+ * for the ``item`` sentinel (to look up average weight per unit); it is
+ * optional for mass units.
+ *
+ * The response is cacheable (Cache-Control: max-age=86400), so repeated
+ * requests with the same parameters hit the browser cache.
+ *
+ * @param value - The numeric quantity (must be >= 0).
+ * @param unit - A unit taxonomy id (e.g. ``xx:kg``) or the ``item`` sentinel.
+ * @param ingredientId - Taxonomy id of the ingredient (required for volume
+ *   and ``item`` units; ignored for mass units).
+ * @param signal - Optional abort signal to cancel the in-flight request.
+ * @returns The quantity converted to grams.
+ * @throws {Error} If the backend responds with a non-2xx status code
+ *   (HTTP 422 when the conversion is not supported, e.g. a volume unit
+ *   without an ``ingredientId`` or an ingredient lacking density).
+ */
+export async function convertToG(
+	value: number,
+	unit: string,
+	ingredientId?: string | null,
+	signal?: AbortSignal
+): Promise<number> {
+	const params = new URLSearchParams({ value: String(value), unit });
+	if (ingredientId) {
+		params.set('ingredient_id', ingredientId);
+	}
+	const response = await fetch(`${API_BASE_URL}/v1/convert-quantity?${params.toString()}`, {
+		signal
+	});
+
+	if (!response.ok) {
+		throw new Error(`Error ${response.status}: ${response.statusText}`);
+	}
+
+	const data = (await response.json()) as ConvertQuantityResponse;
+	return data.quantity_g;
 }

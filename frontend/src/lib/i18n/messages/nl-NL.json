@@ -48,6 +48,9 @@
 		"ingredient_name": "Naam ingrediënt",
 		"ingredient_name_placeholder": "bijv. Tomaat",
 		"weight": "Gewicht (g)",
+		"quantity": "Quantity",
+		"unit": "Unit",
+		"grams": "Grams",
 		"codified_ingredient": "Gecodeerd",
 		"labels": "Keurmerken & labels",
 		"seasonality": "Seizoensgebonden",
@@ -74,6 +77,8 @@
 		"ingredient_not_accounted_tooltip": "We hebben geen overeenkomst gevonden in onze impactdatabase voor dit ingrediënt",
 		"ingredient_zero_quantity": "Zero quantity",
 		"ingredient_zero_quantity_tooltip": "This ingredient's quantity is 0g, so it cannot be taken into account in the calculation.",
+		"ingredient_conversion_error": "Conversion error",
+		"ingredient_conversion_error_tooltip": "The quantity could not be converted to grams for this unit. Try a different unit or quantity.",
 		"ingredient_scorable": "Dit ingrediënt kan worden meegeteld in de Green-Score"
 	},
 	"homepage": {
@@ -126,6 +131,7 @@
 		"recipe_text": "Voer elk ingrediënt op een nieuwe regel in met de hoeveelheid (bijv. 200g bloem, 3 eieren, 100g suiker).",
 		"codified_ingredient": "Gestandaardiseerd ingrediënt uit de database van Open Food Facts / Agribalyse.",
 		"weight": "Netto gewicht van het ingrediënt in grammen.",
+		"grams": "Quantity in grams, used for the green-score computation(computed)",
 		"labels": "Officiële keurmerken (bijv. Biologisch, Fair Trade) die bonussen opleveren voor de Green-Score.",
 		"seasonality": "Vink aan als seizoensgebonden groenten en fruit in het seizoen geteeld zijn voor een milieubonus.",
 		"origin": "Geografische herkomst van het ingrediënt, gebruikt om transportimpact te berekenen.",
