@@ -66,8 +66,12 @@ describe('isIngredientEmpty / isIngredientNotEmpty', () => {
 		expect(isIngredientNotEmpty(ingredient('i1', 'apple'))).toBe(true);
 	});
 
-	it('is not empty when only the weight is set', () => {
-		expect(isIngredientEmpty(ingredient('i1', '', { weight: 100 }))).toBe(false);
+	it('is not empty when only the quantityValue is set', () => {
+		expect(isIngredientEmpty(ingredient('i1', '', { quantityValue: 100 }))).toBe(false);
+	});
+
+	it('is not empty when only the quantityUnit is set', () => {
+		expect(isIngredientEmpty(ingredient('i1', '', { quantityUnit: { id: 'en:kg', label: 'kg', isInTaxonomy: true } }))).toBe(false);
 	});
 
 	it('is not empty when only the codified ingredient is set', () => {
@@ -108,8 +112,8 @@ describe('isIngredientEmpty / isIngredientNotEmpty', () => {
 		);
 	});
 
-	it('treats a zero weight as "set" (not empty)', () => {
-		expect(isIngredientEmpty(ingredient('i1', '', { weight: 0 }))).toBe(false);
+	it('treats a zero quantityValue as "set" (not empty)', () => {
+		expect(isIngredientEmpty(ingredient('i1', '', { quantityValue: 0 }))).toBe(false);
 	});
 });
 
