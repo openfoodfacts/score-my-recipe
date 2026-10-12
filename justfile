@@ -105,3 +105,4 @@ check-openapi:
 [group('quality')]
 test:
     {{ just_server }} test
+    {{ just_frontend }} test
