@@ -3,7 +3,7 @@
 Contains the recipe-level business logic: ingredient parsing and the
 origins/labels/countries/ingredients taxonomies.
 """
-
+import datetime
 import logging
 import re
 
@@ -75,6 +75,14 @@ async def off_ingredient_to_recipe_ingredient(
     # The ingredient id lets the 'item' sentinel be labelled with the
     # ingredient's name (e.g. "3 eggs" rather than "3 item").
     quantity_unit = await units.resolve_unit_to_taxonomy_item(raw_unit, lang, off_ingredient.id)
+
+    # fetch seasonality
+    is_fresh_plant, is_in_season = None, None
+    if off_ingredient.id:
+        ingredients_taxonomy = await off.get_ingredients_taxonomy()
+        if off_ingredient.id in ingredients_taxonomy:
+            node = ingredients_taxonomy[off_ingredient.id]
+            is_fresh_plant, is_in_season = get_seasonality_info(node)
     ingredient = types.RecipeIngredient(
         taxonomy_id=off_ingredient.id,
         codified_ingredient=off_ingredient.text,
@@ -85,6 +93,8 @@ async def off_ingredient_to_recipe_ingredient(
         quantity_value=quantity_value,
         quantity_unit=quantity_unit,
         notes=notes,
+        is_fresh_plant=is_fresh_plant,
+        is_in_season=is_in_season,
     )
     return ingredient
 
@@ -220,7 +230,26 @@ async def get_countries(lang: str, include_synonyms: bool = False) -> list[types
 # ``has_ef_score`` is True when the ingredient resolves (via its node and
 # parents) to an Agribalyse row carrying a non-empty EF score — i.e. it is
 # scorable in the green-score computation (see api.score.gather_ef_metrics).
-IngredientEntry = tuple[str, str, list[str], bool]
+IngredientEntry = tuple[str, str, list[str] | None, bool, bool | None, bool | None]
+
+
+def get_seasonality_info(node) -> tuple[bool | None, bool | None]:
+    """Extract seasonality and fresh plant status from a taxonomy node"""
+    is_fresh_plant = None
+    is_in_season = None
+
+    for ancestor in off._node_chain(node):
+        months_csv = off._property_value(ancestor, "season_in_country_fr")
+        if months_csv:
+            # we have a seasonality, we consider it's a plant
+            is_fresh_plant = True
+
+            current_month = datetime.date.today().month
+            season_months = [int(m) for m in months_csv.split(",") if m.isdecimal()]
+            is_in_season = current_month in season_months
+            break
+            
+    return is_fresh_plant, is_in_season
 
 
 @async_lru_cache(maxsize=200)
@@ -240,7 +269,10 @@ async def _get_ingredients_entries(lang: str) -> list[IngredientEntry]:
         # An ingredient is scorable only when it matches an Agribalyse row AND
         # that row carries a score
         has_ef_score = bool(row and row.get("score"))
-        entries.append((ingredient_id, label, synonyms, has_ef_score))
+        
+        is_fresh_plant, is_in_season = get_seasonality_info(node)
+            
+        entries.append((ingredient_id, label, synonyms, has_ef_score, is_fresh_plant, is_in_season))
     # sort by id for predictable order
     entries.sort(key=lambda x: x[0])
     return entries
@@ -258,8 +290,11 @@ async def get_ingredients(
             label=ingredient_label,
             synonyms=ingredient_synonyms if include_synonyms else None,
             has_ef_score=has_ef_score,
+            is_fresh_plant=is_fresh_plant,
+            is_in_season=is_in_season
         )
-        for ingredient_id, ingredient_label, ingredient_synonyms, has_ef_score in _ingredients
+        for ingredient_id, ingredient_label, ingredient_synonyms, has_ef_score,
+         is_fresh_plant, is_in_season in _ingredients
     ]
 
 
