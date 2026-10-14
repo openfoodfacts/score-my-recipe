@@ -60,8 +60,12 @@ export interface Ingredient {
 	id: string;
 	/** Display name of the ingredient */
 	name: string;
-	/** Weight in grams (null if not specified) */
+	/** Weight in grams (frozen from the parser's quantity_g; read-only in the UI) */
 	weight: number | null;
+	/** Numeric value of the quantity as entered by the user (e.g. 2 for "2 kg") */
+	quantityValue: number | null;
+	/** Unit of the quantity, as a TaxonomyItem (a real unit, a free-text entry, or the 'item' sentinel) */
+	quantityUnit: TaxonomyItem | null;
 	/** Codified ingredient from taxonomy */
 	codifiedIngredient: IngredientType | null;
 	/** List of labels (e.g., organic, fair-trade) */
@@ -91,6 +95,8 @@ export function createEmptyIngredient(): Ingredient {
 		id: generateIngredientId(),
 		name: '',
 		weight: null,
+		quantityValue: null,
+		quantityUnit: null,
 		codifiedIngredient: null,
 		labels: [],
 		isFreshPlant: false,
@@ -107,10 +113,12 @@ export function createEmptyIngredient(): Ingredient {
 export function isIngredientEmpty(ingredient: Ingredient): boolean {
 	// isFreshPlant and isInSeason are default-false flags that don't make a
 	// line "non-empty", so they are excluded from the emptiness check.
+	// Note: weight is not tested because it is derived from quantityValue and quantityUnit, and is not user-editable.
 	return (
 		ingredient.name.trim() === '' &&
-		ingredient.weight === null &&
-		ingredient.codifiedIngredient === null &&
+		ingredient.quantityValue == null &&
+		ingredient.quantityUnit == null &&
+		ingredient.codifiedIngredient == null &&
 		ingredient.labels.length === 0 &&
 		ingredient.origin === null
 	);
@@ -135,5 +143,5 @@ export function isIngredientNotEmpty(ingredient: Ingredient): boolean {
  * @returns A string uniquely identifying the ingredient's relevant content.
  */
 export function ingredientSignature(ingredient: Ingredient): string {
-	return `${ingredient.id}:${ingredient.name}:${ingredient.weight ?? ''}:${ingredient.codifiedIngredient?.id ?? ''}:${ingredient.isFreshPlant}:${ingredient.isInSeason}:${ingredient.origin?.id ?? ''}:${ingredient.labels.map((l) => l.id).join(',')}`;
+	return `${ingredient.id}:${ingredient.name}:${ingredient.weight ?? ''}:${ingredient.quantityValue ?? ''}:${ingredient.quantityUnit?.id ?? ''}:${ingredient.codifiedIngredient?.id ?? ''}:${ingredient.isFreshPlant}:${ingredient.isInSeason}:${ingredient.origin?.id ?? ''}:${ingredient.labels.map((l) => l.id).join(',')}`;
 }

@@ -8,6 +8,7 @@ set dotenv-required := true
 
 just_frontend := "cd frontend && just"
 just_server := "cd server && just"
+just_e2e := "cd e2e && just"
 
 # this help
 [default]
@@ -80,6 +81,9 @@ lint:
     @echo "::group::Frontend lint"
     {{ just_frontend }} lint
     @echo "::endgroup::"
+    @echo "::group::E2E lint"
+    {{ just_e2e }} lint
+    @echo "::endgroup::"
 
 # Quality Checks
 [group('quality')]
@@ -90,18 +94,27 @@ check:
     @echo "::group::Frontend check"
     {{ just_frontend }} check
     @echo "::endgroup::"
+    @echo "::group::E2E check"
+    {{ just_e2e }} check
+    @echo "::endgroup::"
     @echo "::group::openapi check"
     @just check-openapi
     @echo "::endgroup::"
 
 check-openapi:
     @just generate-openapi "-check"
-    diff docs/openapi.json docs/openapi-check.json || (echo "OpenAPI spec has changed. Please run 'just generate-openapi' to update it." && exit 1)
-    diff frontend/src/api-schema.d.ts frontend/src/api-schema-check.d.ts || (echo "TypeScript API schema has changed. Please run 'just generate-openapi' to update it." && exit 1)
-    rm -f docs/openapi-check.json frontend/src/api-schema-check.d.ts
+    @echo "Checking OpenAPI spec and TypeScript API schema..."
+    @diff docs/openapi.json docs/openapi-check.json || (echo "OpenAPI spec has changed. Please run 'just generate-openapi' to update it." && exit 1)
+    @diff frontend/src/api-schema.d.ts frontend/src/api-schema-check.d.ts || (echo "TypeScript API schema has changed. Please run 'just generate-openapi' to update it." && exit 1)
+    @rm -f docs/openapi-check.json frontend/src/api-schema-check.d.ts
 
 # Run all tests
 [group('quality')]
 test:
     {{ just_server }} test
     {{ just_frontend }} test
+
+# End to end testing (Playwright, Chromium)
+[group('quality')]
+e2e:
+    {{ just_e2e }} install_and_test
