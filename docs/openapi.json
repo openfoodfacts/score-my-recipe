@@ -1179,6 +1179,30 @@
             ],
             "title": "Notes",
             "description": "Notes about the ingredient"
+          },
+          "is_in_season": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is In Season",
+            "description": "Whether the ingredient is in season"
+          },
+          "is_fresh_plant": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Fresh Plant",
+            "description": "Whether the ingredient is a fresh plant"
           }
         },
         "type": "object",
@@ -1467,6 +1491,28 @@
             "type": "boolean",
             "title": "Has Ef Score",
             "description": "Whether the ingredient resolves to an Agribalyse row with an EF score, i.e. whether it can be scored in the green-score computation."
+          },
+          "is_fresh_plant": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Fresh Plant"
+          },
+          "is_in_season": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is In Season"
           }
         },
         "type": "object",
