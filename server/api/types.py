@@ -174,6 +174,8 @@ class RecipeIngredient(BaseModel):
         ),
     ] = None
     notes: Annotated[Optional[list[str]], Field(description="Notes about the ingredient")] = None
+    is_in_season: Annotated[Optional[bool], Field(description="Whether the ingredient is in season")] = None
+    is_fresh_plant: Annotated[Optional[bool], Field(description="Whether the ingredient is a fresh plant")] = None
 
 
 class Origin(SuggestedTaxonomyItem):
@@ -401,6 +403,8 @@ class SuggestedIngredient(Ingredient):
             "green-score computation."
         ),
     ]
+    is_fresh_plant: bool | None = None
+    is_in_season: bool | None = None
 
 
 class IngredientsRequest(TaxonomyRequest):
