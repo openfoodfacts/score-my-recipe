@@ -1018,7 +1018,14 @@
             "description": "Message id, a key in the server translation files"
           },
           "icu_template": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Icu Template",
             "description": "Translated ICU message template, with its {placeholders}"
           },
@@ -1026,23 +1033,28 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Params",
-            "description": "Parameters used to render the template"
+            "description": "Parameters used to render the template",
+            "default": {}
           },
           "message": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Message",
             "description": "The message, already translated and formatted (convenience field)"
           }
         },
         "type": "object",
         "required": [
-          "id",
-          "icu_template",
-          "params",
-          "message"
+          "id"
         ],
         "title": "Note",
-        "description": "A note returned by the API, translated in the request language.\n\nNotes are produced during computation as language-agnostic :class:`api.score_types.NoteRef`, and translated at the API boundary.\nThis way API consumers get both the raw material (``id``, ``params``, ``icu_template``) and a ready-to-display ``message``.",
+        "description": "A note about the computation of a score or of a parsed ingredient.\n\nThe computation only fills ``id`` and ``params``;\nthe translation fields (``icu_template`` and ``message``) are filled at the API boundary\n(see :func:`api.api.translate_notes`),\nso that the computation code never depends on a language.\nAPI consumers get both the raw material (``id``, ``params``, ``icu_template``) and a ready-to-display ``message``.",
         "examples": [
           {
             "icu_template": "EPI modifier: EPI score for origin {origin} not found, defaulting to world",

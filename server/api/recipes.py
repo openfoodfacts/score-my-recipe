@@ -50,9 +50,7 @@ async def off_ingredient_to_recipe_ingredient(
     # handle origins: drop if multiple (contains comma)
     origins_str = off_ingredient.origins
     if origins_str and "," in origins_str:
-        notes.append(
-            types.Note(id="notes.dropped_origins", params={"origins": origins_str})
-        )
+        notes.append(types.Note(id="notes.dropped_origins", params={"origins": origins_str}))
         origins_str = None
     if origins_str:
         origins_taxonomy = await off.get_origins_taxonomy()

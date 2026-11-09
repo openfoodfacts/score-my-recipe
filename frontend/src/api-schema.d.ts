@@ -519,10 +519,13 @@ export interface components {
 		};
 		/**
 		 * Note
-		 * @description A note returned by the API, translated in the request language.
+		 * @description A note about the computation of a score or of a parsed ingredient.
 		 *
-		 *     Notes are produced during computation as language-agnostic :class:`api.score_types.NoteRef`, and translated at the API boundary.
-		 *     This way API consumers get both the raw material (``id``, ``params``, ``icu_template``) and a ready-to-display ``message``.
+		 *     The computation only fills ``id`` and ``params``;
+		 *     the translation fields (``icu_template`` and ``message``) are filled at the API boundary
+		 *     (see :func:`api.api.translate_notes`),
+		 *     so that the computation code never depends on a language.
+		 *     API consumers get both the raw material (``id``, ``params``, ``icu_template``) and a ready-to-display ``message``.
 		 * @example {
 		 *       "icu_template": "EPI modifier: EPI score for origin {origin} not found, defaulting to world",
 		 *       "id": "notes.epi.not_found",
@@ -542,10 +545,11 @@ export interface components {
 			 * Icu Template
 			 * @description Translated ICU message template, with its {placeholders}
 			 */
-			icu_template: string;
+			icu_template?: string | null;
 			/**
 			 * Params
 			 * @description Parameters used to render the template
+			 * @default {}
 			 */
 			params: {
 				[key: string]: unknown;
@@ -554,7 +558,7 @@ export interface components {
 			 * Message
 			 * @description The message, already translated and formatted (convenience field)
 			 */
-			message: string;
+			message?: string | null;
 		};
 		/**
 		 * Origin

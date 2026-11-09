@@ -100,7 +100,9 @@ async def health() -> dict:
     return {"status": "ok"}
 
 
-def translate_notes(notes: Optional[list[types.Note]], lang: str | None) -> Optional[list[types.Note]]:
+def translate_notes(
+    notes: Optional[list[types.Note]], lang: str | None
+) -> Optional[list[types.Note]]:
     """Fill the translation fields of the notes for the API response.
 
     The computation only sets ``id`` and ``params``;
