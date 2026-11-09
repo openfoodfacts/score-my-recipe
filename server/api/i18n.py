@@ -76,8 +76,7 @@ _LOCALE_RE = re.compile(r"[A-Za-z0-9_-]{1,35}")
 
 
 def is_valid_locale_name(locale: str) -> bool:
-    """Whether ``locale`` can safely be used as a translation file name
-    """
+    """Whether ``locale`` can safely be used as a translation file name"""
     return _LOCALE_RE.fullmatch(locale) is not None
 
 
