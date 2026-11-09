@@ -321,7 +321,7 @@ async def test_off_ingredient_to_recipe_ingredient_no_unit_returns_item():
         patch_ingredients_taxonomy(_mock_ingredients_taxonomy_with_egg()),
     ):
         result = await off_ingredient_to_recipe_ingredient(off_ingredient, "en")
-    ingredient = result.ingredient
+    ingredient = result
     assert ingredient.quantity_unit == types.TaxonomyItem(
         id="item", label="egg", is_in_taxonomy=True
     )
@@ -345,7 +345,7 @@ async def test_off_ingredient_to_recipe_ingredient_none_quantity_returns_item():
         patch_ingredients_taxonomy(_mock_ingredients_taxonomy_with_egg()),
     ):
         result = await off_ingredient_to_recipe_ingredient(off_ingredient, "en")
-    ingredient = result.ingredient
+    ingredient = result
     assert ingredient.quantity_unit is not None
     assert ingredient.quantity_unit.id == "item"
     assert ingredient.quantity_unit.label == "egg"
@@ -366,7 +366,7 @@ async def test_off_ingredient_to_recipe_ingredient_resolves_unit_id():
     )
     with patch_units_taxonomy(build_mock_units_taxonomy()):
         result = await off_ingredient_to_recipe_ingredient(off_ingredient, "en")
-    ingredient = result.ingredient
+    ingredient = result
     # 'kg' resolves to en:kilogram via the 'xx' name
     assert ingredient.quantity_unit == types.TaxonomyItem(
         id="en:kilogram", label="kilogram", is_in_taxonomy=True
@@ -388,7 +388,7 @@ async def test_off_ingredient_to_recipe_ingredient_resolves_synonym():
     )
     with patch_units_taxonomy(build_mock_units_taxonomy()):
         result = await off_ingredient_to_recipe_ingredient(off_ingredient, "fr")
-    ingredient = result.ingredient
+    ingredient = result
     # 'tasse' is the fr label of en:cup
     assert ingredient.quantity_unit == types.TaxonomyItem(
         id="en:cup", label="tasse", is_in_taxonomy=True

@@ -7,7 +7,8 @@ import pytest
 import yaml
 
 import api.i18n as i18n
-from api.score_types import NoteRef, RecipeMetrics
+from api.score_types import RecipeMetrics
+from api.types import Note
 
 
 @pytest.fixture(autouse=True)
@@ -239,12 +240,14 @@ async def test_warmup_unknown_language_loads_fallback():
 # --- domain side -----------------------------------------------------------
 
 
-def test_add_note_builds_note_refs():
-    """``add_note`` stores a language-agnostic NoteRef with its params."""
+def test_add_note_builds_notes_without_translation():
+    """``add_note`` stores notes with their id and params only,
+    the translation fields being filled at the API boundary."""
     metrics = RecipeMetrics()
     metrics.add_note("notes.epi.not_found", origin="en:france")
     metrics.add_note("notes.seasonality.no_fresh_produce")
-    assert metrics.notes == [
-        NoteRef(id="notes.epi.not_found", params={"origin": "en:france"}),
-        NoteRef(id="notes.seasonality.no_fresh_produce", params={}),
+    assert [(note.id, note.params) for note in metrics.notes] == [
+        ("notes.epi.not_found", {"origin": "en:france"}),
+        ("notes.seasonality.no_fresh_produce", {}),
     ]
+    assert all(isinstance(note, Note) for note in metrics.notes)

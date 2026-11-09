@@ -13,7 +13,6 @@ from async_lru import alru_cache as async_lru_cache
 import api.agribalyse as agribalyse
 import api.off as off
 import api.score_data as score_data
-import api.score_types as score_types
 import api.types as types
 import api.units as units
 from api.lang import two_letter_lang_code
@@ -28,8 +27,12 @@ QUANTITY_UNIT_REGEX = re.compile(r"^\s*(?P<value>\d+(\.\d+)?)\s*(?P<unit>.+)?\s*
 async def off_ingredient_to_recipe_ingredient(
     off_ingredient: types.OFFIngredient,
     lang: str,
-) -> score_types.IngredientWithNotes:
-    """Convert an OFFIngredient to a RecipeIngredient, with its note references."""
+) -> types.RecipeIngredient:
+    """Convert an OFFIngredient to a RecipeIngredient.
+
+    Notes are added with their message id and ICU params only;
+    they are translated when the API returns the ingredient.
+    """
     notes = []
     # handle labels: split by comma if present
     labels_obj = []
@@ -48,7 +51,7 @@ async def off_ingredient_to_recipe_ingredient(
     origins_str = off_ingredient.origins
     if origins_str and "," in origins_str:
         notes.append(
-            score_types.NoteRef(id="notes.dropped_origins", params={"origins": origins_str})
+            types.Note(id="notes.dropped_origins", params={"origins": origins_str})
         )
         origins_str = None
     if origins_str:
@@ -96,13 +99,14 @@ async def off_ingredient_to_recipe_ingredient(
         labels=labels_obj,
         quantity_value=quantity_value,
         quantity_unit=quantity_unit,
+        notes=notes,
         is_fresh_plant=is_fresh_plant,
         is_in_season=is_in_season,
     )
-    return score_types.IngredientWithNotes(ingredient=ingredient, notes=notes)
+    return ingredient
 
 
-async def parse_text(text: str, lang: str) -> list[score_types.IngredientWithNotes]:
+async def parse_text(text: str, lang: str) -> list[types.RecipeIngredient]:
     """Parse a text and return a list of ingredients with quantities and eventual modifiers"""
     # normalize the language code (eg. "fr-FR" or "fr_FR" to "fr"), as the OFF
     # ingredient parsing API only accepts 2-letter language codes

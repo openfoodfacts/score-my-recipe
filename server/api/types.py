@@ -18,10 +18,13 @@ ITEM_UNIT = "item"
 
 
 class Note(BaseModel):
-    """A note returned by the API, translated in the request language.
+    """A note about the computation of a score or of a parsed ingredient.
 
-    Notes are produced during computation as language-agnostic :class:`api.score_types.NoteRef`, and translated at the API boundary.
-    This way API consumers get both the raw material (``id``, ``params``, ``icu_template``) and a ready-to-display ``message``.
+    The computation only fills ``id`` and ``params``;
+    the translation fields (``icu_template`` and ``message``) are filled at the API boundary
+    (see :func:`api.api.translate_notes`),
+    so that the computation code never depends on a language.
+    API consumers get both the raw material (``id``, ``params``, ``icu_template``) and a ready-to-display ``message``.
     """
 
     model_config = ConfigDict(
@@ -44,17 +47,17 @@ class Note(BaseModel):
         Field(description="Message id, a key in the server translation files"),
     ]
     icu_template: Annotated[
-        str,
+        Optional[str],
         Field(description="Translated ICU message template, with its {placeholders}"),
-    ]
+    ] = None
     params: Annotated[
         dict[str, Any],
         Field(description="Parameters used to render the template"),
-    ]
+    ] = {}
     message: Annotated[
-        str,
+        Optional[str],
         Field(description="The message, already translated and formatted (convenience field)"),
-    ]
+    ] = None
 
 
 def async_validate_model(fn):

@@ -386,12 +386,15 @@ async def compute_green_score(
     recipe: types.RecipeInput,
     country: Optional[str] = None,
     accounted_weights: score_types.AccountedWeights = score_types.AccountedWeights.ONLY_SCORABLE,
-) -> score_types.GreenScoreResult:
+) -> types.GreenScoreResponse:
     """Compute (for now: gather Agribalyse data for) the green-score of a recipe.
 
     Each ingredient is looked up in the ingredients taxonomy; its code properties
     (searched on the node and its parents) are used, in priority order, to find
     the matching Agribalyse row.
+
+    Notes are returned with their message id and ICU params only;
+    the API translates them for the request language.
     """
     # TODO handle exceptions
     # compute the EF score for the recipe
@@ -432,7 +435,7 @@ async def compute_green_score(
         letter_grade = None
         notes = None
         ingredients_notes = None
-    return score_types.GreenScoreResult(
+    return types.GreenScoreResponse(
         global_ef_score=ef_score,
         labels_bonus=labels_bonus,
         epi_modifier=epi_modifier,

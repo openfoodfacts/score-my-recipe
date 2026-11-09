@@ -1,26 +1,9 @@
 """Types useful for green-score computation."""
 
 import enum
-from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field
-
-if TYPE_CHECKING:
-    import api.types
-
-
-@dataclass(frozen=True)
-class NoteRef:
-    """A language-agnostic reference to a note.
-
-    Holds the message ``id`` (a key in ``server/i18n/*.json``, e.g. ``"notes.epi.no_origin"``) and its ICU ``params``.
-    The translated template and the rendered message are resolved at the API boundary (see :func:`api.i18n.translate`),
-    so the computation code never depends on a language.
-    """
-
-    id: str
-    params: dict[str, Any] = field(default_factory=dict)
 
 
 class AccountedWeights(enum.StrEnum):
@@ -35,11 +18,16 @@ class AccountedWeights(enum.StrEnum):
 
 
 class NotesMixin(BaseModel):
-    """Mixin for models that can have notes."""
+    """Mixin for models that can have notes.
 
-    notes: Optional[list[NoteRef]] = Field(
+    Notes are the same Pydantic model as the public one (:class:`api.types.Note`), used here without the translation fields:
+    the computation only fills ``id`` and ``params``,
+    and :func:`api.api.translate_notes` fills ``icu_template`` and ``message`` at the API boundary.
+    """
+
+    notes: Optional[list[Any]] = Field(
         default=None,
-        description="Optional notes about computation specifics",
+        description="Notes about computation specifics, as unfinished api.types.Note",
     )
 
     def add_note(self, note_id: str, **params: Any) -> None:
@@ -47,7 +35,10 @@ class NotesMixin(BaseModel):
 
         Example: ``add_note("notes.epi.not_found", origin="en:france")``.
         """
-        note = NoteRef(id=note_id, params=params)
+        # Imported here to avoid a circular import: api.types imports this module.
+        import api.types
+
+        note = api.types.Note(id=note_id, params=params)
         if self.notes is None:
             self.notes = [note]
         else:
@@ -110,35 +101,3 @@ class RecipeMetrics(NotesMixin):
         keyed by ingredient id.
         """
         return {metric.id: metric.notes for metric in self.metrics if metric.notes}
-
-
-@dataclass(frozen=True)
-class GreenScoreResult:
-    """Language-agnostic result of the green-score computation.
-
-    Holds the same fields as :class:`api.types.GreenScoreResponse`, except the notes, which stay as :class:`NoteRef`,
-    so that translation happens at the API boundary (see :func:`api.api.green_score`).
-    """
-
-    global_ef_score: Optional[float]
-    labels_bonus: Optional[float]
-    epi_modifier: Optional[float]
-    distances_modifier: Optional[float]
-    seasonality_modifier: Optional[float]
-    numeric_score: Optional[float]
-    letter_grade: Optional[str]
-    missing_ingredient_ids: list[str]
-    notes: Optional[list[NoteRef]] = None
-    ingredients_notes: Optional[dict[str, list[NoteRef]]] = field(default=None)
-
-
-@dataclass(frozen=True)
-class IngredientWithNotes:
-    """A parsed recipe ingredient and its language-agnostic notes.
-
-    ``recipes.off_ingredient_to_recipe_ingredient`` builds the public :class:`api.types.RecipeIngredient` without notes;
-    the notes are kept here as :class:`NoteRef`, so the API boundary can translate them.
-    """
-
-    ingredient: "api.types.RecipeIngredient"
-    notes: list[NoteRef]

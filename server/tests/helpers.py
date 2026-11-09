@@ -319,7 +319,7 @@ def build_ingredient_obj(
 
 
 def note_ids(notes) -> list[str]:
-    """Return the message ids of a list of notes (``NoteRef`` or public ``Note``).
+    """Return the message ids of a list of notes.
 
     Tests assert on ids rather than on translated text, so they stay independent from the wording and from the request language.
     """

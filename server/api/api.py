@@ -20,7 +20,6 @@ import api.i18n as i18n
 import api.logging_config as logging_config
 import api.recipes as recipes
 import api.score as score
-import api.score_types as score_types
 import api.types as types
 import api.units as units
 from api.settings import get_settings
@@ -101,27 +100,21 @@ async def health() -> dict:
     return {"status": "ok"}
 
 
-def translate_notes(
-    notes: Optional[list[score_types.NoteRef]], lang: str | None
-) -> Optional[list[types.Note]]:
-    """Translate domain note references for an API response.
+def translate_notes(notes: Optional[list[types.Note]], lang: str | None) -> Optional[list[types.Note]]:
+    """Fill the translation fields of the notes for the API response.
 
-    The computation code only produces language-agnostic :class:`api.score_types.NoteRef`;
-    this is the single place where they are turned into public :class:`api.types.Note` (translated template + message).
+    The computation only sets ``id`` and ``params``;
+    this is the single place where they get their ``icu_template`` and rendered ``message``.
     """
     if notes is None:
         return None
-    translated = []
-    for ref in notes:
-        template, message = i18n.translate(ref.id, ref.params, lang)
-        translated.append(
-            types.Note(id=ref.id, icu_template=template, params=ref.params, message=message)
-        )
-    return translated
+    for note in notes:
+        note.icu_template, note.message = i18n.translate(note.id, note.params, lang)
+    return notes
 
 
 def translate_ingredients_notes(
-    ingredients_notes: Optional[dict[str, list[score_types.NoteRef]]], lang: str | None
+    ingredients_notes: Optional[dict[str, list[types.Note]]], lang: str | None
 ) -> Optional[dict[str, list[types.Note]]]:
     """Same as :func:`translate_notes`, for the per-ingredient notes mapping."""
     if ingredients_notes is None:
@@ -136,12 +129,9 @@ def translate_ingredients_notes(
 @types.async_validate_model
 async def parse_text(request: types.RecipeParseRequest) -> types.RecipeParseResponse:
     """Parse a text and return a list of ingredients with quantities and eventual modifiers"""
-    parsed = await recipes.parse_text(request.text, request.lang)
-    ingredients = []
-    for item in parsed:
-        ingredient = item.ingredient
-        ingredient.notes = translate_notes(item.notes, request.lang)
-        ingredients.append(ingredient)
+    ingredients = await recipes.parse_text(request.text, request.lang)
+    for ingredient in ingredients:
+        translate_notes(ingredient.notes, request.lang)
     return types.RecipeParseResponse(ingredients=ingredients)
 
 
