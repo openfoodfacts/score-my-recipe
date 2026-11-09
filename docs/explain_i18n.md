@@ -74,7 +74,7 @@ which keeps a bad translation from breaking a request.
 ### How notes reach the API
 
 The computation code only fills `id` and `params` of each note (a plain `api.types.Note`, see `server/api/types.py`).
-They are translated at the API boundary (`translate_notes` in `server/api/api.py`), which sets the two remaining fields:
+They are translated at the API boundary (`translate_notes` in `server/api/api_i18n.py`), which sets the two remaining fields:
 
 | Field          | Content                                                 |
 | -------------- | ------------------------------------------------------- |

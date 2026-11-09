@@ -22,7 +22,7 @@ class Note(BaseModel):
 
     The computation only fills ``id`` and ``params``;
     the translation fields (``icu_template`` and ``message``) are filled at the API boundary
-    (see :func:`api.api.translate_notes`),
+    (see :func:`api.api_i18n.translate_notes`),
     so that the computation code never depends on a language.
     API consumers get both the raw material (``id``, ``params``, ``icu_template``) and a ready-to-display ``message``.
     """

@@ -22,7 +22,7 @@ class NotesMixin(BaseModel):
 
     Notes are the same Pydantic model as the public one (:class:`api.types.Note`), used here without the translation fields:
     the computation only fills ``id`` and ``params``,
-    and :func:`api.api.translate_notes` fills ``icu_template`` and ``message`` at the API boundary.
+    and :func:`api.api_i18n.translate_notes` fills ``icu_template`` and ``message`` at the API boundary.
     """
 
     notes: Optional[list[Any]] = Field(

@@ -8,15 +8,15 @@ this file should only handle the HTTP specific parts.
 import asyncio
 import logging
 from contextlib import asynccontextmanager
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import FastAPI, HTTPException, Query, Request, Response
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+import api.api_i18n as api_i18n
 import api.exceptions as exceptions
-import api.i18n as i18n
 import api.logging_config as logging_config
 import api.recipes as recipes
 import api.score as score
@@ -100,40 +100,12 @@ async def health() -> dict:
     return {"status": "ok"}
 
 
-def translate_notes(
-    notes: Optional[list[types.Note]], lang: str | None
-) -> Optional[list[types.Note]]:
-    """Fill the translation fields of the notes for the API response.
-
-    The computation only sets ``id`` and ``params``;
-    this is the single place where they get their ``icu_template`` and rendered ``message``.
-    """
-    if notes is None:
-        return None
-    for note in notes:
-        note.icu_template, note.message = i18n.translate(note.id, note.params, lang)
-    return notes
-
-
-def translate_ingredients_notes(
-    ingredients_notes: Optional[dict[str, list[types.Note]]], lang: str | None
-) -> Optional[dict[str, list[types.Note]]]:
-    """Same as :func:`translate_notes`, for the per-ingredient notes mapping."""
-    if ingredients_notes is None:
-        return None
-    return {
-        ingredient_id: translate_notes(notes, lang) or []
-        for ingredient_id, notes in ingredients_notes.items()
-    }
-
-
 @app.post("/v1/parse_text")
 @types.async_validate_model
 async def parse_text(request: types.RecipeParseRequest) -> types.RecipeParseResponse:
     """Parse a text and return a list of ingredients with quantities and eventual modifiers"""
     ingredients = await recipes.parse_text(request.text, request.lang)
-    for ingredient in ingredients:
-        translate_notes(ingredient.notes, request.lang)
+    api_i18n.translate_ingredients(ingredients, request.lang)
     return types.RecipeParseResponse(ingredients=ingredients)
 
 
@@ -241,7 +213,7 @@ async def green_score(request: types.GreenScoreRequest) -> types.GreenScoreRespo
         accounted_weights=request.accounted_weights,
         country=request.country,
     )
-    return types.GreenScoreResponse(
+    response = types.GreenScoreResponse(
         global_ef_score=result.global_ef_score,
         labels_bonus=result.labels_bonus,
         epi_modifier=result.epi_modifier,
@@ -250,9 +222,10 @@ async def green_score(request: types.GreenScoreRequest) -> types.GreenScoreRespo
         numeric_score=result.numeric_score,
         letter_grade=result.letter_grade,
         missing_ingredient_ids=result.missing_ingredient_ids,
-        notes=translate_notes(result.notes, request.lang),
-        ingredients_notes=translate_ingredients_notes(result.ingredients_notes, request.lang),
+        notes=result.notes,
+        ingredients_notes=result.ingredients_notes,
     )
+    return api_i18n.translate_green_score(response, request.lang)
 
 
 @app.get("/v1/convert-quantity", response_model_exclude_none=True)
