@@ -12,7 +12,8 @@ from api.score_types import NoteRef, RecipeMetrics
 
 @pytest.fixture(autouse=True)
 def _clear_i18n_cache():
-    """Start every test from a cold cache so loading/logging is observable."""
+    """Start every test from a cold cache
+    so loading/logging is observable."""
     i18n.clear_cache()
     yield
     i18n.clear_cache()
@@ -156,6 +157,66 @@ def test_mf1_placeholder_conversion():
     assert i18n.to_mf2("{a} and {b}") == "{$a} and {$b}"
     assert i18n.to_mf2("{$a} and {b :number}") == "{$a} and {$b :number}"
     assert i18n.to_mf2(i18n.to_mf2("{a}")) == "{$a}"
+
+
+# --- path traversal protection --------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "lang",
+    [
+        "../secrets",
+        "../../etc/passwd",
+        "..",
+        "..\\windows\\win.ini",  # Windows separator, not a "/" so a "/"-only check would miss it
+        "/etc/passwd",  # absolute path replaces I18N_DIR when joined with Path / str
+        "en-US/../../x",
+        "",
+    ],
+)
+def test_resolve_locale_never_returns_traversal(lang):
+    """Whatever the user supplies, the resolved locale is a shipped or fallback locale.
+
+    ``resolve_locale`` is the mapping step used by the API, so it must never leak user input into a file path.
+    """
+    assert i18n.resolve_locale(lang) in {*i18n.LOCALE_MAPPING.values(), i18n.FALLBACK_LOCALE}
+
+
+@pytest.mark.parametrize(
+    "locale",
+    [
+        "../secrets",
+        "../../etc/passwd",
+        "..",
+        "..\\windows\\win.ini",
+        "/etc/passwd",
+        "en-US/../../x",
+        "en-US.json/json",  # valid tag characters plus a separator must still be rejected
+        "en US",  # space
+        "en+US",  # plus
+        "x" * 36,  # longer than any real language tag
+    ],
+)
+def test_load_locale_rejects_unsafe_names(locale):
+    """``_load_locale`` (the path-building boundary) refuses names that could escape I18N_DIR.
+
+    Even if a caller bypasses ``resolve_locale`` (e.g. a future message id or a config value),
+    the loader must not read outside the translation directory.
+    """
+    assert i18n.is_valid_locale_name(locale) is False
+    assert i18n._load_locale(locale) is None
+
+
+def test_load_locale_does_not_escape_via_absolute_path(tmp_path, monkeypatch):
+    """An absolute path never replaces I18N_DIR, even if the target file exists.
+
+    ``Path("/a") / "/etc/passwd"`` yields ``/etc/passwd``, so joining alone is not a protection.
+    """
+    victim = tmp_path / "secret.json"
+    victim.write_text('{"notes": "leaked"}', encoding="utf-8")
+    monkeypatch.setattr(i18n, "I18N_DIR", tmp_path / "i18n")
+    (tmp_path / "i18n").mkdir()
+    assert i18n._load_locale(str(victim)) is None
 
 
 # --- warmup ----------------------------------------------------------------
