@@ -19,6 +19,7 @@ from tests.helpers import (
     build_ingredient_obj,
     create_taxonomy,
     create_taxonomy_node,
+    note_ids,
     patch_ingredients_taxonomy,
     patch_labels_taxonomy,
     patch_epi_modifiers,
@@ -111,7 +112,7 @@ async def test_gather_distances_modifiers_no_country_defaults_to_world(agribalys
         recipe_metrics = await score.gather_ef_metrics(recipe)
         await score.gather_distances_modifiers(recipe, recipe_metrics, country=None)
     assert recipe_metrics.metrics[0].distance_modifier == DEFAULT_DISTANCE_MODIFIER
-    assert any("no country provided" in n for n in (recipe_metrics.metrics[0].notes or []))
+    assert "notes.distance.no_country" in note_ids(recipe_metrics.metrics[0].notes)
 
 
 @pytest.mark.asyncio
@@ -167,7 +168,7 @@ async def test_gather_distances_modifiers_no_origin_defaults_to_world(agribalyse
         recipe_metrics = await score.gather_ef_metrics(recipe)
         await score.gather_distances_modifiers(recipe, recipe_metrics, country=FRANCE_COUNTRY)
     assert recipe_metrics.metrics[0].distance_modifier == DEFAULT_DISTANCE_MODIFIER
-    assert any("no origin provided" in n for n in (recipe_metrics.metrics[0].notes or []))
+    assert "notes.distance.no_origin" in note_ids(recipe_metrics.metrics[0].notes)
 
 
 @pytest.mark.asyncio
@@ -181,7 +182,7 @@ async def test_gather_distances_modifiers_unknown_origin_defaults_to_world(agrib
         recipe_metrics = await score.gather_ef_metrics(recipe)
         await score.gather_distances_modifiers(recipe, recipe_metrics, country=FRANCE_COUNTRY)
     assert recipe_metrics.metrics[0].distance_modifier == DEFAULT_DISTANCE_MODIFIER
-    assert any("not found" in n for n in (recipe_metrics.metrics[0].notes or []))
+    assert "notes.distance.not_found" in note_ids(recipe_metrics.metrics[0].notes)
 
 
 @pytest.mark.asyncio

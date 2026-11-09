@@ -21,6 +21,7 @@ from tests.helpers import (
     build_ingredient_obj,
     create_taxonomy,
     create_taxonomy_node,
+    note_ids,
     patch_ingredients_taxonomy,
     patch_labels_taxonomy,
 )
@@ -55,14 +56,14 @@ def test_global_seasonality_modifier_no_fresh_plant():
     recipe = [build_ingredient_obj("i1", "flour", "en:wheat-flour", weight=200)]
     recipe_metrics = RecipeMetrics()
     assert score.global_seasonality_modifier(recipe, recipe_metrics) == 0.0
-    assert recipe_metrics.notes == ["No fresh produce ingredients: no seasonality bonus/malus"]
+    assert note_ids(recipe_metrics.notes) == ["notes.seasonality.no_fresh_produce"]
 
 
 def test_global_seasonality_modifier_empty_recipe():
     """An empty ingredient list is neutral (0)."""
     recipe_metrics = RecipeMetrics()
     assert score.global_seasonality_modifier([], recipe_metrics) == 0.0
-    assert recipe_metrics.notes == ["No fresh produce ingredients: no seasonality bonus/malus"]
+    assert note_ids(recipe_metrics.notes) == ["notes.seasonality.no_fresh_produce"]
 
 
 def test_global_seasonality_modifier_all_in_season():
@@ -75,9 +76,7 @@ def test_global_seasonality_modifier_all_in_season():
     assert score.global_seasonality_modifier(recipe, recipe_metrics) == pytest.approx(
         MAX_SEASONALITY_BONUS
     )
-    assert recipe_metrics.notes == [
-        "All fresh produce ingredients are in season: maximum seasonality bonus"
-    ]
+    assert note_ids(recipe_metrics.notes) == ["notes.seasonality.all_in_season"]
 
 
 def test_global_seasonality_modifier_single_in_season():
@@ -87,9 +86,7 @@ def test_global_seasonality_modifier_single_in_season():
     assert score.global_seasonality_modifier(recipe, recipe_metrics) == pytest.approx(
         MAX_SEASONALITY_BONUS
     )
-    assert recipe_metrics.notes == [
-        "All fresh produce ingredients are in season: maximum seasonality bonus"
-    ]
+    assert note_ids(recipe_metrics.notes) == ["notes.seasonality.all_in_season"]
 
 
 def test_global_seasonality_modifier_none_in_season():
@@ -148,9 +145,7 @@ def test_global_seasonality_modifier_ignores_non_fresh_plant():
     assert score.global_seasonality_modifier(recipe, recipe_metrics) == pytest.approx(
         MAX_SEASONALITY_BONUS
     )
-    assert recipe_metrics.notes == [
-        "All fresh produce ingredients are in season: maximum seasonality bonus"
-    ]
+    assert note_ids(recipe_metrics.notes) == ["notes.seasonality.all_in_season"]
 
 
 # --- compute_green_score integration --------------------------------------
@@ -192,9 +187,7 @@ async def test_compute_green_score_fresh_plant_in_season(agribalyse_index):
         + MAX_SEASONALITY_BONUS
     )
     # the in-season branch emits a recipe-level seasonality note
-    assert result.notes == [
-        "All fresh produce ingredients are in season: maximum seasonality bonus"
-    ]
+    assert note_ids(result.notes) == ["notes.seasonality.all_in_season"]
     # the apple has no origin, so per-ingredient notes are populated
     assert result.ingredients_notes is not None
     assert "i1" in result.ingredients_notes
@@ -246,7 +239,7 @@ async def test_compute_green_score_non_fresh_is_neutral(agribalyse_index):
         score.normalize_ef_score(0.3) + WORLD_EPI_MODIFIER + DEFAULT_DISTANCE_MODIFIER
     )
     # no fresh produce -> the neutral branch emits its own recipe-level note
-    assert result.notes == ["No fresh produce ingredients: no seasonality bonus/malus"]
+    assert note_ids(result.notes) == ["notes.seasonality.no_fresh_produce"]
 
 
 @pytest.mark.asyncio

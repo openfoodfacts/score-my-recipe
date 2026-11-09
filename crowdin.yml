@@ -15,3 +15,15 @@ files:
         ca: ca-ES
         nl: nl-NL
         pt: pt-PT
+  - source: /server/i18n/en-US.json
+    translation: /server/i18n/%locale%.json
+    languages_mapping:
+      locale:
+        en: en-US
+        fr: fr-FR
+        de: de-DE
+        es: es-ES
+        it: it-IT
+        ca: ca-ES
+        nl: nl-NL
+        pt: pt-PT

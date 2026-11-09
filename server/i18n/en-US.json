@@ -1,0 +1,20 @@
+{
+	"notes": {
+		"dropped_origins": "Dropped origins because multiple origins are not supported: {origins}",
+		"label_restricted": "Label {label_id} bonus does not apply to ingredient {ingredient_id}",
+		"epi": {
+			"label_bonus": "EPI modifier: not applied, ingredient has a label bonus (EPI and label bonuses are not cumulative)",
+			"no_origin": "EPI modifier: no origin provided, defaulting to world",
+			"not_found": "EPI modifier: EPI score for origin {origin} not found, defaulting to world"
+		},
+		"distance": {
+			"no_country": "Distance modifier: no country provided for recipe, defaulting to world",
+			"no_origin": "Distance modifier: no origin provided, defaulting to world",
+			"not_found": "Distance modifier: distance score for origin {origin} in country {country} not found, defaulting to world"
+		},
+		"seasonality": {
+			"no_fresh_produce": "No fresh produce ingredients: no seasonality bonus/malus",
+			"all_in_season": "All fresh produce ingredients are in season: maximum seasonality bonus"
+		}
+	}
+}

@@ -202,6 +202,8 @@ export interface paths {
 		/**
 		 * Green Score
 		 * @description Compute the green-score of a recipe given as a list of ingredients.
+		 *
+		 *     The notes are translated in the request ``lang`` (default ``en``).
 		 */
 		post: operations['green_score_v1_green_score_post'];
 		delete?: never;
@@ -370,6 +372,11 @@ export interface components {
 			 * @default scorable
 			 */
 			accountedWeights: components['schemas']['AccountedWeights'];
+			/**
+			 * Lang
+			 * @description Language code used to translate the notes (e.g. 'fr'). Defaults to 'en'; unknown languages fall back to en-US.
+			 */
+			lang?: string | null;
 		};
 		/**
 		 * GreenScoreResponse
@@ -426,13 +433,13 @@ export interface components {
 			 * Notes
 			 * @description Notes about the recipe-level score computation (e.g. seasonality), null when no ingredients have a score
 			 */
-			notes?: string[] | null;
+			notes?: components['schemas']['Note'][] | null;
 			/**
 			 * Ingredientsnotes
 			 * @description Per-ingredient notes keyed by ingredient id, only entries with at least one note are included, null if no ingredients have a score
 			 */
 			ingredientsNotes?: {
-				[key: string]: string[];
+				[key: string]: components['schemas']['Note'][];
 			} | null;
 		};
 		/** HTTPValidationError */
@@ -509,6 +516,45 @@ export interface components {
 		LabelsResponse: {
 			/** Labels */
 			labels: components['schemas']['Label'][];
+		};
+		/**
+		 * Note
+		 * @description A note returned by the API, translated in the request language.
+		 *
+		 *     Notes are produced during computation as language-agnostic :class:`api.score_types.NoteRef`, and translated at the API boundary.
+		 *     This way API consumers get both the raw material (``id``, ``params``, ``icu_template``) and a ready-to-display ``message``.
+		 * @example {
+		 *       "icu_template": "EPI modifier: EPI score for origin {origin} not found, defaulting to world",
+		 *       "id": "notes.epi.not_found",
+		 *       "message": "EPI modifier: EPI score for origin en:france not found, defaulting to world",
+		 *       "params": {
+		 *         "origin": "en:france"
+		 *       }
+		 *     }
+		 */
+		Note: {
+			/**
+			 * Id
+			 * @description Message id, a key in the server translation files
+			 */
+			id: string;
+			/**
+			 * Icu Template
+			 * @description Translated ICU message template, with its {placeholders}
+			 */
+			icu_template: string;
+			/**
+			 * Params
+			 * @description Parameters used to render the template
+			 */
+			params: {
+				[key: string]: unknown;
+			};
+			/**
+			 * Message
+			 * @description The message, already translated and formatted (convenience field)
+			 */
+			message: string;
 		};
 		/**
 		 * Origin
@@ -631,7 +677,7 @@ export interface components {
 			 * Notes
 			 * @description Notes about the ingredient
 			 */
-			notes?: string[] | null;
+			notes?: components['schemas']['Note'][] | null;
 			/**
 			 * Is In Season
 			 * @description Whether the ingredient is in season

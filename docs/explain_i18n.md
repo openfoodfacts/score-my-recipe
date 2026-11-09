@@ -44,24 +44,64 @@ Full syntax reference (plurals, select, number/date skeletons, escaping…):
 
 ## Keeping locale files in sync
 
-`pnpm i18nsync` (in `frontend/`) adds missing keys to every locale from
-`en-US.json`; `pnpm i18ncheck` reports missing/extra keys and placeholder
-mismatches. See [`frontend/scripts/i18n-sync.ts`](../frontend/scripts/i18n-sync.ts).
+`pnpm i18nsync` (in `frontend/`) adds missing keys to every locale from `en-US.json`;
+`pnpm i18ncheck` reports missing/extra keys and placeholder mismatches.
+See [`frontend/scripts/i18n-sync.ts`](../frontend/scripts/i18n-sync.ts).
+
+## Server side: notes returned by the API
+
+The notes attached to ingredients and scores (`notes` / `ingredientsNotes`) are translated by the backend, so that API consumers get readable messages.
+
+### Where the messages live
+
+- Messages are in [`server/i18n/`](../server/i18n/), one JSON file per locale.
+- They are structured like the frontend ones: nested objects, looked up with dot keys (e.g. `notes.epi.no_origin`).
+- `en-US.json` is the reference, `fr-FR.json` is maintained alongside it, and the other locales come from Crowdin.
+
+### How messages are written
+
+Messages are written in ICU MessageFormat, with frontend-style placeholders (`{origin}`), so that both file sets read the same.
+
+Rendering uses the [`messageformat2`](https://pypi.org/project/messageformat2/) package, which expects MF2 syntax (`{$origin}`).
+The conversion happens at render time (see `to_mf2` in `server/api/i18n.py`), so the files themselves stay in the frontend form.
+As a result, `icu_template` in the API response is the template as stored in the files (frontend-style placeholders), and `message` is the rendered result.
+
+Server messages must use plain placeholders (`{origin}`, `{count :number}`).
+The conversion only rewrites variables, so MF1 constructs (`{n, plural, …}`, `{x, select, …}`) are not supported:
+such a template is never formatted and falls back to being returned verbatim,
+which keeps a bad translation from breaking a request.
+
+### How notes reach the API
+
+The computation code never depends on a language: it only produces `NoteRef(id, params)` (see `server/api/score_types.py`).
+They are translated at the API boundary (`translate_notes` in `server/api/api.py`) into:
+
+| Field          | Content                                                 |
+| -------------- | ------------------------------------------------------- |
+| `id`           | message id, e.g. `notes.epi.not_found`                  |
+| `icu_template` | the translated template, with its `{placeholders}`       |
+| `params`       | the values used for the placeholders                    |
+| `message`      | the template rendered with `params` (convenience only)  |
+
+### Which language is used
+
+The request language comes from the `lang` parameter.
+
+Short codes are mapped to locales like on the frontend (`en` → `en-US`, `fr` → `fr-FR`, see `LOCALE_MAPPING`).
+Unknown languages fall back to `en-US`, and a missing message falls back to its `en-US` version, then to its id.
+
+Translation files are loaded lazily; set `SCORE_MY_RECIPE_WARMUP=fr,en` to load them at startup.
 
 ## Crowdin
 
-Actual translations are written by the community on the Open Food Facts Crowdin
-project (<https://translate.openfoodfacts.org>).
-The mapping between the Crowdin project and the files above is configured in
-[`crowdin.yml`](../crowdin.yml):
-`en-US.json` is the source,
-and each language is written to `frontend/src/lib/i18n/messages/<locale>.json`.
+Actual translations are written by the community on the Open Food Facts Crowdin project (<https://translate.openfoodfacts.org>).
+The mapping between the Crowdin project and the files above is configured in [`crowdin.yml`](../crowdin.yml):
+`en-US.json` is the source, and each language is written to `frontend/src/lib/i18n/messages/<locale>.json`.
+A second entry covers the backend: `server/i18n/en-US.json` is the source, and each language is written to `server/i18n/<locale>.json`, with the same `languages_mapping`.
+That mapping is duplicated as `LOCALE_MAPPING` in `server/api/i18n.py`, and a test guards that both stay identical.
 
-Sync is done by the Crowdin GitHub Action (using `@crowdin/cli`
-and the `CROWDIN_PROJECT_ID` / `CROWDIN_PERSONAL_TOKEN` secrets),
-which opens a PR titled `l10n: New Crowdin translations to review and merge`.
-To fix a bad translation, correct it in Crowdin first
-so it is not re-applied on the next sync.
+Sync is done by the Crowdin GitHub Action (using `@crowdin/cli` and the `CROWDIN_PROJECT_ID` / `CROWDIN_PERSONAL_TOKEN` secrets), which opens a PR titled `l10n: New Crowdin translations to review and merge`.
+To fix a bad translation, correct it in Crowdin first, so it is not re-applied on the next sync.
 
 See the Crowdin GitHub Action documentation:
 <https://github.com/crowdin/github-action>

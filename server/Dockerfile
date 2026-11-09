@@ -48,6 +48,7 @@ RUN --mount=type=cache,target=/var/cache/uv,uid=$USER_UID,gid=$USER_GID \
 
 # Copy the project into the intermediate image
 COPY --chown=off:off api /app/api
+COPY --chown=off:off i18n /app/i18n
 
 # Sync the project
 RUN --mount=type=cache,target=/var/cache/uv,uid=$USER_UID,gid=$USER_GID \

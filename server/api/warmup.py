@@ -49,19 +49,21 @@ async def gather_warmup(lang: str, calls: dict[str, Coroutine[Any, Any, Any]]) -
 # ``agribalyse`` parses the Agribalyse CSV into lookup indexes (no lang dependency).
 # ``recipes`` builds the per-language taxonomy views (depend on off + score_data + agribalyse).
 # ``units``   builds the per-language unit views (depend on off units taxonomy).
+# ``i18n``    loads the translation files of the configured languages.
 #
 # Imported here (and not at the top of each module) to keep this file the single
 # source of truth for the participating set; modules do not import this module at
 # load time, so there is no import cycle.
 def _warmup_modules() -> list[Any]:
     import api.agribalyse as agribalyse
+    import api.i18n as i18n
     import api.off as off
     import api.recipes as recipes
     import api.score as score
     import api.score_data as score_data
     import api.units as units
 
-    return [off, score_data, score, agribalyse, recipes, units]
+    return [off, score_data, score, agribalyse, recipes, units, i18n]
 
 
 async def warmup(langs: list[str]) -> None:

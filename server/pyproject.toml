@@ -16,6 +16,7 @@ dependencies = [
     "async-lru>=2.3.0",
     "aiofile>=3.12.3",
     "pydantic-async-validation>=0.5.1",
+    "messageformat2>=1.1.0",
 ]
 
 [project.optional-dependencies]

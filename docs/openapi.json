@@ -441,7 +441,7 @@
     "/v1/green-score": {
       "post": {
         "summary": "Green Score",
-        "description": "Compute the green-score of a recipe given as a list of ingredients.",
+        "description": "Compute the green-score of a recipe given as a list of ingredients.\n\nThe notes are translated in the request ``lang`` (default ``en``).",
         "operationId": "green_score_v1_green_score_post",
         "requestBody": {
           "content": {
@@ -695,6 +695,18 @@
             "$ref": "#/components/schemas/AccountedWeights",
             "description": "Accounted weights for the ponderated sum.\n\n    * scorable takes the ratio of each ingredient compared to the total weight of ingredients that have an EF score\n    * total takes the ratio of each ingredient compared to the total weight of all ingredients, including unmatched ones\n    ",
             "default": "scorable"
+          },
+          "lang": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lang",
+            "description": "Language code used to translate the notes (e.g. 'fr'). Defaults to 'en'; unknown languages fall back to en-US."
           }
         },
         "type": "object",
@@ -835,7 +847,7 @@
             "anyOf": [
               {
                 "items": {
-                  "type": "string"
+                  "$ref": "#/components/schemas/Note"
                 },
                 "type": "array"
               },
@@ -851,7 +863,7 @@
               {
                 "additionalProperties": {
                   "items": {
-                    "type": "string"
+                    "$ref": "#/components/schemas/Note"
                   },
                   "type": "array"
                 },
@@ -995,6 +1007,50 @@
                 "label": "Fair Trade"
               }
             ]
+          }
+        ]
+      },
+      "Note": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Message id, a key in the server translation files"
+          },
+          "icu_template": {
+            "type": "string",
+            "title": "Icu Template",
+            "description": "Translated ICU message template, with its {placeholders}"
+          },
+          "params": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Params",
+            "description": "Parameters used to render the template"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "The message, already translated and formatted (convenience field)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "icu_template",
+          "params",
+          "message"
+        ],
+        "title": "Note",
+        "description": "A note returned by the API, translated in the request language.\n\nNotes are produced during computation as language-agnostic :class:`api.score_types.NoteRef`, and translated at the API boundary.\nThis way API consumers get both the raw material (``id``, ``params``, ``icu_template``) and a ready-to-display ``message``.",
+        "examples": [
+          {
+            "icu_template": "EPI modifier: EPI score for origin {origin} not found, defaulting to world",
+            "id": "notes.epi.not_found",
+            "message": "EPI modifier: EPI score for origin en:france not found, defaulting to world",
+            "params": {
+              "origin": "en:france"
+            }
           }
         ]
       },
@@ -1169,7 +1225,7 @@
             "anyOf": [
               {
                 "items": {
-                  "type": "string"
+                  "$ref": "#/components/schemas/Note"
                 },
                 "type": "array"
               },

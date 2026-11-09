@@ -72,6 +72,20 @@ This is a mono repository with two components:
 * the frontend in `frontend` based on sveltekit
 * the backend in `server` based on FastAPI
 
+### Comment and markdown formatting
+
+When you comment or write markdown,
+put line breaks at points that make sense for understanding,
+to optimize the next `git diff` if the text is amended.
+
+Keep whole sentences and clauses on a single line
+rather than wrapping at a fixed width:
+never break mid-phrase,
+and split long sentences at a clause boundary
+or before a coordinated clause.
+This way, editing one sentence changes one line,
+not several.
+
 ---
 
 ## Contributing Rules

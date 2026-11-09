@@ -316,3 +316,11 @@ def build_ingredient_obj(
         is_in_season=is_in_season,
         origin=build_origin_obj(origin) if origin else None,
     )
+
+
+def note_ids(notes) -> list[str]:
+    """Return the message ids of a list of notes (``NoteRef`` or public ``Note``).
+
+    Tests assert on ids rather than on translated text, so they stay independent from the wording and from the request language.
+    """
+    return [note.id for note in (notes or [])]

@@ -55,6 +55,15 @@ wheels = [
 ]
 
 [[package]]
+name = "babel"
+version = "2.18.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/7d/b2/51899539b6ceeeb420d40ed3cd4b7a40519404f9baf3d4ac99dc413a834b/babel-2.18.0.tar.gz", hash = "sha256:b80b99a14bd085fcacfa15c9165f651fbb3406e66cc603abf11c5750937c992d", size = 9959554, upload-time = "2026-02-01T12:30:56.078Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/77/f5/21d2de20e8b8b0408f0681956ca2c69f1320a3848ac50e6e7f39c6159675/babel-2.18.0-py3-none-any.whl", hash = "sha256:e2b422b277c2b9a9630c1d7903c2a00d0830c409c59ac8cae9081c92f1aeba35", size = 10196845, upload-time = "2026-02-01T12:30:53.445Z" },
+]
+
+[[package]]
 name = "caio"
 version = "0.12.4"
 source = { registry = "https://pypi.org/simple" }
@@ -286,6 +295,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d6/54/cfe61301667036ec958cb99bd3efefba235e65cdeb9c84d24a8293ba1d90/mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba", size = 8729, upload-time = "2022-08-14T12:40:10.846Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8", size = 9979, upload-time = "2022-08-14T12:40:09.779Z" },
+]
+
+[[package]]
+name = "messageformat2"
+version = "1.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "babel" },
+    { name = "click" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/16/8d/1cde8a5135ee3a124acdfaac69461c52716a5aabcb6600a1f4c559d7c11a/messageformat2-1.1.0.tar.gz", hash = "sha256:81750770e7dac7264e74a4c83a0aecd44c1600f13b8f3bed3e2600714a4c5e43", size = 114612, upload-time = "2026-11-04T23:08:29.684Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4a/7b/329be5198b6c591f091fc78b1c395a409e2ea1161070ac360d1aa853ae99/messageformat2-1.1.0-py3-none-any.whl", hash = "sha256:879abeeabfa31656de6e67278f6d362751b5c9f798f963e78fe7866719154e74", size = 30821, upload-time = "2026-11-04T23:08:27.34Z" },
 ]
 
 [[package]]
@@ -602,6 +624,7 @@ dependencies = [
     { name = "aiofile" },
     { name = "async-lru" },
     { name = "fastapi" },
+    { name = "messageformat2" },
     { name = "openfoodfacts" },
     { name = "openpyxl" },
     { name = "pydantic" },
@@ -627,6 +650,7 @@ requires-dist = [
     { name = "async-lru", specifier = ">=2.3.0" },
     { name = "fastapi", specifier = ">=0.136.1" },
     { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.28.0" },
+    { name = "messageformat2", specifier = ">=1.1.0" },
     { name = "openfoodfacts", specifier = ">=5.1.0" },
     { name = "openpyxl", specifier = ">=3.1" },
     { name = "pydantic", specifier = ">=2.13" },
