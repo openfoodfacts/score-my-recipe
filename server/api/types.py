@@ -17,6 +17,49 @@ import api.score_types as score_types
 ITEM_UNIT = "item"
 
 
+class Note(BaseModel):
+    """A note about the computation of a score or of a parsed ingredient.
+
+    The computation only fills ``id`` and ``params``;
+    the translation fields (``icu_template`` and ``message``) are filled at the API boundary
+    (see :func:`api.api_i18n.translate_notes`),
+    so that the computation code never depends on a language.
+    API consumers get both the raw material (``id``, ``params``, ``icu_template``) and a ready-to-display ``message``.
+    """
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "id": "notes.epi.not_found",
+                    "icu_template": "EPI modifier: EPI score for origin {origin} not found, "
+                    "defaulting to world",
+                    "params": {"origin": "en:france"},
+                    "message": "EPI modifier: EPI score for origin en:france not found, "
+                    "defaulting to world",
+                }
+            ]
+        }
+    )
+
+    id: Annotated[
+        str,
+        Field(description="Message id, a key in the server translation files"),
+    ]
+    icu_template: Annotated[
+        Optional[str],
+        Field(description="Translated ICU message template, with its {placeholders}"),
+    ] = None
+    params: Annotated[
+        dict[str, Any],
+        Field(description="Parameters used to render the template"),
+    ] = {}
+    message: Annotated[
+        Optional[str],
+        Field(description="The message, already translated and formatted (convenience field)"),
+    ] = None
+
+
 def async_validate_model(fn):
     """Decorator to run async validation on a Pydantic model before calling the function.
 
@@ -173,9 +216,13 @@ class RecipeIngredient(BaseModel):
             "sentinel for countable ingredients with no unit)."
         ),
     ] = None
-    notes: Annotated[Optional[list[str]], Field(description="Notes about the ingredient")] = None
-    is_in_season: Annotated[Optional[bool], Field(description="Whether the ingredient is in season")] = None
-    is_fresh_plant: Annotated[Optional[bool], Field(description="Whether the ingredient is a fresh plant")] = None
+    notes: Annotated[Optional[list[Note]], Field(description="Notes about the ingredient")] = None
+    is_in_season: Annotated[
+        Optional[bool], Field(description="Whether the ingredient is in season")
+    ] = None
+    is_fresh_plant: Annotated[
+        Optional[bool], Field(description="Whether the ingredient is a fresh plant")
+    ] = None
 
 
 class Origin(SuggestedTaxonomyItem):
@@ -676,6 +723,15 @@ class GreenScoreRequest(CamelModel):
         ),
     ] = score_types.AccountedWeights.ONLY_SCORABLE
 
+    lang: Annotated[
+        Optional[str],
+        Field(
+            default=None,
+            description="Language code used to translate the notes "
+            "(e.g. 'fr'). Defaults to 'en'; unknown languages fall back to en-US.",
+        ),
+    ] = None
+
     @field_validator("country", mode="before")
     def upper_country_code(cls, value: Optional[str]) -> Optional[str]:
         """Ensure the country code is uppercase (ISO 3166-1 alpha-2)
@@ -805,14 +861,14 @@ class GreenScoreResponse(CamelModel):
         ),
     ] = []
     notes: Annotated[
-        Optional[list[str]],
+        Optional[list[Note]],
         Field(
             description="Notes about the recipe-level score computation "
             "(e.g. seasonality), null when no ingredients have a score"
         ),
     ] = None
     ingredients_notes: Annotated[
-        Optional[dict[str, list[str]]],
+        Optional[dict[str, list[Note]]],
         Field(
             description="Per-ingredient notes keyed by ingredient id, "
             "only entries with at least one note are included, "

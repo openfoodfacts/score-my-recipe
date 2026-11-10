@@ -15,9 +15,10 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+import api.api_i18n as api_i18n
+import api.exceptions as exceptions
 import api.logging_config as logging_config
 import api.recipes as recipes
-import api.exceptions as exceptions
 import api.score as score
 import api.types as types
 import api.units as units
@@ -104,6 +105,7 @@ async def health() -> dict:
 async def parse_text(request: types.RecipeParseRequest) -> types.RecipeParseResponse:
     """Parse a text and return a list of ingredients with quantities and eventual modifiers"""
     ingredients = await recipes.parse_text(request.text, request.lang)
+    api_i18n.translate_ingredients(ingredients, request.lang)
     return types.RecipeParseResponse(ingredients=ingredients)
 
 
@@ -202,12 +204,28 @@ async def suggest_scored_ingredient(
 @app.post("/v1/green-score")
 @types.async_validate_model
 async def green_score(request: types.GreenScoreRequest) -> types.GreenScoreResponse:
-    """Compute the green-score of a recipe given as a list of ingredients."""
-    return await score.compute_green_score(
+    """Compute the green-score of a recipe given as a list of ingredients.
+
+    The notes are translated in the request ``lang`` (default ``en``).
+    """
+    result = await score.compute_green_score(
         request.ingredients,
         accounted_weights=request.accounted_weights,
         country=request.country,
     )
+    response = types.GreenScoreResponse(
+        global_ef_score=result.global_ef_score,
+        labels_bonus=result.labels_bonus,
+        epi_modifier=result.epi_modifier,
+        distances_modifier=result.distances_modifier,
+        seasonality_modifier=result.seasonality_modifier,
+        numeric_score=result.numeric_score,
+        letter_grade=result.letter_grade,
+        missing_ingredient_ids=result.missing_ingredient_ids,
+        notes=result.notes,
+        ingredients_notes=result.ingredients_notes,
+    )
+    return api_i18n.translate_green_score(response, request.lang)
 
 
 @app.get("/v1/convert-quantity", response_model_exclude_none=True)

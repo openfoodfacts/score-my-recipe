@@ -222,7 +222,7 @@ def mock_off_parse_text_with_multiple_values():
 
 
 def test_parse_text_handles_multiple_origins_and_labels(mock_off_parse_text_with_multiple_values):
-    """Test that multiple labels are split into a list, and multiple origins are dropped with a note"""
+    """Multiple labels are split into a list, and multiple origins are dropped with a note."""
     response = client.post(
         "/v1/parse_text",
         json={"text": "100g organic vegan salad from France and Italy", "lang": "en"},
@@ -241,8 +241,13 @@ def test_parse_text_handles_multiple_origins_and_labels(mock_off_parse_text_with
 
     # A note should be added explaining the dropped origin
     assert len(ingredients[0]["notes"]) == 1
-    assert "Dropped origins" in ingredients[0]["notes"][0]
-    assert "en:france,en:italy" in ingredients[0]["notes"][0]
+    note = ingredients[0]["notes"][0]
+    assert note["id"] == "notes.dropped_origins"
+    assert note["params"] == {"origins": "en:france,en:italy"}
+    assert "Dropped origins" in note["message"]
+    assert "en:france,en:italy" in note["message"]
+    # the template keeps the placeholder, the message is rendered
+    assert "{origins}" in note["icu_template"]
 
 
 # ---------------------------------------------------------------------------
@@ -315,7 +320,8 @@ async def test_off_ingredient_to_recipe_ingredient_no_unit_returns_item():
         patch_units_taxonomy(build_mock_units_taxonomy()),
         patch_ingredients_taxonomy(_mock_ingredients_taxonomy_with_egg()),
     ):
-        ingredient = await off_ingredient_to_recipe_ingredient(off_ingredient, "en")
+        result = await off_ingredient_to_recipe_ingredient(off_ingredient, "en")
+    ingredient = result
     assert ingredient.quantity_unit == types.TaxonomyItem(
         id="item", label="egg", is_in_taxonomy=True
     )
@@ -338,7 +344,8 @@ async def test_off_ingredient_to_recipe_ingredient_none_quantity_returns_item():
         patch_units_taxonomy(build_mock_units_taxonomy()),
         patch_ingredients_taxonomy(_mock_ingredients_taxonomy_with_egg()),
     ):
-        ingredient = await off_ingredient_to_recipe_ingredient(off_ingredient, "en")
+        result = await off_ingredient_to_recipe_ingredient(off_ingredient, "en")
+    ingredient = result
     assert ingredient.quantity_unit is not None
     assert ingredient.quantity_unit.id == "item"
     assert ingredient.quantity_unit.label == "egg"
@@ -358,7 +365,8 @@ async def test_off_ingredient_to_recipe_ingredient_resolves_unit_id():
         is_in_taxonomy=1,
     )
     with patch_units_taxonomy(build_mock_units_taxonomy()):
-        ingredient = await off_ingredient_to_recipe_ingredient(off_ingredient, "en")
+        result = await off_ingredient_to_recipe_ingredient(off_ingredient, "en")
+    ingredient = result
     # 'kg' resolves to en:kilogram via the 'xx' name
     assert ingredient.quantity_unit == types.TaxonomyItem(
         id="en:kilogram", label="kilogram", is_in_taxonomy=True
@@ -379,8 +387,22 @@ async def test_off_ingredient_to_recipe_ingredient_resolves_synonym():
         is_in_taxonomy=1,
     )
     with patch_units_taxonomy(build_mock_units_taxonomy()):
-        ingredient = await off_ingredient_to_recipe_ingredient(off_ingredient, "fr")
+        result = await off_ingredient_to_recipe_ingredient(off_ingredient, "fr")
+    ingredient = result
     # 'tasse' is the fr label of en:cup
     assert ingredient.quantity_unit == types.TaxonomyItem(
         id="en:cup", label="tasse", is_in_taxonomy=True
     )
+
+
+def test_parse_text_notes_are_translated(mock_off_parse_text_with_multiple_values):
+    """Ingredient notes are returned translated in the request language."""
+    response = client.post(
+        "/v1/parse_text",
+        json={"text": "100g salad from France and Italy", "lang": "fr"},
+    )
+    assert response.status_code == 200
+    note = response.json()["ingredients"][0]["notes"][0]
+    assert note["id"] == "notes.dropped_origins"
+    assert note["params"] == {"origins": "en:france,en:italy"}
+    assert "Origines ignorées" in note["message"]

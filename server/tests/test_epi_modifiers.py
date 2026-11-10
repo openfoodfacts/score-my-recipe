@@ -19,6 +19,7 @@ from tests.helpers import (
     build_ingredient_obj,
     create_taxonomy,
     create_taxonomy_node,
+    note_ids,
     patch_ingredients_taxonomy,
     patch_labels_taxonomy,
     patch_origins_taxonomy,
@@ -147,7 +148,7 @@ async def test_gather_epi_modifiers_no_origin_defaults_to_world(agribalyse_index
         recipe_metrics = await score.gather_ef_metrics(recipe)
         await score.gather_epi_modifiers(recipe, recipe_metrics)
     assert recipe_metrics.metrics[0].epi_modifier == WORLD_EPI_MODIFIER
-    assert any("no origin provided" in n for n in (recipe_metrics.metrics[0].notes or []))
+    assert "notes.epi.no_origin" in note_ids(recipe_metrics.metrics[0].notes)
 
 
 @pytest.mark.asyncio
@@ -189,7 +190,7 @@ async def test_gather_epi_modifiers_unknown_origin_defaults_to_world(agribalyse_
         recipe_metrics = await score.gather_ef_metrics(recipe)
         await score.gather_epi_modifiers(recipe, recipe_metrics)
     assert recipe_metrics.metrics[0].epi_modifier == WORLD_EPI_MODIFIER
-    assert any("not found" in n for n in (recipe_metrics.metrics[0].notes or []))
+    assert "notes.epi.not_found" in note_ids(recipe_metrics.metrics[0].notes)
 
 
 @pytest.mark.asyncio
@@ -397,7 +398,7 @@ async def test_gather_epi_modifiers_suppressed_by_label_bonus(agribalyse_index):
     metric = recipe_metrics.metrics[0]
     assert metric.labels_bonus == 15
     assert metric.epi_modifier is None
-    assert any("label bonus" in n for n in (metric.notes or []))
+    assert "notes.epi.label_bonus" in note_ids(metric.notes)
 
 
 @pytest.mark.asyncio

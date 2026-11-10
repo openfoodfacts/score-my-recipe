@@ -1,7 +1,7 @@
 """Types useful for green-score computation."""
 
 import enum
-from typing import Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
@@ -18,15 +18,27 @@ class AccountedWeights(enum.StrEnum):
 
 
 class NotesMixin(BaseModel):
-    """Mixin for models that can have notes."""
+    """Mixin for models that can have notes.
 
-    notes: Optional[list[str]] = Field(
+    Notes are the same Pydantic model as the public one (:class:`api.types.Note`), used here without the translation fields:
+    the computation only fills ``id`` and ``params``,
+    and :func:`api.api_i18n.translate_notes` fills ``icu_template`` and ``message`` at the API boundary.
+    """
+
+    notes: Optional[list[Any]] = Field(
         default=None,
-        description="Optional notes about computation specifics",
+        description="Notes about computation specifics, as unfinished api.types.Note",
     )
 
-    def add_note(self, note: str) -> None:
-        """Add a note to the ingredient metrics."""
+    def add_note(self, note_id: str, **params: Any) -> None:
+        """Add a note referenced by its message ``id`` and ICU ``params``.
+
+        Example: ``add_note("notes.epi.not_found", origin="en:france")``.
+        """
+        # Imported here to avoid a circular import: api.types imports this module.
+        import api.types
+
+        note = api.types.Note(id=note_id, params=params)
         if self.notes is None:
             self.notes = [note]
         else:

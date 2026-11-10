@@ -11,12 +11,12 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from api import agribalyse, off, recipes, score, score_data, units
+from api import agribalyse, i18n, off, recipes, score, score_data, units
 from api.settings import Settings
 from api.warmup import gather_warmup, warmup
 
 # Modules participating in warmup, in the orchestrator's dependency order.
-WARMUP_MODULES = ["off", "score_data", "score", "agribalyse", "recipes", "units"]
+WARMUP_MODULES = ["off", "score_data", "score", "agribalyse", "recipes", "units", "i18n"]
 
 
 # --- Settings CSV parsing --------------------------------------------------
@@ -120,8 +120,8 @@ async def test_warmup_normalizes_and_deduplicates_languages():
             stack.enter_context(patch(f"api.{name}.warmup", new=_warmup))
         await warmup(["fr-FR", "fr", "en"])
 
-    # "fr-FR" normalized to "fr" and merged with the explicit "fr": each of the
-    # 6 modules is called once with "fr" and once with "en".
+    # "fr-FR" normalized to "fr" and merged with the explicit "fr": each module
+    # is called once with "fr" and once with "en".
     assert calls.count("fr") == len(WARMUP_MODULES)
     assert calls.count("en") == len(WARMUP_MODULES)
     assert "fr-FR" not in calls
@@ -233,3 +233,14 @@ async def test_agribalyse_warmup_loads_csv():
     with patch("api.agribalyse._load_agribalyse") as mock_load:
         await agribalyse.warmup("fr")
     mock_load.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_i18n_warmup_loads_translation_file():
+    """i18n.warmup loads the locale file so the first request does not pay for it."""
+    i18n.clear_cache()
+    try:
+        await i18n.warmup("fr")
+        assert i18n._locale_cache.get("fr-FR") is not None
+    finally:
+        i18n.clear_cache()

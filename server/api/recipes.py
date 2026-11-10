@@ -3,6 +3,7 @@
 Contains the recipe-level business logic: ingredient parsing and the
 origins/labels/countries/ingredients taxonomies.
 """
+
 import datetime
 import logging
 import re
@@ -11,8 +12,8 @@ from async_lru import alru_cache as async_lru_cache
 
 import api.agribalyse as agribalyse
 import api.off as off
-import api.types as types
 import api.score_data as score_data
+import api.types as types
 import api.units as units
 from api.lang import two_letter_lang_code
 
@@ -27,7 +28,11 @@ async def off_ingredient_to_recipe_ingredient(
     off_ingredient: types.OFFIngredient,
     lang: str,
 ) -> types.RecipeIngredient:
-    """Convert an OFFIngredient to a RecipeIngredient"""
+    """Convert an OFFIngredient to a RecipeIngredient.
+
+    Notes are added with their message id and ICU params only;
+    they are translated when the API returns the ingredient.
+    """
     notes = []
     # handle labels: split by comma if present
     labels_obj = []
@@ -45,7 +50,7 @@ async def off_ingredient_to_recipe_ingredient(
     # handle origins: drop if multiple (contains comma)
     origins_str = off_ingredient.origins
     if origins_str and "," in origins_str:
-        notes.append(f"Dropped origins because multiple origins are not supported: {origins_str}")
+        notes.append(types.Note(id="notes.dropped_origins", params={"origins": origins_str}))
         origins_str = None
     if origins_str:
         origins_taxonomy = await off.get_origins_taxonomy()
@@ -248,7 +253,7 @@ def get_seasonality_info(node) -> tuple[bool | None, bool | None]:
             season_months = [int(m) for m in months_csv.split(",") if m.isdecimal()]
             is_in_season = current_month in season_months
             break
-            
+
     return is_fresh_plant, is_in_season
 
 
@@ -269,9 +274,9 @@ async def _get_ingredients_entries(lang: str) -> list[IngredientEntry]:
         # An ingredient is scorable only when it matches an Agribalyse row AND
         # that row carries a score
         has_ef_score = bool(row and row.get("score"))
-        
+
         is_fresh_plant, is_in_season = get_seasonality_info(node)
-            
+
         entries.append((ingredient_id, label, synonyms, has_ef_score, is_fresh_plant, is_in_season))
     # sort by id for predictable order
     entries.sort(key=lambda x: x[0])
@@ -291,10 +296,9 @@ async def get_ingredients(
             synonyms=ingredient_synonyms if include_synonyms else None,
             has_ef_score=has_ef_score,
             is_fresh_plant=is_fresh_plant,
-            is_in_season=is_in_season
+            is_in_season=is_in_season,
         )
-        for ingredient_id, ingredient_label, ingredient_synonyms, has_ef_score,
-         is_fresh_plant, is_in_season in _ingredients
+        for ingredient_id, ingredient_label, ingredient_synonyms, has_ef_score, is_fresh_plant, is_in_season in _ingredients
     ]
 
 

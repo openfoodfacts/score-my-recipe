@@ -316,6 +316,26 @@ describe('computeGreenScore', () => {
 		expect(body.country).toBe('FR');
 	});
 
+	it('omits lang when not provided (backend default applies)', async () => {
+		const fetchMock = vi.mocked(fetch);
+		fetchMock.mockResolvedValue(okResponse({ missingIngredientIds: [] }) as Response);
+
+		await computeGreenScore([namedIngredient('i1', 'apple')]);
+
+		const body = JSON.parse(fetchMock.mock.calls[0][1]?.body as string);
+		expect(body).not.toHaveProperty('lang');
+	});
+
+	it('sends the lang used to translate the notes', async () => {
+		const fetchMock = vi.mocked(fetch);
+		fetchMock.mockResolvedValue(okResponse({ missingIngredientIds: [] }) as Response);
+
+		await computeGreenScore([namedIngredient('i1', 'apple')], { lang: 'fr' });
+
+		const body = JSON.parse(fetchMock.mock.calls[0][1]?.body as string);
+		expect(body.lang).toBe('fr');
+	});
+
 	it('passes the abort signal through to fetch', async () => {
 		const fetchMock = vi.mocked(fetch);
 		fetchMock.mockResolvedValue(okResponse({ missingIngredientIds: [] }) as Response);

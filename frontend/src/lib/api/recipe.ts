@@ -141,6 +141,11 @@ export type ComputeGreenScoreOptions = {
 	 * When omitted, the distance defaults to "world".
 	 */
 	country?: string;
+	/**
+	 * Language code used by the backend to translate the notes (e.g. `"fr"`).
+	 * When omitted, the backend default applies (`"en"`).
+	 */
+	lang?: string;
 	/** Optional abort signal to cancel the in-flight request. */
 	signal?: AbortSignal;
 };
@@ -160,11 +165,12 @@ export async function computeGreenScore(
 	ingredients: IngredientsList,
 	options: ComputeGreenScoreOptions = {}
 ): Promise<GreenScoreResponse> {
-	const { country, signal } = options;
+	const { country, lang, signal } = options;
 	const payload: GreenScoreRequest = {
 		ingredients: ingredients.filter(isIngredientNotEmpty).map(ingredientToGreenScoreInput),
 		accountedWeights: 'scorable',
-		country: country ?? null
+		country: country ?? null,
+		...(lang ? { lang } : {})
 	};
 	const response = await fetch(`${API_BASE_URL}/v1/green-score`, {
 		method: 'POST',

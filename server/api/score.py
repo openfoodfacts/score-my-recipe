@@ -214,7 +214,9 @@ async def gather_labels_bonus(
                     and ingredient.codified_ingredient.id not in labels_restrictions[label.id]
                 ):
                     metric.add_note(
-                        f"Label {label.id} bonus does not apply to ingredient {ingredient.codified_ingredient.id}"
+                        "notes.label_restricted",
+                        label_id=label.id,
+                        ingredient_id=ingredient.codified_ingredient.id,
                     )
                     continue
             labels_to_apply.append(label.id)
@@ -244,16 +246,13 @@ async def gather_epi_modifiers(
         # modifier when the ingredient already has one, leaving epi_modifier
         # as None so it does not contribute to the global weighted average.
         if metric.labels_bonus is not None:
-            metric.add_note(
-                "EPI modifier: not applied, ingredient has a label bonus "
-                "(EPI and label bonuses are not cumulative)"
-            )
+            metric.add_note("notes.epi.label_bonus")
             continue
         if not ingredient.origin:
-            metric.add_note("EPI modifier: no origin provided, defaulting to world")
+            metric.add_note("notes.epi.no_origin")
             modifier = epi_modifiers["en:world"]
         elif ingredient.origin.id not in epi_modifiers:
-            metric.add_note("EPI modifier: EPI score for  origins not found, defaulting to world")
+            metric.add_note("notes.epi.not_found", origin=ingredient.origin.id)
             modifier = epi_modifiers["en:world"]
         else:
             modifier = epi_modifiers[ingredient.origin.id]
@@ -278,12 +277,10 @@ async def gather_distances_modifiers(
         if metric.missing:
             continue
         elif not country_id:
-            metric.add_note(
-                "Distance modifier: no country provided for recipe, defaulting to world"
-            )
+            metric.add_note("notes.distance.no_country")
             modifier = score_data.DEFAULT_DISTANCE_MODIFIER
         elif not ingredient.origin or not ingredient.origin.id:
-            metric.add_note("Distance modifier: no origin provided, defaulting to world")
+            metric.add_note("notes.distance.no_origin")
             modifier = score_data.DEFAULT_DISTANCE_MODIFIER
         else:
             country_origin_id = origin_to_country_origin.get(ingredient.origin.id)
@@ -292,7 +289,7 @@ async def gather_distances_modifiers(
                 or (country_id, country_origin_id) not in distances_modifiers
             ):
                 metric.add_note(
-                    "Distance modifier: distance score for origins not found, defaulting to world"
+                    "notes.distance.not_found", origin=ingredient.origin.id, country=country
                 )
                 modifier = score_data.DEFAULT_DISTANCE_MODIFIER
             else:
@@ -351,7 +348,7 @@ def global_seasonality_modifier(
         ingredient.weight for ingredient in recipe if ingredient.is_fresh_plant
     )
     if total_fresh_plant_weight == 0:
-        recipe_metrics.add_note("No fresh produce ingredients: no seasonality bonus/malus")
+        recipe_metrics.add_note("notes.seasonality.no_fresh_produce")
         return 0.0
     total_in_season_weight = sum(
         ingredient.weight
@@ -360,9 +357,7 @@ def global_seasonality_modifier(
     )
     # all fresh produce ingredients are in season, return the maximum bonus
     if total_fresh_plant_weight == total_in_season_weight:
-        recipe_metrics.add_note(
-            "All fresh produce ingredients are in season: maximum seasonality bonus"
-        )
+        recipe_metrics.add_note("notes.seasonality.all_in_season")
         return 5.0
     else:
         ratio = total_in_season_weight / total_fresh_plant_weight
@@ -397,6 +392,9 @@ async def compute_green_score(
     Each ingredient is looked up in the ingredients taxonomy; its code properties
     (searched on the node and its parents) are used, in priority order, to find
     the matching Agribalyse row.
+
+    Notes are returned with their message id and ICU params only;
+    the API translates them for the request language.
     """
     # TODO handle exceptions
     # compute the EF score for the recipe

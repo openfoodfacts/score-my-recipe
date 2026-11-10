@@ -1,0 +1,20 @@
+{
+	"notes": {
+		"dropped_origins": "Origines ignorées car les origines multiples ne sont pas prises en charge : {origins}",
+		"label_restricted": "Le bonus du label {label_id} ne s'applique pas à l'ingrédient {ingredient_id}",
+		"epi": {
+			"label_bonus": "Modificateur EPI : non appliqué, l'ingrédient bénéficie d'un bonus de label (les bonus EPI et label ne sont pas cumulables)",
+			"no_origin": "Modificateur EPI : aucune origine fournie, valeur par défaut « monde » appliquée",
+			"not_found": "Modificateur EPI : score EPI introuvable pour l'origine {origin}, valeur par défaut « monde » appliquée"
+		},
+		"distance": {
+			"no_country": "Modificateur de distance : aucun pays fourni pour la recette, valeur par défaut « monde » appliquée",
+			"no_origin": "Modificateur de distance : aucune origine fournie, valeur par défaut « monde » appliquée",
+			"not_found": "Modificateur de distance : score de distance introuvable pour l'origine {origin} dans le pays {country}, valeur par défaut « monde » appliquée"
+		},
+		"seasonality": {
+			"no_fresh_produce": "Aucun fruit ou légume frais : pas de bonus/malus de saisonnalité",
+			"all_in_season": "Tous les fruits et légumes frais sont de saison : bonus de saisonnalité maximal"
+		}
+	}
+}

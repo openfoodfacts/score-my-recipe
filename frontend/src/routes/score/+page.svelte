@@ -25,6 +25,7 @@
 		type Ingredient
 	} from '$lib/types/ingredient';
 	import { computeGreenScore, type GreenScoreResponse } from '$lib/api/recipe';
+	import { getLocale as getLocaleKey } from '$lib/i18n';
 
 	/**
 	 * Initial ingredients coming from the `/add` page (passed via `goto` state).
@@ -123,6 +124,7 @@
 		try {
 			greenScore = await computeGreenScore(ingredients, {
 				country: country ?? undefined,
+				lang: getLocaleKey(),
 				signal: requestController.signal
 			});
 		} catch (e) {
