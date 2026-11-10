@@ -246,6 +246,7 @@ def test_add_note_builds_notes_without_translation():
     metrics = RecipeMetrics()
     metrics.add_note("notes.epi.not_found", origin="en:france")
     metrics.add_note("notes.seasonality.no_fresh_produce")
+    assert metrics.notes is not None
     assert [(note.id, note.params) for note in metrics.notes] == [
         ("notes.epi.not_found", {"origin": "en:france"}),
         ("notes.seasonality.no_fresh_produce", {}),

@@ -21,8 +21,9 @@ def test_translate_notes_fills_template_and_message_in_place():
     notes = api_i18n.translate_notes([note], "en")
 
     assert notes == [note]
-    assert "{origin}" in note.icu_template
     assert note.icu_template is not None
+    assert "{origin}" in note.icu_template
+    assert note.message is not None
     assert "en:france" in note.message
     assert "{origin}" not in note.message
 
@@ -32,7 +33,9 @@ def test_translate_notes_uses_the_requested_language():
     note = types.Note(id="notes.epi.no_origin")
     api_i18n.translate_notes([note], "fr")
 
+    assert note.message is not None
     assert "aucune origine" in note.message
+    assert note.icu_template is not None
     assert "aucune origine" in note.icu_template
 
 
@@ -63,6 +66,7 @@ def test_translate_ingredients_notes_translates_every_note():
         for note in notes:
             assert note.icu_template is not None
             assert note.message is not None
+    assert result["i1"][0].message is not None
     assert "aucune origine" in result["i1"][0].message
 
 
@@ -81,6 +85,7 @@ def test_translate_ingredients_translates_parsed_ingredient_notes():
     api_i18n.translate_ingredients([ingredient], "fr")
 
     assert ingredient.notes is not None
+    assert ingredient.notes[0].message is not None
     assert "aucune origine" in ingredient.notes[0].message
 
 
@@ -96,8 +101,10 @@ def test_translate_green_score_translates_recipe_and_ingredient_notes():
 
     assert result is response
     assert result.notes is not None
+    assert result.notes[0].message is not None
     assert "aucune origine" in result.notes[0].message
     assert result.ingredients_notes is not None
+    assert result.ingredients_notes["i1"][0].message is not None
     assert "en:france" in result.ingredients_notes["i1"][0].message
 
 
