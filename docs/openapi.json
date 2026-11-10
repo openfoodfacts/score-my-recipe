@@ -1054,7 +1054,7 @@
           "id"
         ],
         "title": "Note",
-        "description": "A note about the computation of a score or of a parsed ingredient.\n\nThe computation only fills ``id`` and ``params``;\nthe translation fields (``icu_template`` and ``message``) are filled at the API boundary\n(see :func:`api.api.translate_notes`),\nso that the computation code never depends on a language.\nAPI consumers get both the raw material (``id``, ``params``, ``icu_template``) and a ready-to-display ``message``.",
+        "description": "A note about the computation of a score or of a parsed ingredient.\n\nThe computation only fills ``id`` and ``params``;\nthe translation fields (``icu_template`` and ``message``) are filled at the API boundary\n(see :func:`api.api_i18n.translate_notes`),\nso that the computation code never depends on a language.\nAPI consumers get both the raw material (``id``, ``params``, ``icu_template``) and a ready-to-display ``message``.",
         "examples": [
           {
             "icu_template": "EPI modifier: EPI score for origin {origin} not found, defaulting to world",
