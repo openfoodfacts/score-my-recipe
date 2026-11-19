@@ -65,6 +65,8 @@ The API will be available at <http://localhost:8000>.
 
 Interactive docs (Swagger UI) are at <http://localhost:8000/docs>.
 
+Follow the [API tutorial](api-tutorial.md) to look up ingredients and score your first recipe.
+
 
 ## Frontend
 
