@@ -15,6 +15,18 @@ import type { IngredientsList } from '$lib/types/ingredientsList';
 /** Response schema for the `parse_text` endpoint, generated from the OpenAPI schema. */
 export type RecipeParseResponse = components['schemas']['RecipeParseResponse'];
 
+/** Response schema for the `parse_csv` endpoint, including its detection report. */
+export type RecipeParseCsvResponse = components['schemas']['RecipeParseCsvResponse'];
+
+/** Detection report returned by the `parse_csv` endpoint. */
+export type CsvDetection = components['schemas']['CsvDetection'];
+
+/** One column detected by the `parse_csv` endpoint. */
+export type CsvColumn = components['schemas']['CsvColumn'];
+
+/** Role inferred for a pasted spreadsheet column. */
+export type CsvColumnRole = components['schemas']['CsvColumnRole'];
+
 /** Single ingredient schema from the `parse_text` endpoint. */
 export type RecipeIngredient = components['schemas']['RecipeIngredient'];
 
@@ -56,6 +68,58 @@ export async function parseRecipeText(text: string, lang: string): Promise<Recip
 	}
 
 	return (await response.json()) as RecipeParseResponse;
+}
+
+/**
+ * Extract a user-facing error message from a failed API response.
+ *
+ * The backend returns translated `detail` strings for `parse_csv` errors.
+ * Falling back to the HTTP status keeps unexpected responses understandable.
+ *
+ * @param response - The non-ok response.
+ * @returns The detail string when present, otherwise a status summary.
+ */
+async function getErrorDetail(response: Response): Promise<string> {
+	try {
+		const data = (await response.json()) as { detail?: unknown };
+		if (typeof data.detail === 'string') {
+			return data.detail;
+		}
+	} catch {
+		// Not a JSON body: fall through to the status summary.
+	}
+	return `Error ${response.status}: ${response.statusText}`;
+}
+
+/**
+ * Parse a recipe pasted from a spreadsheet.
+ *
+ * The backend detects the separator, header row and column roles from the raw
+ * pasted text; the response contains the same ingredients as `parse_text`
+ * plus a detection report and non-fatal warnings.
+ *
+ * @param text - The raw spreadsheet clipboard text.
+ * @param lang - The language code of the recipe (e.g. `"fr"`).
+ * @returns The parsed ingredients and detection report.
+ * @throws {Error} With the backend's translated detail when detection fails.
+ */
+export async function parseRecipeCsv(
+	text: string,
+	lang: string,
+	signal?: AbortSignal
+): Promise<RecipeParseCsvResponse> {
+	const response = await fetch(`${API_BASE_URL}/v1/parse_csv`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ text, lang }),
+		signal
+	});
+
+	if (!response.ok) {
+		throw new Error(await getErrorDetail(response));
+	}
+
+	return (await response.json()) as RecipeParseCsvResponse;
 }
 
 /**

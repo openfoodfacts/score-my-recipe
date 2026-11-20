@@ -1,4 +1,36 @@
 {
+	"csv": {
+		"errors": {
+			"empty": "Paste some spreadsheet data first.",
+			"too_large": "The pasted data is too large (max {max_bytes} bytes and {max_rows} rows).",
+			"too_many_rows": "The pasted data has too many rows (max {max_rows}).",
+			"separator_not_detected": "Could not detect the column separator. Copy the table from your spreadsheet again.",
+			"invalid_csv": "The pasted data could not be read as a table.",
+			"no_rows": "No data rows were found.",
+			"no_data_rows": "The pasted data only contains a header row.",
+			"no_quantity_rows": "No row contains a quantity.",
+			"no_quantity_column": "No column contains quantities. At least one numeric quantity column is required.",
+			"no_ingredient_column": "No column looks like an ingredient column.",
+			"no_valid_rows": "No usable ingredient rows were found after applying the detected columns.",
+			"no_ingredients_parsed": "The ingredient parser did not recognize any ingredient in the pasted data."
+		},
+		"warnings": {
+			"rows_without_number": "Rows without a numeric quantity were skipped: {rows}.",
+			"rows_missing_quantity": "Rows without a value in the quantity column were skipped: {rows}.",
+			"rows_missing_ingredient": "Rows without an ingredient name were skipped: {rows}.",
+			"ragged_rows": "Some rows had a different number of columns: {rows}.",
+			"ambiguous_columns": "Some columns matched several roles equally and were left unassigned: {columns}.",
+			"duplicate_ingredient_columns": "Extra ingredient columns were ignored: {columns}.",
+			"duplicate_quantity_columns": "Extra quantity columns were ignored: {columns}.",
+			"duplicate_unit_columns": "Extra unit columns were ignored: {columns}.",
+			"duplicate_origin_columns": "Extra origin columns were ignored: {columns}.",
+			"ingredient_fallback_taxonomy": "No clear ingredient column was found; using column {column} based on ingredient matches.",
+			"ingredient_fallback_shape": "No ingredient name matched the taxonomy; using column {column} based on its text shape.",
+			"multiple_origins": "Multiple origins were found; only the first origin was kept for rows: {rows}.",
+			"extra_ingredients": "The parser returned {count} more ingredients than data rows; the extra results were ignored.",
+			"missing_ingredients": "The parser returned no result for {count} rows: {rows}."
+		}
+	},
 	"notes": {
 		"dropped_origins": "Dropped origins because multiple origins are not supported: {origins}",
 		"label_restricted": "Label {label_id} bonus does not apply to ingredient {ingredient_id}",

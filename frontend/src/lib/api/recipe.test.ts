@@ -3,6 +3,7 @@ import {
 	apiIngredientToIngredient,
 	apiIngredientsToIngredients,
 	ingredientToGreenScoreInput,
+	parseRecipeCsv,
 	parseRecipeText,
 	computeGreenScore,
 	getOrigins,
@@ -207,6 +208,14 @@ function errorResponse(status: number, statusText: string) {
 	};
 }
 
+/** Error response stub whose body carries a translated API ``detail``. */
+function detailErrorResponse(status: number, statusText: string, detail: string) {
+	return {
+		...errorResponse(status, statusText),
+		json: async () => ({ detail })
+	};
+}
+
 describe('parseRecipeText', () => {
 	beforeEach(() => {
 		vi.stubGlobal('fetch', vi.fn());
@@ -241,6 +250,62 @@ describe('parseRecipeText', () => {
 		vi.mocked(fetch).mockResolvedValue(errorResponse(422, 'Unprocessable Entity') as Response);
 
 		await expect(parseRecipeText('bad', 'en')).rejects.toThrow('Error 422: Unprocessable Entity');
+	});
+});
+
+describe('parseRecipeCsv', () => {
+	beforeEach(() => {
+		vi.stubGlobal('fetch', vi.fn());
+	});
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	it('sends a POST with text, lang and an abort signal', async () => {
+		const fetchMock = vi.mocked(fetch);
+		fetchMock.mockResolvedValue(okResponse({ ingredients: [], detection: {} }) as Response);
+		const controller = new AbortController();
+
+		await parseRecipeCsv('apple\t150', 'fr', controller.signal);
+
+		expect(fetchMock).toHaveBeenCalledTimes(1);
+		const [url, init] = fetchMock.mock.calls[0];
+		expect(url).toContain('/v1/parse_csv');
+		expect(init?.method).toBe('POST');
+		expect(init?.headers).toEqual({ 'Content-Type': 'application/json' });
+		expect(init?.signal).toBe(controller.signal);
+		expect(JSON.parse(init?.body as string)).toEqual({ text: 'apple\t150', lang: 'fr' });
+	});
+
+	it('returns the ingredients and detection report', async () => {
+		const parsed = {
+			ingredients: [apiIngredient()],
+			detection: {
+				separator: '\t',
+				has_header: true,
+				row_count: 1,
+				sample_size: 1,
+				columns: [],
+				warnings: []
+			}
+		};
+		vi.mocked(fetch).mockResolvedValue(okResponse(parsed) as Response);
+
+		await expect(parseRecipeCsv('apple\t150', 'en')).resolves.toEqual(parsed);
+	});
+
+	it('throws the translated detail from a 422 response', async () => {
+		vi.mocked(fetch).mockResolvedValue(
+			detailErrorResponse(422, 'Unprocessable Entity', 'No row contains a quantity.') as Response
+		);
+
+		await expect(parseRecipeCsv('bad', 'en')).rejects.toThrow('No row contains a quantity.');
+	});
+
+	it('falls back to the status summary when the error body has no detail', async () => {
+		vi.mocked(fetch).mockResolvedValue(errorResponse(500, 'Internal Server Error') as Response);
+
+		await expect(parseRecipeCsv('bad', 'en')).rejects.toThrow('Error 500: Internal Server Error');
 	});
 });
 
