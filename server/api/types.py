@@ -1,4 +1,5 @@
 import functools
+from enum import StrEnum
 from typing import Annotated, Any, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -317,6 +318,143 @@ class RecipeParseRequest(LangRequest):
     )
 
     text: str
+
+
+class CsvColumnRole(StrEnum):
+    """Role inferred for a pasted spreadsheet column."""
+
+    INGREDIENT = "ingredient"
+    QUANTITY = "quantity"
+    UNIT = "unit"
+    ORIGIN = "origin"
+    LABELS = "labels"
+
+
+class CsvColumn(BaseModel):
+    """One column detected in pasted spreadsheet data."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {"index": 0, "header": "Ingredient", "role": "ingredient", "confidence": 0.9},
+                {"index": 1, "header": "Qty", "role": "quantity", "confidence": 1.0},
+                {"index": 2, "header": None, "role": None, "confidence": None},
+            ]
+        }
+    )
+
+    index: Annotated[int, Field(description="Zero-based column index")]
+    header: Annotated[
+        Optional[str],
+        Field(description="Header cell value, null when the table has no header"),
+    ] = None
+    role: Annotated[
+        Optional[CsvColumnRole],
+        Field(description="Detected role, null when the column was left unassigned"),
+    ] = None
+    confidence: Annotated[
+        Optional[float],
+        Field(
+            ge=0,
+            le=1,
+            description="Fraction of sampled values matching the detected role",
+        ),
+    ] = None
+
+
+class CsvDetection(BaseModel):
+    """Detection report returned alongside parsed CSV ingredients."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "separator": "\t",
+                    "has_header": True,
+                    "row_count": 12,
+                    "sample_size": 10,
+                    "columns": [
+                        {
+                            "index": 0,
+                            "header": "Ingredient",
+                            "role": "ingredient",
+                            "confidence": 0.9,
+                        }
+                    ],
+                    "warnings": [],
+                }
+            ]
+        }
+    )
+
+    separator: Annotated[str, Field(description="Detected column separator character")]
+    has_header: Annotated[
+        bool, Field(description="Whether the first non-empty row was treated as a header")
+    ]
+    row_count: Annotated[int, Field(description="Number of non-empty data rows")]
+    sample_size: Annotated[
+        int, Field(description="Number of valid data rows used to detect column roles")
+    ]
+    columns: Annotated[list[CsvColumn], Field(description="Detected columns, in order")]
+    warnings: Annotated[
+        list[Note],
+        Field(description="Non-fatal detection warnings, translated in the request language"),
+    ] = []
+
+
+class RecipeParseCsvResponse(RecipeParseResponse):
+    """Response model for the parse_csv endpoint."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "ingredients": [
+                        {
+                            "taxonomy_id": "en:apple",
+                            "is_in_taxonomy": True,
+                            "codified_ingredient": "apple",
+                            "quantity_g": 150.0,
+                        }
+                    ],
+                    "detection": {
+                        "separator": "\t",
+                        "has_header": True,
+                        "row_count": 1,
+                        "sample_size": 1,
+                        "columns": [
+                            {
+                                "index": 0,
+                                "header": "Ingredient",
+                                "role": "ingredient",
+                                "confidence": 1.0,
+                            }
+                        ],
+                        "warnings": [],
+                    },
+                }
+            ]
+        }
+    )
+
+    detection: Annotated[CsvDetection, Field(description="CSV detection report")]
+
+
+class RecipeParseCsvRequest(LangRequest):
+    """Request model for parse_csv endpoint."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "lang": "en",
+                    "text": "Ingredient\tQuantity\tUnit\napple\t150\tg\nflour\t200\tg",
+                }
+            ]
+        }
+    )
+
+    text: Annotated[str, Field(description="Pasted spreadsheet data")]
 
 
 class OriginsResponse(BaseModel):

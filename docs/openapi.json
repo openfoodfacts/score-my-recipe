@@ -85,6 +85,45 @@
         }
       }
     },
+    "/v1/parse_csv": {
+      "post": {
+        "summary": "Parse Csv",
+        "description": "Parse a recipe pasted from a spreadsheet.\n\nThe separator, header row and column roles are auto-detected. The response\nhas the same ingredient shape as ``/v1/parse_text`` plus a detection report.",
+        "operationId": "parse_csv_v1_parse_csv_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecipeParseCsvRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecipeParseCsvResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/origins": {
       "get": {
         "summary": "Get Origins",
@@ -666,6 +705,155 @@
             "synonyms": [
               "french"
             ]
+          }
+        ]
+      },
+      "CsvColumn": {
+        "properties": {
+          "index": {
+            "type": "integer",
+            "title": "Index",
+            "description": "Zero-based column index"
+          },
+          "header": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Header",
+            "description": "Header cell value, null when the table has no header"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CsvColumnRole"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Detected role, null when the column was left unassigned"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence",
+            "description": "Fraction of sampled values matching the detected role"
+          }
+        },
+        "type": "object",
+        "required": [
+          "index"
+        ],
+        "title": "CsvColumn",
+        "description": "One column detected in pasted spreadsheet data.",
+        "examples": [
+          {
+            "confidence": 0.9,
+            "header": "Ingredient",
+            "index": 0,
+            "role": "ingredient"
+          },
+          {
+            "confidence": 1.0,
+            "header": "Qty",
+            "index": 1,
+            "role": "quantity"
+          },
+          {
+            "index": 2
+          }
+        ]
+      },
+      "CsvColumnRole": {
+        "type": "string",
+        "enum": [
+          "ingredient",
+          "quantity",
+          "unit",
+          "origin",
+          "labels"
+        ],
+        "title": "CsvColumnRole",
+        "description": "Role inferred for a pasted spreadsheet column."
+      },
+      "CsvDetection": {
+        "properties": {
+          "separator": {
+            "type": "string",
+            "title": "Separator",
+            "description": "Detected column separator character"
+          },
+          "has_header": {
+            "type": "boolean",
+            "title": "Has Header",
+            "description": "Whether the first non-empty row was treated as a header"
+          },
+          "row_count": {
+            "type": "integer",
+            "title": "Row Count",
+            "description": "Number of non-empty data rows"
+          },
+          "sample_size": {
+            "type": "integer",
+            "title": "Sample Size",
+            "description": "Number of valid data rows used to detect column roles"
+          },
+          "columns": {
+            "items": {
+              "$ref": "#/components/schemas/CsvColumn"
+            },
+            "type": "array",
+            "title": "Columns",
+            "description": "Detected columns, in order"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/Note"
+            },
+            "type": "array",
+            "title": "Warnings",
+            "description": "Non-fatal detection warnings, translated in the request language",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "separator",
+          "has_header",
+          "row_count",
+          "sample_size",
+          "columns"
+        ],
+        "title": "CsvDetection",
+        "description": "Detection report returned alongside parsed CSV ingredients.",
+        "examples": [
+          {
+            "columns": [
+              {
+                "confidence": 0.9,
+                "header": "Ingredient",
+                "index": 0,
+                "role": "ingredient"
+              }
+            ],
+            "has_header": true,
+            "row_count": 12,
+            "sample_size": 10,
+            "separator": "\t",
+            "warnings": []
           }
         ]
       },
@@ -1393,6 +1581,82 @@
               "label": "France"
             },
             "weight": 150
+          }
+        ]
+      },
+      "RecipeParseCsvRequest": {
+        "properties": {
+          "lang": {
+            "type": "string",
+            "title": "Lang",
+            "description": "Language for the request (2 or 5 letter code)"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "Pasted spreadsheet data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lang",
+          "text"
+        ],
+        "title": "RecipeParseCsvRequest",
+        "description": "Request model for parse_csv endpoint.",
+        "examples": [
+          {
+            "lang": "en",
+            "text": "Ingredient\tQuantity\tUnit\napple\t150\tg\nflour\t200\tg"
+          }
+        ]
+      },
+      "RecipeParseCsvResponse": {
+        "properties": {
+          "ingredients": {
+            "items": {
+              "$ref": "#/components/schemas/RecipeIngredient"
+            },
+            "type": "array",
+            "title": "Ingredients"
+          },
+          "detection": {
+            "$ref": "#/components/schemas/CsvDetection",
+            "description": "CSV detection report"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ingredients",
+          "detection"
+        ],
+        "title": "RecipeParseCsvResponse",
+        "description": "Response model for the parse_csv endpoint.",
+        "examples": [
+          {
+            "detection": {
+              "columns": [
+                {
+                  "confidence": 1.0,
+                  "header": "Ingredient",
+                  "index": 0,
+                  "role": "ingredient"
+                }
+              ],
+              "has_header": true,
+              "row_count": 1,
+              "sample_size": 1,
+              "separator": "\t",
+              "warnings": []
+            },
+            "ingredients": [
+              {
+                "codified_ingredient": "apple",
+                "is_in_taxonomy": true,
+                "quantity_g": 150.0,
+                "taxonomy_id": "en:apple"
+              }
+            ]
           }
         ]
       },

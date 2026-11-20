@@ -10,6 +10,19 @@ const RECIPE_TEXT = `1 pâte brisée (150g)
 30g de beurre origine France`;
 
 /**
+ * The pasted spreadsheet exercised by the CSV scenario.
+ *
+ * The rows match the recorded `parse_csv_recipe.json` fixture, and the
+ * label/origin columns carry the same metadata as the text recipe so the
+ * pinned green-score grade stays valid.
+ */
+const SPREADSHEET_TEXT = `Ingrédient\tQuantité\tUnité\tOrigine\tLabels
+Pâte brisée\t1\tpièce\t\t
+Pommes\t4\tpièce\t\tBio
+Sucre\t50\tg\t\t
+Beurre\t30\tg\tFrance\t`;
+
+/**
  * Pinned expected letter grade.
  *
  * Captured against:
@@ -67,5 +80,43 @@ test.describe('Recipe green-score integration', () => {
 
 		// 9. Assert the numeric score is also displayed (format: "XX.X/100").
 		await expect(page.getByText(/\d+\.\d+\/100/)).toBeVisible();
+	});
+
+	test('user pastes a spreadsheet, sees the detection preview and scores it', async ({ page }) => {
+		// 1. Switch the UI to French, like the text scenario.
+		await page.goto('/');
+		await page.waitForLoadState('networkidle');
+		await page.locator('.locale-selector select').selectOption('fr-FR');
+
+		// 2. Open /add and select the spreadsheet tab.
+		await page.getByRole('link', { name: 'Notez une recette' }).click();
+		await expect(page).toHaveURL(/\/add$/);
+		await page.getByRole('tab', { name: 'Tableur' }).click();
+
+		// 3. Paste the table and parse it.
+		await page.locator('#spreadsheet-text').fill(SPREADSHEET_TEXT);
+		await page.getByRole('button', { name: 'Analyser le tableau' }).click();
+
+		// 4. The detection report and preview are shown before scoring.
+		await expect(page.getByRole('heading', { name: 'Tableau détecté' })).toBeVisible();
+		await expect(page.getByText('Tabulation')).toBeVisible();
+		await expect(page.getByRole('heading', { name: 'Ingrédients à noter' })).toBeVisible();
+		// The item unit is labelled with the ingredient name, so scope the
+		// first match to the ingredient-name column.
+		await expect(
+			page.getByRole('cell', { name: 'pâte brisée', exact: true }).first()
+		).toBeVisible();
+		await expect(page.getByRole('cell', { name: 'Bio', exact: true }).first()).toBeVisible();
+		await expect(page.getByRole('cell', { name: 'France', exact: true }).first()).toBeVisible();
+
+		// 5. Continue to the score editor and verify the pinned grade.
+		await page.getByRole('button', { name: 'Continuer vers la notation' }).click();
+		await expect(page).toHaveURL(/\/score$/);
+
+		const scoreLogo = page.locator('img.h-32');
+		await expect(scoreLogo).toBeVisible({ timeout: 15_000 });
+		const letterGrade = await scoreLogo.getAttribute('alt');
+		expect(letterGrade).toMatch(/^(A\+|[A-F])$/);
+		expect(letterGrade).toBe(EXPECTED_LETTER_GRADE);
 	});
 });

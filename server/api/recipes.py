@@ -11,6 +11,8 @@ import re
 from async_lru import alru_cache as async_lru_cache
 
 import api.agribalyse as agribalyse
+import api.csv_parse as csv_parse
+import api.exceptions as exceptions
 import api.off as off
 import api.score_data as score_data
 import api.types as types
@@ -115,6 +117,94 @@ async def parse_text(text: str, lang: str) -> list[types.RecipeIngredient]:
         for ingredient in off_ingredients
     ]
     return ingredients
+
+
+def _merge_labels(
+    existing: list[types.TaxonomyItem],
+    extra: list[types.TaxonomyItem],
+) -> list[types.TaxonomyItem]:
+    """Merge two label lists, deduplicating by taxonomy id or normalized label.
+
+    Checking both the id and the normalized label prevents a free-text label
+    from duplicating the same taxonomy label detected by OFF.
+    """
+    seen_ids: set[str] = set()
+    seen_labels: set[str] = set()
+    merged: list[types.TaxonomyItem] = []
+    for item in [*existing, *extra]:
+        label_key = csv_parse.normalize_value(item.label)
+        if (item.id is not None and item.id in seen_ids) or label_key in seen_labels:
+            continue
+        if item.id is not None:
+            seen_ids.add(item.id)
+        seen_labels.add(label_key)
+        merged.append(item)
+    return merged
+
+
+async def parse_csv(text: str, lang: str) -> types.RecipeParseCsvResponse:
+    """Parse pasted spreadsheet data into the same ingredients as ``parse_text``.
+
+    The pasted table is detected and assembled into one textual ingredient
+    line per row (see :mod:`api.csv_parse`), then parsed in a single OFF call.
+    Parsed ingredients are aligned with the table rows by index. Explicit
+    label columns are merged with OFF-detected labels; an explicit origin
+    column overrides the OFF-detected origin.
+
+    :raises exceptions.CsvParseError: when the paste cannot be used.
+    """
+    lang = two_letter_lang_code(lang)
+    plan = await csv_parse.detect_and_assemble(text, lang)
+
+    ingredients = await parse_text(plan.assembled_text, lang)
+    if not ingredients:
+        raise exceptions.CsvParseError("csv.errors.no_ingredients_parsed")
+
+    if len(ingredients) > len(plan.rows):
+        plan.warnings.append(
+            types.Note(
+                id="csv.warnings.extra_ingredients",
+                params={"count": len(ingredients) - len(plan.rows)},
+            )
+        )
+    elif len(ingredients) < len(plan.rows):
+        missing_rows = [row.row_number for row in plan.rows[len(ingredients) :]]
+        plan.warnings.append(
+            types.Note(
+                id="csv.warnings.missing_ingredients",
+                params={
+                    "count": len(missing_rows),
+                    "rows": ", ".join(str(row) for row in missing_rows),
+                },
+            )
+        )
+
+    aligned_ingredients = ingredients[: len(plan.rows)]
+    for row, ingredient in zip(plan.rows, aligned_ingredients):
+        if row.origin is not None:
+            ingredient.origins = row.origin
+        ingredient.labels = _merge_labels(ingredient.labels or [], row.labels)
+
+    detection = types.CsvDetection(
+        separator=plan.separator,
+        has_header=plan.has_header,
+        row_count=plan.row_count,
+        sample_size=plan.sample_size,
+        columns=[
+            types.CsvColumn(
+                index=column.index,
+                header=column.header,
+                role=types.CsvColumnRole(column.role) if column.role else None,
+                confidence=column.confidence,
+            )
+            for column in plan.columns
+        ],
+        warnings=plan.warnings,
+    )
+    return types.RecipeParseCsvResponse(
+        ingredients=aligned_ingredients,
+        detection=detection,
+    )
 
 
 @async_lru_cache(maxsize=200)

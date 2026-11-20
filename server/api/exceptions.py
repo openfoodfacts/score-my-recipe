@@ -20,6 +20,20 @@ class UnitConversionNotSupportedError(Exception):
     """
 
 
+class CsvParseError(Exception):
+    """Raised when pasted spreadsheet data cannot be turned into ingredients.
+
+    Carries a translation message id and its ICU params, so the HTTP layer can
+    return a translated 422 ``detail`` without the CSV logic depending on a
+    language.
+    """
+
+    def __init__(self, message_id: str, params: dict | None = None):
+        super().__init__(message_id)
+        self.message_id = message_id
+        self.params = params or {}
+
+
 class AsyncRequestValidationError(RequestValidationError):
     """Custom exception to distinguish async validation errors from sync ones.
 
