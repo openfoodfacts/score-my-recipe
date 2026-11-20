@@ -30,7 +30,7 @@ import openfoodfacts.taxonomy as taxonomy
 import openpyxl
 
 from api.settings import get_settings
-from api.off import _node_chain, _property_value
+from api.off import _property_value
 
 
 logger = logging.getLogger(__name__)
@@ -264,11 +264,10 @@ def find_agribalyse_row(
 ) -> tuple[Optional[str], Optional[str], Optional[dict[str, Any]]]:
     """Find the Agribalyse row matching a taxonomy node.
 
-    The node's code properties are tried in priority order. When
-    ``search_parents`` is ``True`` (the default) the same properties are also
-    searched on the node's parents (closest first); when ``False`` only the
-    node itself is considered — useful when walking down the taxonomy where a
-    child should match on its own codes, not inherit a parent's.
+    Try every code property on the node before considering ancestors. If none
+    resolves and ``search_parents`` is ``True``, search the ancestors in property
+    priority order, closest first within each property. When ``False``, only
+    the node itself is considered.
 
     Returns ``(matched_code, code_source_property, row)`` where ``row`` is
     ``None`` when nothing matched.
@@ -279,17 +278,14 @@ def find_agribalyse_row(
     by_code, by_ciqual = _load_agribalyse()
     indexes = {AGRIBALYSE_CODE_COLUMN: by_code, CIQUAL_CODE_COLUMN: by_ciqual}
 
-    # Nodes inspected for each property: the node alone, or the node followed
-    # by its parents when parent search is enabled.
-    nodes = [node] if not search_parents else _node_chain(node)
-
-    for prop in INGREDIENT_CODE_PROPERTIES:
-        column = _column_for_property(prop)
-        index = indexes[column]
-        for n in nodes:
-            code = _property_value(n, prop)
-            if code and code in index:
-                return code, prop, index[code]
+    ancestors = list(node.get_parents_hierarchy()) if search_parents else []
+    for nodes in ([node], ancestors):
+        for prop in INGREDIENT_CODE_PROPERTIES:
+            index = indexes[_column_for_property(prop)]
+            for candidate in nodes:
+                code = _property_value(candidate, prop)
+                if code and code in index:
+                    return code, prop, index[code]
     return None, None, None
 
 

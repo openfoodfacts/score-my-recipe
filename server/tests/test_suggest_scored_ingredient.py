@@ -6,6 +6,8 @@ The traversal is exercised on small taxonomies built with
 parents, DAG) is used rather than a mock reimplementation.
 """
 
+from pathlib import Path
+
 import openfoodfacts.taxonomy as taxonomy
 
 from api import agribalyse
@@ -51,6 +53,36 @@ def test_search_parents_false_still_matches_node_own_code(agribalyse_index):
     code, source, row = agribalyse.find_agribalyse_row(tax["en:apple"], search_parents=False)
     assert code == "10001"
     assert row is not None
+
+
+def test_direct_ciqual_match_beats_ancestor_agribalyse():
+    """Use the dough reference when its taxonomic parent is a baked biscuit."""
+    taxonomy_path = Path(__file__).parent / "data/taxonomies/off-ingredient.json"
+    ingredients = taxonomy.Taxonomy.from_path(taxonomy_path)
+    code, source, row = agribalyse.find_agribalyse_row(ingredients["en:cooked-shortbread-dough"])
+
+    assert (code, source) == ("23442", "ciqual_food_code")
+    assert row is not None
+    assert row["code"] == "23442"
+
+
+def test_missing_direct_ciqual_match_keeps_ancestor_fallback(agribalyse_index):
+    """An unresolved ingredient code still allows the existing ancestor search."""
+    tax = build_taxonomy(
+        {
+            "en:fruit": {"name": {"en": "Fruit"}, "agribalyse_food_code": {"en": "10001"}},
+            "en:apple": {
+                "name": {"en": "Apple"},
+                "parents": ["en:fruit"],
+                "ciqual_food_code": {"en": "not-in-csv"},
+            },
+        }
+    )
+    code, source, row = agribalyse.find_agribalyse_row(tax["en:apple"])
+
+    assert (code, source) == ("10001", "agribalyse_food_code")
+    assert row is not None
+    assert row["code"] == "10001"
 
 
 # --- suggest_scored_ingredient --------------------------------------------
