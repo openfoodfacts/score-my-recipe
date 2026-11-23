@@ -10,6 +10,8 @@
   Props:
   - letterGrade: The letter grade ("A+", "A", ... "F"), or null if unavailable.
   - numericScore: The numeric score (0-100), or null.
+  - size: Logo size, used to render a compact badge in lists.
+  - showNumeric: Whether to render the numeric score below the logo.
 -->
 <script lang="ts">
 	import { _ } from '$lib/i18n';
@@ -17,9 +19,23 @@
 	type Props = {
 		letterGrade?: string | null;
 		numericScore?: number | null;
+		size?: 'sm' | 'md' | 'lg';
+		showNumeric?: boolean;
 	};
 
-	let { letterGrade = null, numericScore = null }: Props = $props();
+	let {
+		letterGrade = null,
+		numericScore = null,
+		size = 'lg',
+		showNumeric = true
+	}: Props = $props();
+
+	/** Logo height for each supported size. */
+	const sizeClasses = {
+		sm: 'h-10',
+		md: 'h-20',
+		lg: 'h-32'
+	};
 
 	// Map each green-score SVG asset to its letter grade key.
 	// Keys use a lowercase, hyphenated form of the grade (e.g. "A+" -> "a-plus").
@@ -52,8 +68,8 @@
 </script>
 
 <div class="flex flex-col items-center gap-2">
-	<img src={scoreLogoUrl} alt={letterGrade ?? 'unknown'} class="h-32" />
-	{#if numericScore !== null}
+	<img src={scoreLogoUrl} alt={letterGrade ?? 'unknown'} class={sizeClasses[size]} />
+	{#if showNumeric && numericScore !== null}
 		<span class="text-base-content/70 text-sm">
 			{$_('recipe.numeric_score', { default: 'Score' })}: {numericScore.toFixed(1)}/100
 		</span>
