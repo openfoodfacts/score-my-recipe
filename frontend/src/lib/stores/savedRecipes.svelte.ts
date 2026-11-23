@@ -66,7 +66,7 @@ class SavedRecipesStore {
 	 */
 	save(input: SavedRecipeInput, options: SaveRecipeOptions): SavedRecipe {
 		const result = saveRecipeToStorage(input, options);
-		this.recipes = result.recipes;
+		this.refresh();
 		return result.recipe;
 	}
 
