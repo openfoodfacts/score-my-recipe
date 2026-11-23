@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { _ } from '$lib/i18n';
+	import { offLinks } from '$lib/offLink';
 </script>
 
 <svelte:head>
@@ -31,9 +32,12 @@
 		<p class="text-base-content/70 mx-auto mb-12 max-w-2xl text-xl leading-relaxed font-medium">
 			{$_('homepage.hero_description')}
 		</p>
-		<div class="flex items-center justify-center">
+		<div class="flex flex-wrap items-center justify-center gap-4">
 			<a href={resolve('/add')} class="btn btn-primary btn-lg">
 				{$_('homepage.cta_recipe_calculator')}
+			</a>
+			<a href={`${offLinks.website}/green-score`} class="btn btn-outline btn-lg">
+				{$_('navbar.methodology', { default: 'About the Green-Score' })}
 			</a>
 		</div>
 	</div>
@@ -83,6 +87,25 @@
 				</p>
 			</div>
 		</div>
+	</div>
+</section>
+
+<section class="bg-base-200 border-base-300 border-t px-6 py-16">
+	<div class="mx-auto max-w-3xl text-center">
+		<p class="text-base-content/70 mb-8 text-lg leading-relaxed font-medium">
+			{$_('homepage.community_description', {
+				default:
+					'Score My Recipe is built with the vibrant Open Food Facts community: volunteers, researchers and food lovers who share their time and knowledge to make food information more transparent for everyone.'
+			})}
+		</p>
+		<a
+			href="https://world.openfoodfacts.org/contribute"
+			target="_blank"
+			rel="noopener"
+			class="btn btn-secondary"
+		>
+			{$_('navbar.join_community', { default: 'Join the community' })}
+		</a>
 	</div>
 </section>
 
