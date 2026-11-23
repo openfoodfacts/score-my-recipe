@@ -99,7 +99,23 @@ test.describe('Recipe green-score integration', () => {
 
 		// 4. The detection report and preview are shown before scoring.
 		await expect(page.getByRole('heading', { name: 'Tableau détecté' })).toBeVisible();
+
+		// The separator and column detection details start collapsed:
+		// they are only revealed by the "see details" summary.
+		const columnsHeading = page.getByRole('heading', { name: 'Colonnes' });
+		const showDetails = page.getByText('Voir les détails de la détection du tableau');
+		const hideDetails = page.getByText('Masquer les détails de la détection du tableau');
+		await expect(showDetails).toBeVisible();
+		await expect(page.getByText('Tabulation')).toBeHidden();
+		await expect(columnsHeading).toBeHidden();
+
+		// 5. Unfold the details: the summary label flips and both sections appear.
+		await showDetails.click();
+		await expect(hideDetails).toBeVisible();
 		await expect(page.getByText('Tabulation')).toBeVisible();
+		await expect(columnsHeading).toBeVisible();
+
+		// 6. The ingredient preview stays visible regardless of the fold state.
 		await expect(page.getByRole('heading', { name: 'Ingrédients à noter' })).toBeVisible();
 		// The item unit is labelled with the ingredient name, so scope the
 		// first match to the ingredient-name column.
@@ -109,7 +125,7 @@ test.describe('Recipe green-score integration', () => {
 		await expect(page.getByRole('cell', { name: 'Bio', exact: true }).first()).toBeVisible();
 		await expect(page.getByRole('cell', { name: 'France', exact: true }).first()).toBeVisible();
 
-		// 5. Continue to the score editor and verify the pinned grade.
+		// 7. Continue to the score editor and verify the pinned grade.
 		await page.getByRole('button', { name: 'Continuer vers la notation' }).click();
 		await expect(page).toHaveURL(/\/score$/);
 
