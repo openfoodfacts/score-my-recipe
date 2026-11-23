@@ -151,7 +151,7 @@
 	</form>
 
 	{#if error}
-		<div class="alert alert-error" role="alert">
+		<div id="spreadsheet-errors" class="alert alert-error" role="alert">
 			<div>
 				<h2 class="font-semibold">
 					{$_('add.spreadsheet.error_title', { default: 'Could not parse the spreadsheet' })}
@@ -167,91 +167,106 @@
 				{$_('add.spreadsheet.detection_title', { default: 'Detected table' })}
 			</h2>
 
-			<dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-4">
-				<div>
-					<dt class="text-base-content/60">
-						{$_('add.spreadsheet.separator', { default: 'Separator' })}
-					</dt>
-					<dd class="font-medium">
-						{#if result.detection.separator === '\t'}
-							{$_('add.spreadsheet.separator_tab', { default: 'Tab' })}
-						{:else if result.detection.separator === ','}
-							{$_('add.spreadsheet.separator_comma', { default: 'Comma' })}
-						{:else if result.detection.separator === ';'}
-							{$_('add.spreadsheet.separator_semicolon', { default: 'Semicolon' })}
-						{:else if result.detection.separator === '|'}
-							{$_('add.spreadsheet.separator_pipe', { default: 'Pipe' })}
-						{:else}
-							{result.detection.separator}
-						{/if}
-					</dd>
-				</div>
-				<div>
-					<dt class="text-base-content/60">
-						{$_('add.spreadsheet.header', { default: 'Header row' })}
-					</dt>
-					<dd class="font-medium">
-						{result.detection.has_header
-							? $_('add.yes', { default: 'Yes' })
-							: $_('add.no', { default: 'No' })}
-					</dd>
-				</div>
-				<div>
-					<dt class="text-base-content/60">
-						{$_('add.spreadsheet.row_count', { default: 'Data rows' })}
-					</dt>
-					<dd class="font-medium">{result.detection.row_count}</dd>
-				</div>
-				<div>
-					<dt class="text-base-content/60">
-						{$_('add.spreadsheet.sample_size', { default: 'Rows sampled' })}
-					</dt>
-					<dd class="font-medium">{result.detection.sample_size}</dd>
-				</div>
-			</dl>
+			<details class="group collapse-arrow bg-base-200 collapse">
+				<summary class="collapse-title font-medium">
+					<span class="group-open:hidden">
+						{$_('add.spreadsheet.details_show', { default: 'See table detection details' })}
+					</span>
+					<span class="hidden group-open:inline">
+						{$_('add.spreadsheet.details_hide', { default: 'Hide table detection details' })}
+					</span>
+				</summary>
+				<div class="collapse-content space-y-6">
+					<dl
+						id="spreadsheet-detection-details"
+						class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-4"
+					>
+						<div>
+							<dt class="text-base-content/60">
+								{$_('add.spreadsheet.separator', { default: 'Separator' })}
+							</dt>
+							<dd class="font-medium">
+								{#if result.detection.separator === '\t'}
+									{$_('add.spreadsheet.separator_tab', { default: 'Tab' })}
+								{:else if result.detection.separator === ','}
+									{$_('add.spreadsheet.separator_comma', { default: 'Comma' })}
+								{:else if result.detection.separator === ';'}
+									{$_('add.spreadsheet.separator_semicolon', { default: 'Semicolon' })}
+								{:else if result.detection.separator === '|'}
+									{$_('add.spreadsheet.separator_pipe', { default: 'Pipe' })}
+								{:else}
+									{result.detection.separator}
+								{/if}
+							</dd>
+						</div>
+						<div>
+							<dt class="text-base-content/60">
+								{$_('add.spreadsheet.header', { default: 'Header row' })}
+							</dt>
+							<dd class="font-medium">
+								{result.detection.has_header
+									? $_('add.yes', { default: 'Yes' })
+									: $_('add.no', { default: 'No' })}
+							</dd>
+						</div>
+						<div>
+							<dt class="text-base-content/60">
+								{$_('add.spreadsheet.row_count', { default: 'Data rows' })}
+							</dt>
+							<dd class="font-medium">{result.detection.row_count}</dd>
+						</div>
+						<div>
+							<dt class="text-base-content/60">
+								{$_('add.spreadsheet.sample_size', { default: 'Rows sampled' })}
+							</dt>
+							<dd class="font-medium">{result.detection.sample_size}</dd>
+						</div>
+					</dl>
 
-			<div>
-				<h3 class="mb-2 text-lg font-semibold">
-					{$_('add.spreadsheet.columns_title', { default: 'Columns' })}
-				</h3>
-				<div class="overflow-x-auto">
-					<table class="table-sm table">
-						<thead>
-							<tr>
-								<th scope="col">
-									{$_('add.spreadsheet.column_index', { default: 'Column' })}
-								</th>
-								<th scope="col">
-									{$_('add.spreadsheet.column_header', { default: 'Header' })}
-								</th>
-								<th scope="col">
-									{$_('add.spreadsheet.column_role', { default: 'Detected role' })}
-								</th>
-								<th scope="col">
-									{$_('add.spreadsheet.column_confidence', { default: 'Confidence' })}
-								</th>
-							</tr>
-						</thead>
-						<tbody>
-							{#each result.detection.columns as column (column.index)}
-								<tr>
-									<td>{column.index + 1}</td>
-									<td>
-										{column.header ?? $_('add.spreadsheet.no_value', { default: '—' })}
-									</td>
-									<td>
-										{$_(roleKey(column.role), { default: 'Unassigned' })}
-									</td>
-									<td>{formatConfidence(column.confidence)}</td>
-								</tr>
-							{/each}
-						</tbody>
-					</table>
+					<div id="spreadsheetcolumns-detail">
+						<h3 class="mb-2 text-lg font-semibold">
+							{$_('add.spreadsheet.columns_title', { default: 'Columns' })}
+						</h3>
+						<div class="overflow-x-auto">
+							<table class="table-sm table">
+								<thead>
+									<tr>
+										<th scope="col">
+											{$_('add.spreadsheet.column_index', { default: 'Column' })}
+										</th>
+										<th scope="col">
+											{$_('add.spreadsheet.column_header', { default: 'Header' })}
+										</th>
+										<th scope="col">
+											{$_('add.spreadsheet.column_role', { default: 'Detected role' })}
+										</th>
+										<th scope="col">
+											{$_('add.spreadsheet.column_confidence', { default: 'Confidence' })}
+										</th>
+									</tr>
+								</thead>
+								<tbody>
+									{#each result.detection.columns as column (column.index)}
+										<tr>
+											<td>{column.index + 1}</td>
+											<td>
+												{column.header ?? $_('add.spreadsheet.no_value', { default: '—' })}
+											</td>
+											<td>
+												{$_(roleKey(column.role), { default: 'Unassigned' })}
+											</td>
+											<td>{formatConfidence(column.confidence)}</td>
+										</tr>
+									{/each}
+								</tbody>
+							</table>
+						</div>
+					</div>
 				</div>
-			</div>
+			</details>
 
 			{#if result.detection.warnings.length > 0}
-				<div class="alert alert-warning" role="status">
+				<div id="spreadsheet-warnings" class="alert alert-warning" role="status">
 					<div>
 						<h3 class="font-semibold">
 							{$_('add.spreadsheet.warnings_title', { default: 'Warnings' })}
@@ -265,7 +280,7 @@
 				</div>
 			{/if}
 
-			<div>
+			<div id="spreadsheet-ingredients-preview">
 				<h3 class="mb-2 text-lg font-semibold">
 					{$_('add.spreadsheet.preview_title', { default: 'Ingredients to score' })}
 				</h3>

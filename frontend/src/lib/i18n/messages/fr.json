@@ -126,6 +126,8 @@
 			"parsing": "Parsing...",
 			"error_title": "Could not parse the spreadsheet",
 			"detection_title": "Detected table",
+			"details_show": "Voir les détails de la détection du tableau",
+			"details_hide": "Masquer les détails de la détection du tableau",
 			"separator": "Separator",
 			"separator_tab": "Tab",
 			"separator_comma": "Comma",

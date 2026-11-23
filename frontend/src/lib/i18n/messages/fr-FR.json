@@ -126,6 +126,8 @@
 			"parsing": "Analyse en cours...",
 			"error_title": "Impossible d'analyser le tableau",
 			"detection_title": "Tableau détecté",
+			"details_show": "Voir les détails de la détection du tableau",
+			"details_hide": "Masquer les détails de la détection du tableau",
 			"separator": "Séparateur",
 			"separator_tab": "Tabulation",
 			"separator_comma": "Virgule",
