@@ -5,7 +5,8 @@ Starts the **real** FastAPI application on a local port, with the
 OpenFoodFacts external dependency mocked so the suite is deterministic and
 runs fully offline:
 
-* ``parse_text`` — returns a recorded fixture (``data/parse_text_recipe.json``)
+* ``parse_text`` and ``parse_csv`` — return recorded fixtures
+  (``data/parse_text_recipe.json`` and ``data/parse_csv_recipe.json``)
   instead of calling the live OFF ingredient parser.
 * taxonomy fetchers — read from committed snapshots
   (``data/taxonomies/*.json``) via ``SCORE_MY_RECIPE_CACHE_DIR`` instead of
@@ -23,7 +24,7 @@ import json
 import os
 import sys
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 # ── Set environment BEFORE importing api modules ────────────────────────────
 # ``get_settings()`` is a singleton: the env vars must be set before the first
@@ -50,28 +51,41 @@ from api.api import app  # noqa: E402
 PORT = 8800
 
 
-def _load_parse_text_fixture() -> list[types.OFFIngredient]:
-    """Load the recorded parse_text response and build OFFIngredient objects.
+def _load_fixture(name: str) -> list[types.OFFIngredient]:
+    """Load a recorded OFF parse response and build OFFIngredient objects.
 
-    The fixture is a JSON array of raw ingredient dicts as returned by the OFF
+    Each fixture is a JSON array of raw ingredient dicts as returned by the OFF
     SDK's ``parse_ingredients``. We reconstruct ``OFFIngredient`` Pydantic
     models so the rest of the pipeline (``off_ingredient_to_recipe_ingredient``)
     runs for real.
     """
-    fixture_path = TESTS_DIR / "data" / "parse_text_recipe.json"
+    fixture_path = TESTS_DIR / "data" / name
     raw = json.loads(fixture_path.read_text(encoding="utf-8"))
     return [types.OFFIngredient(**item) for item in raw]
 
 
 def main() -> None:
-    """Patch OFF parse_text with the fixture and run uvicorn."""
-    ingredients = _load_parse_text_fixture()
+    """Patch OFF parse_text with the fixtures and run uvicorn."""
+    text_ingredients = _load_fixture("parse_text_recipe.json")
+    # The CSV fixture mirrors the text fixture's ingredients so both scenarios
+    # can share the pinned green-score grade. It is kept as a separate file so
+    # the CSV scenario can diverge when its recorded response needs to change.
+    csv_ingredients = _load_fixture("parse_csv_recipe.json")
 
-    # Patch the OFF parse_text call inside recipes.parse_text.
-    # The fixture is returned for any input text — this server is only used
-    # by the single-recipe integration test.
-    mock_parse = AsyncMock(return_value=ingredients)
-    patcher = patch("api.recipes.off.parse_text", mock_parse)
+    async def mock_parse(text: str, lang: str) -> list[types.OFFIngredient]:
+        """Return the fixture matching the caller.
+
+        ``parse_csv`` assembles rows joined by ``",\\n"``, while the text
+        recipe uses plain newlines. This is enough to route the two e2e
+        scenarios to their recorded responses without parsing the input.
+        """
+        if ",\n" in text:
+            return csv_ingredients
+        return text_ingredients
+
+    # Patch the OFF parse_text call inside recipes.parse_text, so both the
+    # text and spreadsheet e2e flows stay fully offline.
+    patcher = patch("api.recipes.off.parse_text", new=mock_parse)
     patcher.start()  # kept active for the server's lifetime
 
     uvicorn.run(app, host="127.0.0.1", port=PORT, log_level="warning")

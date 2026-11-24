@@ -1,4 +1,36 @@
 {
+	"csv": {
+		"errors": {
+			"empty": "Collez d'abord des données depuis un tableur.",
+			"too_large": "Les données collées sont trop volumineuses (maximum {max_bytes} octets et {max_rows} lignes).",
+			"too_many_rows": "Les données collées contiennent trop de lignes (maximum {max_rows}).",
+			"separator_not_detected": "Impossible de détecter le séparateur de colonnes. Copiez à nouveau le tableau depuis votre tableur.",
+			"invalid_csv": "Les données collées n'ont pas pu être lues comme un tableau.",
+			"no_rows": "Aucune ligne de données n'a été trouvée.",
+			"no_data_rows": "Les données collées ne contiennent qu'une ligne d'en-tête.",
+			"no_quantity_rows": "Aucune ligne ne contient de quantité.",
+			"no_quantity_column": "Aucune colonne ne contient de quantités. Au moins une colonne de quantités numériques est nécessaire.",
+			"no_ingredient_column": "Aucune colonne ne ressemble à une colonne d'ingrédients.",
+			"no_valid_rows": "Aucune ligne d'ingrédient utilisable n'a été trouvée après application des colonnes détectées.",
+			"no_ingredients_parsed": "L'analyseur d'ingrédients n'a reconnu aucun ingrédient dans les données collées."
+		},
+		"warnings": {
+			"rows_without_number": "Les lignes sans quantité numérique ont été ignorées : {rows}.",
+			"rows_missing_quantity": "Les lignes sans valeur dans la colonne de quantité ont été ignorées : {rows}.",
+			"rows_missing_ingredient": "Les lignes sans nom d'ingrédient ont été ignorées : {rows}.",
+			"ragged_rows": "Certaines lignes n'ont pas le même nombre de colonnes : {rows}.",
+			"ambiguous_columns": "Certaines colonnes correspondaient également à plusieurs rôles et n'ont pas été attribuées : {columns}.",
+			"duplicate_ingredient_columns": "Les colonnes d'ingrédients supplémentaires ont été ignorées : {columns}.",
+			"duplicate_quantity_columns": "Les colonnes de quantités supplémentaires ont été ignorées : {columns}.",
+			"duplicate_unit_columns": "Les colonnes d'unités supplémentaires ont été ignorées : {columns}.",
+			"duplicate_origin_columns": "Les colonnes d'origines supplémentaires ont été ignorées : {columns}.",
+			"ingredient_fallback_taxonomy": "Aucune colonne d'ingrédients évidente n'a été trouvée ; la colonne {column} est utilisée d'après les correspondances d'ingrédients.",
+			"ingredient_fallback_shape": "Aucun nom d'ingrédient ne correspond à la taxonomie ; la colonne {column} est utilisée d'après la forme de son texte.",
+			"multiple_origins": "Plusieurs origines ont été trouvées ; seule la première origine a été conservée pour les lignes : {rows}.",
+			"extra_ingredients": "L'analyseur a renvoyé {count} ingrédients de plus que de lignes ; les résultats supplémentaires ont été ignorés.",
+			"missing_ingredients": "L'analyseur n'a renvoyé aucun résultat pour {count} lignes : {rows}."
+		}
+	},
 	"notes": {
 		"dropped_origins": "Origines ignorées car les origines multiples ne sont pas prises en charge : {origins}",
 		"label_restricted": "Le bonus du label {label_id} ne s'applique pas à l'ingrédient {ingredient_id}",

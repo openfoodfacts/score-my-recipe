@@ -58,6 +58,29 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	'/v1/parse_csv': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Parse Csv
+		 * @description Parse a recipe pasted from a spreadsheet.
+		 *
+		 *     The separator, header row and column roles are auto-detected. The response
+		 *     has the same ingredient shape as ``/v1/parse_text`` plus a detection report.
+		 */
+		post: operations['parse_csv_v1_parse_csv_post'];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	'/v1/origins': {
 		parameters: {
 			query?: never;
@@ -316,6 +339,102 @@ export interface components {
 			 * @description ISO 3166-1 alpha-2 country code
 			 */
 			country_code?: string | null;
+		};
+		/**
+		 * CsvColumn
+		 * @description One column detected in pasted spreadsheet data.
+		 * @example {
+		 *       "confidence": 0.9,
+		 *       "header": "Ingredient",
+		 *       "index": 0,
+		 *       "role": "ingredient"
+		 *     }
+		 * @example {
+		 *       "confidence": 1,
+		 *       "header": "Qty",
+		 *       "index": 1,
+		 *       "role": "quantity"
+		 *     }
+		 * @example {
+		 *       "index": 2
+		 *     }
+		 */
+		CsvColumn: {
+			/**
+			 * Index
+			 * @description Zero-based column index
+			 */
+			index: number;
+			/**
+			 * Header
+			 * @description Header cell value, null when the table has no header
+			 */
+			header?: string | null;
+			/** @description Detected role, null when the column was left unassigned */
+			role?: components['schemas']['CsvColumnRole'] | null;
+			/**
+			 * Confidence
+			 * @description Fraction of sampled values matching the detected role
+			 */
+			confidence?: number | null;
+		};
+		/**
+		 * CsvColumnRole
+		 * @description Role inferred for a pasted spreadsheet column.
+		 * @enum {string}
+		 */
+		CsvColumnRole: 'ingredient' | 'quantity' | 'unit' | 'origin' | 'labels';
+		/**
+		 * CsvDetection
+		 * @description Detection report returned alongside parsed CSV ingredients.
+		 * @example {
+		 *       "columns": [
+		 *         {
+		 *           "confidence": 0.9,
+		 *           "header": "Ingredient",
+		 *           "index": 0,
+		 *           "role": "ingredient"
+		 *         }
+		 *       ],
+		 *       "has_header": true,
+		 *       "row_count": 12,
+		 *       "sample_size": 10,
+		 *       "separator": "\t",
+		 *       "warnings": []
+		 *     }
+		 */
+		CsvDetection: {
+			/**
+			 * Separator
+			 * @description Detected column separator character
+			 */
+			separator: string;
+			/**
+			 * Has Header
+			 * @description Whether the first non-empty row was treated as a header
+			 */
+			has_header: boolean;
+			/**
+			 * Row Count
+			 * @description Number of non-empty data rows
+			 */
+			row_count: number;
+			/**
+			 * Sample Size
+			 * @description Number of valid data rows used to detect column roles
+			 */
+			sample_size: number;
+			/**
+			 * Columns
+			 * @description Detected columns, in order
+			 */
+			columns: components['schemas']['CsvColumn'][];
+			/**
+			 * Warnings
+			 * @description Non-fatal detection warnings, translated in the request language
+			 * @default []
+			 */
+			warnings: components['schemas']['Note'][];
 		};
 		/**
 		 * GreenScoreRequest
@@ -760,6 +879,61 @@ export interface components {
 			origin?: components['schemas']['TaxonomyItem'] | null;
 		};
 		/**
+		 * RecipeParseCsvRequest
+		 * @description Request model for parse_csv endpoint.
+		 * @example {
+		 *       "lang": "en",
+		 *       "text": "Ingredient\tQuantity\tUnit\napple\t150\tg\nflour\t200\tg"
+		 *     }
+		 */
+		RecipeParseCsvRequest: {
+			/**
+			 * Lang
+			 * @description Language for the request (2 or 5 letter code)
+			 */
+			lang: string;
+			/**
+			 * Text
+			 * @description Pasted spreadsheet data
+			 */
+			text: string;
+		};
+		/**
+		 * RecipeParseCsvResponse
+		 * @description Response model for the parse_csv endpoint.
+		 * @example {
+		 *       "detection": {
+		 *         "columns": [
+		 *           {
+		 *             "confidence": 1,
+		 *             "header": "Ingredient",
+		 *             "index": 0,
+		 *             "role": "ingredient"
+		 *           }
+		 *         ],
+		 *         "has_header": true,
+		 *         "row_count": 1,
+		 *         "sample_size": 1,
+		 *         "separator": "\t",
+		 *         "warnings": []
+		 *       },
+		 *       "ingredients": [
+		 *         {
+		 *           "codified_ingredient": "apple",
+		 *           "is_in_taxonomy": true,
+		 *           "quantity_g": 150,
+		 *           "taxonomy_id": "en:apple"
+		 *         }
+		 *       ]
+		 *     }
+		 */
+		RecipeParseCsvResponse: {
+			/** Ingredients */
+			ingredients: components['schemas']['RecipeIngredient'][];
+			/** @description CSV detection report */
+			detection: components['schemas']['CsvDetection'];
+		};
+		/**
 		 * RecipeParseRequest
 		 * @description Request model for parse_text endpoint
 		 * @example {
@@ -1062,6 +1236,39 @@ export interface operations {
 				};
 				content: {
 					'application/json': components['schemas']['RecipeParseResponse'];
+				};
+			};
+			/** @description Validation Error */
+			422: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					'application/json': components['schemas']['HTTPValidationError'];
+				};
+			};
+		};
+	};
+	parse_csv_v1_parse_csv_post: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				'application/json': components['schemas']['RecipeParseCsvRequest'];
+			};
+		};
+		responses: {
+			/** @description Successful Response */
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					'application/json': components['schemas']['RecipeParseCsvResponse'];
 				};
 			};
 			/** @description Validation Error */

@@ -51,6 +51,7 @@ tests/                # tests (using pytest)
 ├── data/             # fixtures for integration tests
 │   ├── taxonomies/   # pinned OFF taxonomy snapshots (offline-safe)
 │   ├── parse_text_recipe.json  # recorded parse_text response
+│   ├── parse_csv_recipe.json   # recorded parse_csv response
 │   ├── update_taxonomies.sh    # refresh taxonomy snapshots (network)
 │   └── capture_parse_text.py   # re-capture parse_text fixture (network)
 └── integration_server.py       # e2e backend entrypoint (OFF mocked)

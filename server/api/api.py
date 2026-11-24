@@ -17,6 +17,7 @@ from fastapi.responses import JSONResponse
 
 import api.api_i18n as api_i18n
 import api.exceptions as exceptions
+import api.i18n as i18n
 import api.logging_config as logging_config
 import api.recipes as recipes
 import api.score as score
@@ -107,6 +108,24 @@ async def parse_text(request: types.RecipeParseRequest) -> types.RecipeParseResp
     ingredients = await recipes.parse_text(request.text, request.lang)
     api_i18n.translate_ingredients(ingredients, request.lang)
     return types.RecipeParseResponse(ingredients=ingredients)
+
+
+@app.post("/v1/parse_csv")
+@types.async_validate_model
+async def parse_csv(request: types.RecipeParseCsvRequest) -> types.RecipeParseCsvResponse:
+    """Parse a recipe pasted from a spreadsheet.
+
+    The separator, header row and column roles are auto-detected. The response
+    has the same ingredient shape as ``/v1/parse_text`` plus a detection report.
+    """
+    try:
+        response = await recipes.parse_csv(request.text, request.lang)
+    except exceptions.CsvParseError as exc:
+        _, message = i18n.translate(exc.message_id, exc.params, request.lang)
+        raise HTTPException(status_code=422, detail=message)
+    api_i18n.translate_ingredients(response.ingredients, request.lang)
+    api_i18n.translate_notes(response.detection.warnings, request.lang)
+    return response
 
 
 @app.get("/v1/origins", response_model_exclude_none=True)
