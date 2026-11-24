@@ -7,12 +7,27 @@ The frontend translates all user-facing strings with
 
 - Setup: [`frontend/src/lib/i18n/index.ts`](../frontend/src/lib/i18n/index.ts)
   registers every locale and re-exports the `_` store.
-- Messages: one JSON file per locale in
+- Messages: one JSON file per **language** in
   [`frontend/src/lib/i18n/messages/`](../frontend/src/lib/i18n/messages/),
-  e.g. `en-US.json`, `fr-FR.json`. `en-US.json` is the reference source file.
+  e.g. `en-US.json`, `fr.json`, `nl.json`. `en-US.json` is the reference source file.
+  [`messages/index.ts`](../frontend/src/lib/i18n/messages/index.ts) lists which files exist;
+  it is the only place to touch when adding a language.
 - Keys are nested objects, looked up with dot notation: `navbar.score_recipe`.
 - In components: `{$_('navbar.score_recipe', { default: 'Score a recipe' })}`.
   Always keep the `default` fallback (see `frontend/AGENTS.md`).
+
+## One file per language, not per country
+
+Translations are stored once per language (`fr.json`, `nl.json`…).
+A regional code such as `fr-FR` or `nl-BE` loads the file of its language:
+`messagesFileFor` in `index.ts` strips the country part.
+This matters because svelte-i18n resolves `fr-FR` as `fr-FR` → `fr` → `en-US`:
+a `fr.json` next to a `fr-FR.json` would silently act as an override layer,
+and the two files would drift apart with no way to tell which one is authoritative.
+
+Adding a language-specific exception later is still possible:
+put the few differing keys in a regional file and register it in `messages/index.ts`
+instead of adding a whole new language file.
 
 ## Locale files are partial, missing keys fall back to `en-US`
 
@@ -125,7 +140,7 @@ Translation files are loaded lazily; set `SCORE_MY_RECIPE_WARMUP=fr,en` to load 
 
 Actual translations are written by the community on the Open Food Facts Crowdin project (<https://translate.openfoodfacts.org>).
 The mapping between the Crowdin project and the files above is configured in [`crowdin.yml`](../crowdin.yml):
-`en-US.json` is the source, and each language is written to `frontend/src/lib/i18n/messages/<locale>.json`.
+`en-US.json` is the source, and each language is written to `frontend/src/lib/i18n/messages/<language>.json`, with the `languages_mapping` collapsing country variants onto the language file (`fr` → `fr.json`, `nl` → `nl.json`…).
 A second entry covers the backend: `server/i18n/en-US.json` is the source, and each language is written to `server/i18n/<locale>.json`, with the same `languages_mapping`.
 That mapping is duplicated as `LOCALE_MAPPING` in `server/api/i18n.py`, and a test guards that both stay identical.
 
