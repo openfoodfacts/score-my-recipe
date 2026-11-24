@@ -1,5 +1,10 @@
 project_id_env: CROWDIN_PROJECT_ID
 api_token_env: CROWDIN_PERSONAL_TOKEN
+# Only pull translated strings, so locale files stay partial
+# and untranslated keys fall back to en-US at runtime (see docs/explain_i18n.md).
+skip_untranslated_strings: true
+json:
+  preserve_keys_with_empty_values: false
 pull_request_body: '### What\n- Automated pull request pulling in new or updated translations from Crowdin (https://translate.openfoodfacts.org).\n## Checklist\n- [ ] Check that they are no bad translations. If there are, correct them directly in Crowdin so that they are not resynced again. Then you can correct them here as well, or wait 24 hours for the sync to happen automatically.\n- [ ] Put extra attention on Acholi, which is used mistakenly as a sandbox by people discovering the self-service translation button on Open Food Facts\n- [ ] Once you are happy, that automated checks pass, you can approve the PR and merge it.\n### Part of\n- Translations'
 pull_request_title: 'l10n: New Crowdin translations to review and merge'
 files:

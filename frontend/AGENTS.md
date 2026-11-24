@@ -26,15 +26,15 @@ source it: `cd frontend; . ./local-nvm.sh` before using `pnpm commands`
 
 ## Key Commands
 
-| Command          | Purpose                                         | Approx. time       |
-| ---------------- | ----------------------------------------------- | ------------------ |
-| `pnpm dev`       | Start dev server at <http://localhost:5173>     | ~3s (runs forever) |
-| `pnpm build`     | Production build                                | ~20s               |
-| `pnpm check`     | TypeScript + Svelte type check                  | ~10s               |
-| `pnpm lint`      | Prettier + ESLint                               | ~15s               |
-| `pnpm format`    | Auto-format all files                           | ~5s                |
-| `pnpm i18ncheck` | check translation files                         | ~5s                |
-| `pnpm i18nsync`  | add missing translations in secondary languages | ~5s                |
+| Command          | Purpose                                        | Approx. time       |
+| ---------------- | ---------------------------------------------- | ------------------ |
+| `pnpm dev`       | Start dev server at <http://localhost:5173>    | ~3s (runs forever) |
+| `pnpm build`     | Production build                               | ~20s               |
+| `pnpm check`     | TypeScript + Svelte type check                 | ~10s               |
+| `pnpm lint`      | Prettier + ESLint                              | ~15s               |
+| `pnpm format`    | Auto-format all files                          | ~5s                |
+| `pnpm i18ncheck` | check translation files                        | ~5s                |
+| `pnpm i18nsync`  | prune stale / untranslated translation entries | ~5s                |
 
 > External API calls to OpenFoodFacts will fail in sandboxed environments — this is expected. Focus on UI and code correctness.
 
@@ -95,6 +95,10 @@ We try to use the frameworks at their best to have easy to read, semantic code.
 - **All user-facing strings must go through svelte-i18n.**
 - Always provide a `default` fallback: `$_('some.key', { default: 'Fallback text' })`.
 - Add new keys to `src/lib/i18n/messages/en-US.json` first.
+- Locale files are **partial**: only add a key to another locale file once it is really translated.
+  A missing key falls back to `en-US` at runtime (see [explain_i18n.md](../docs/explain_i18n.md)),
+  so adding a label only touches `en-US.json`.
+  Never copy the English value into another locale to "complete" it: `pnpm i18nsync` removes such leftovers.
 
 ---
 

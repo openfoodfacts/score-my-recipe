@@ -1,9 +1,35 @@
+/**
+ * @fileoverview Translation file maintenance: check and sync.
+ *
+ * Locale files may be **partial**: they only need the keys that were actually
+ * translated. A key missing from a locale file is resolved at runtime from the
+ * reference locale (`en-US.json`) by svelte-i18n, because `fallbackLocale` is
+ * set in `src/lib/i18n/index.ts`.
+ * So a missing key is normal and never an error;
+ * what must be avoided is a key that no longer exists in the reference (dead key)
+ * or a translation whose placeholders do not match the reference.
+ *
+ * Modes:
+ * - `--check` reports extra keys and placeholder mismatches (exit code 1 on error),
+ *   and prints the translation coverage of each locale.
+ * - `--sync` prunes keys that were removed from the reference,
+ *   and drops leaves that are identical to the reference (untranslated leftovers).
+ *   It never copies reference values into a target file.
+ */
 import fs from 'node:fs';
 import path from 'node:path';
 
 const MESSAGES_DIR = path.join(process.cwd(), 'src/lib/i18n/messages');
 
-// Parse command line arguments
+/**
+ * A translated leaf, flattened to a dot-notation key.
+ * `placeholders` lists the ICU parameters (`{name}`, `{count, number}`…) found in the value.
+ */
+type Leaf = { value: string; placeholders: string[] };
+
+type FlatMessages = Record<string, Leaf>;
+
+/** Parse command line arguments. */
 function parseArgs(): { ref: string; mode: 'sync' | 'check' } {
 	const args = process.argv.slice(2);
 	let ref = 'en-US.json';
@@ -24,15 +50,12 @@ function parseArgs(): { ref: string; mode: 'sync' | 'check' } {
 }
 
 /**
- * Recursively flattens a nested JSON object into a dot-notation key structure.
- * Also extracts placeholder information.
- * Example: { navbar: { title: "Hello {name}" } } -> { "navbar.title": { value: "Hello {name}", placeholders: ["{name}"] } }
+ * Recursively flattens a nested JSON object into dot-notation keys.
+ * Example: { navbar: { title: "Hello {name}" } }
+ *       -> { "navbar.title": { value: "Hello {name}", placeholders: ["{name}"] } }
  */
-function flattenObject(
-	obj: Record<string, unknown>,
-	prefix = ''
-): Record<string, { value: string; placeholders: string[] }> {
-	const result: Record<string, { value: string; placeholders: string[] }> = {};
+function flattenObject(obj: Record<string, unknown>, prefix = ''): FlatMessages {
+	const result: FlatMessages = {};
 
 	for (const [key, value] of Object.entries(obj)) {
 		const newKey = prefix ? `${prefix}.${key}` : key;
@@ -41,28 +64,20 @@ function flattenObject(
 			Object.assign(result, flattenObject(value as Record<string, unknown>, newKey));
 		} else {
 			const strValue = String(value);
-			const placeholders = extractPlaceholders(strValue);
-			result[newKey] = { value: strValue, placeholders };
+			result[newKey] = { value: strValue, placeholders: extractPlaceholders(strValue) };
 		}
 	}
 
 	return result;
 }
 
-/**
- * Extracts placeholders from a string (e.g., {name}, {count}, etc.)
- */
+/** Extracts ICU placeholders from a string (e.g. `{name}` in "Hello {name}"). */
 function extractPlaceholders(str: string): string[] {
-	const matches = str.match(/\{[^}]+\}/g) || [];
-	return matches;
+	return str.match(/\{[^}]+\}/g) || [];
 }
 
-/**
- * Recursively expands a flat dot-notation object back into a nested structure.
- */
-function unflattenObject(
-	flat: Record<string, { value: string; placeholders: string[] }>
-): Record<string, unknown> {
+/** Recursively expands a flat dot-notation object back into a nested structure. */
+function unflattenObject(flat: FlatMessages): Record<string, unknown> {
 	const result: Record<string, unknown> = {};
 
 	for (const [key, { value }] of Object.entries(flat)) {
@@ -83,217 +98,182 @@ function unflattenObject(
 	return result;
 }
 
-/**
- * Synchronizes a target translation file with the reference.
- * - Adds missing keys from reference (with English value)
- * - Removes keys that don't exist in reference
- * - Preserves existing translations for common keys
- */
-function syncTranslationFile(
-	reference: Record<string, { value: string; placeholders: string[] }>,
-	target: Record<string, { value: string; placeholders: string[] }>
-): Record<string, { value: string; placeholders: string[] }> {
-	const result: Record<string, { value: string; placeholders: string[] }> = {};
+/** Load and flatten one message file. */
+function loadFlat(filePath: string): FlatMessages {
+	return flattenObject(JSON.parse(fs.readFileSync(filePath, 'utf-8')));
+}
 
-	// Add keys from reference (use English value if missing in target)
-	for (const [key, refData] of Object.entries(reference)) {
-		if (key in target) {
-			// Keep existing translation
-			result[key] = target[key];
-		} else {
-			// Add missing key with English translation
-			result[key] = refData;
-		}
-	}
-
-	return result;
+/** All locale file names, reference included. */
+function listFiles(): string[] {
+	return fs.readdirSync(MESSAGES_DIR).filter((f) => f.endsWith('.json'));
 }
 
 /**
- * Checks for differences between reference and target files.
- * Returns an object with missing keys, extra keys, and placeholder mismatches.
+ * Keys of `target` that do not exist in `reference`.
+ * They are dead keys: nothing can request them any more, so they only add noise.
  */
-function checkTranslationFile(
-	reference: Record<string, { value: string; placeholders: string[] }>,
-	target: Record<string, { value: string; placeholders: string[] }>
-): { missing: string[]; extra: string[]; placeholderMismatches: string[] } {
-	const missing: string[] = [];
-	const extra: string[] = [];
-	const placeholderMismatches: string[] = [];
+function findExtraKeys(reference: FlatMessages, target: FlatMessages): string[] {
+	return Object.keys(target).filter((key) => !(key in reference));
+}
 
-	// Check for missing keys
-	for (const key of Object.keys(reference)) {
-		if (!(key in target)) {
-			missing.push(key);
-		}
-	}
+/**
+ * Translated keys whose placeholders differ from the reference.
+ * A mismatch breaks the message formatting at runtime,
+ * so it is an error even though the key exists.
+ */
+function findPlaceholderMismatches(reference: FlatMessages, target: FlatMessages): string[] {
+	const mismatches: string[] = [];
 
-	// Check for extra keys
 	for (const key of Object.keys(target)) {
-		if (!(key in reference)) {
-			extra.push(key);
+		if (!(key in reference)) continue;
+		const expected = reference[key].placeholders;
+		const got = target[key].placeholders;
+		if (expected.length !== got.length || !expected.every((p) => got.includes(p))) {
+			mismatches.push(`${key}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(got)}`);
 		}
 	}
 
-	// Check for placeholder mismatches
-	for (const key of Object.keys(reference)) {
-		if (key in target) {
-			const refPlaceholders = reference[key].placeholders;
-			const targetPlaceholders = target[key].placeholders;
-
-			if (
-				refPlaceholders.length !== targetPlaceholders.length ||
-				!refPlaceholders.every((p) => targetPlaceholders.includes(p))
-			) {
-				placeholderMismatches.push(
-					`${key}: expected ${JSON.stringify(refPlaceholders)}, got ${JSON.stringify(targetPlaceholders)}`
-				);
-			}
-		}
-	}
-
-	return { missing, extra, placeholderMismatches };
+	return mismatches;
 }
 
-function sync(ref: string) {
-	console.log('🔄 Starting i18n sync...\n');
+/**
+ * Leaves of `target` that carry the reference English text instead of a translation.
+ * Those are leftovers copied by the old full-file sync,
+ * including near-duplicates that only differ by punctuation or spacing
+ * (e.g. "computation(computed)" against "computation (computed)"),
+ * so the comparison ignores whitespace and punctuation.
+ * They can be removed so that the fallback does the job instead.
+ */
+function findUntranslatedLeaves(reference: FlatMessages, target: FlatMessages): string[] {
+	return Object.keys(target).filter(
+		(key) =>
+			key in reference &&
+			normalizeForComparison(target[key].value) === normalizeForComparison(reference[key].value)
+	);
+}
 
-	// Read reference file
+/** Lowercase, drop spaces and punctuation, for comparing an English leftover with the reference. */
+function normalizeForComparison(value: string): string {
+	return value.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
+}
+
+/** Print up to `limit` items of a list, then an ellipsis summary. */
+function printLimited(items: string[], limit = 5) {
+	for (const item of items.slice(0, limit)) {
+		console.log(`      - ${item}`);
+	}
+	if (items.length > limit) {
+		console.log(`      ... and ${items.length - limit} more`);
+	}
+}
+
+/** Percentage of reference keys translated in `target`. */
+function coverage(reference: FlatMessages, target: FlatMessages): number {
+	const refKeys = Object.keys(reference);
+	if (refKeys.length === 0) return 100;
+	const translated = refKeys.filter((key) => key in target).length;
+	return Math.round((translated / refKeys.length) * 100);
+}
+
+function check(ref: string) {
+	console.log('🔍 Starting i18n check...\n');
+
 	const referencePath = path.join(MESSAGES_DIR, ref);
 	if (!fs.existsSync(referencePath)) {
 		console.error(`❌ Reference file not found: ${ref}`);
 		process.exit(1);
 	}
 
-	const referenceContent = fs.readFileSync(referencePath, 'utf-8');
-	const referenceData = JSON.parse(referenceContent);
-	const referenceFlat = flattenObject(referenceData);
-
+	const referenceFlat = loadFlat(referencePath);
 	console.log(`📚 Reference locale: ${ref}`);
 	console.log(`   Keys found: ${Object.keys(referenceFlat).length}\n`);
 
-	// Get all JSON files in messages directory
-	const files = fs.readdirSync(MESSAGES_DIR).filter((f) => f.endsWith('.json'));
+	let errorCount = 0;
+
+	for (const file of listFiles()) {
+		if (file === ref) continue;
+
+		const targetFlat = loadFlat(path.join(MESSAGES_DIR, file));
+		const extra = findExtraKeys(referenceFlat, targetFlat);
+		const mismatches = findPlaceholderMismatches(referenceFlat, targetFlat);
+
+		console.log(`\n📄 Checking: ${file} (${coverage(referenceFlat, targetFlat)}% translated)`);
+
+		if (extra.length === 0 && mismatches.length === 0) {
+			console.log(`   ✅ OK! (${Object.keys(targetFlat).length} keys)`);
+			continue;
+		}
+
+		errorCount += extra.length + mismatches.length;
+
+		if (extra.length > 0) {
+			// A dead key is either a leftover or a typo: `pnpm i18nsync` prunes it.
+			console.log(`   ⚠️  Keys not in the reference (${extra.length}), run pnpm i18nsync:`);
+			printLimited(extra);
+		}
+		if (mismatches.length > 0) {
+			console.log(`   🔤 Placeholder mismatches (${mismatches.length}):`);
+			printLimited(mismatches);
+		}
+	}
+
+	if (errorCount === 0) {
+		console.log(`\n✨ Done! All translation files are valid.`);
+	} else {
+		console.log(`\n⚠️  Done! Found ${errorCount} issue(s).`);
+		process.exit(1);
+	}
+}
+
+function sync(ref: string) {
+	console.log('🔄 Starting i18n sync...\n');
+
+	const referencePath = path.join(MESSAGES_DIR, ref);
+	if (!fs.existsSync(referencePath)) {
+		console.error(`❌ Reference file not found: ${ref}`);
+		process.exit(1);
+	}
+
+	const referenceFlat = loadFlat(referencePath);
+	console.log(`📚 Reference locale: ${ref}`);
+	console.log(`   Keys found: ${Object.keys(referenceFlat).length}\n`);
 
 	let syncedCount = 0;
 
-	for (const file of files) {
-		// Skip reference file
+	for (const file of listFiles()) {
 		if (file === ref) continue;
 
 		const filePath = path.join(MESSAGES_DIR, file);
-		const targetContent = fs.readFileSync(filePath, 'utf-8');
-		const targetData = JSON.parse(targetContent);
-		const targetFlat = flattenObject(targetData);
+		const targetFlat = loadFlat(filePath);
+		const extra = new Set(findExtraKeys(referenceFlat, targetFlat));
+		const untranslated = new Set(findUntranslatedLeaves(referenceFlat, targetFlat));
 
-		console.log(`\n📄 Processing: ${file}`);
-		console.log(`   Current keys: ${Object.keys(targetFlat).length}`);
+		const keptFlat: FlatMessages = {};
+		for (const [key, leaf] of Object.entries(targetFlat)) {
+			if (extra.has(key) || untranslated.has(key)) continue;
+			keptFlat[key] = leaf;
+		}
 
-		// Sync translations
-		const syncedFlat = syncTranslationFile(referenceFlat, targetFlat);
-		const syncedData = unflattenObject(syncedFlat);
+		if (extra.size === 0 && untranslated.size === 0) {
+			console.log(`\n📄 ${file}: ✅ already clean (${Object.keys(keptFlat).length} keys)`);
+			continue;
+		}
 
-		// Write back to file with pretty formatting
-		fs.writeFileSync(filePath, JSON.stringify(syncedData, null, 2) + '\n', 'utf-8');
-
-		const addedKeys = Object.keys(referenceFlat).filter((k) => !(k in targetFlat)).length;
-		const removedKeys = Object.keys(targetFlat).filter((k) => !(k in referenceFlat)).length;
-
+		console.log(`\n📄 ${file}`);
+		if (extra.size > 0)
+			console.log(`   🗑️  Removed ${extra.size} key(s) missing from the reference`);
+		if (untranslated.size > 0)
+			console.log(`   🗑️  Removed ${untranslated.size} untranslated key(s)`);
+		const keptData = unflattenObject(keptFlat);
+		fs.writeFileSync(filePath, JSON.stringify(keptData, null, '\t') + '\n', 'utf-8');
 		console.log(
-			`   ✅ Synced! Added: ${addedKeys}, Removed: ${removedKeys}, Total: ${Object.keys(syncedFlat).length}`
+			`   ✅ Kept ${Object.keys(keptFlat).length} key(s) (${coverage(referenceFlat, keptFlat)}% translated)`
 		);
 
 		syncedCount++;
 	}
 
 	console.log(`\n✨ Done! Synced ${syncedCount} translation file(s).`);
-}
-
-function check(ref: string) {
-	console.log('🔍 Starting i18n check...\n');
-
-	// Read reference file
-	const referencePath = path.join(MESSAGES_DIR, ref);
-	if (!fs.existsSync(referencePath)) {
-		console.error(`❌ Reference file not found: ${ref}`);
-		process.exit(1);
-	}
-
-	const referenceContent = fs.readFileSync(referencePath, 'utf-8');
-	const referenceData = JSON.parse(referenceContent);
-	const referenceFlat = flattenObject(referenceData);
-
-	console.log(`📚 Reference locale: ${ref}`);
-	console.log(`   Keys found: ${Object.keys(referenceFlat).length}\n`);
-
-	// Get all JSON files in messages directory
-	const files = fs.readdirSync(MESSAGES_DIR).filter((f) => f.endsWith('.json'));
-
-	let totalIssues = 0;
-	let checkedCount = 0;
-
-	for (const file of files) {
-		// Skip reference file
-		if (file === ref) continue;
-
-		const filePath = path.join(MESSAGES_DIR, file);
-		const targetContent = fs.readFileSync(filePath, 'utf-8');
-		const targetData = JSON.parse(targetContent);
-		const targetFlat = flattenObject(targetData);
-
-		console.log(`\n📄 Checking: ${file}`);
-
-		const issues = checkTranslationFile(referenceFlat, targetFlat);
-
-		if (
-			issues.missing.length === 0 &&
-			issues.extra.length === 0 &&
-			issues.placeholderMismatches.length === 0
-		) {
-			console.log(`   ✅ OK! (${Object.keys(targetFlat).length} keys)`);
-		} else {
-			checkedCount++;
-			totalIssues +=
-				issues.missing.length + issues.extra.length + issues.placeholderMismatches.length;
-
-			if (issues.missing.length > 0) {
-				console.log(`   ❌ Missing keys (${issues.missing.length}):`);
-				for (const key of issues.missing.slice(0, 5)) {
-					console.log(`      - ${key}`);
-				}
-				if (issues.missing.length > 5) {
-					console.log(`      ... and ${issues.missing.length - 5} more`);
-				}
-			}
-
-			if (issues.extra.length > 0) {
-				console.log(`   ⚠️  Extra keys (${issues.extra.length}):`);
-				for (const key of issues.extra.slice(0, 5)) {
-					console.log(`      - ${key}`);
-				}
-				if (issues.extra.length > 5) {
-					console.log(`      ... and ${issues.extra.length - 5} more`);
-				}
-			}
-
-			if (issues.placeholderMismatches.length > 0) {
-				console.log(`   🔤 Placeholder mismatches (${issues.placeholderMismatches.length}):`);
-				for (const mismatch of issues.placeholderMismatches.slice(0, 5)) {
-					console.log(`      - ${mismatch}`);
-				}
-				if (issues.placeholderMismatches.length > 5) {
-					console.log(`      ... and ${issues.placeholderMismatches.length - 5} more`);
-				}
-			}
-		}
-	}
-
-	if (totalIssues === 0) {
-		console.log(`\n✨ Done! All translation files are valid.`);
-	} else {
-		console.log(`\n⚠️  Done! Found ${totalIssues} issue(s) in ${checkedCount} file(s).`);
-		process.exit(1);
-	}
 }
 
 function main() {

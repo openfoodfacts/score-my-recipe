@@ -3,7 +3,6 @@
 		"for_the_recipes": "Per a les receptes",
 		"score_recipe": "Puntuar una recepta",
 		"join_community": "Uneix-te a la comunitat",
-		"open_food_facts": "Open Food Facts",
 		"methodology": "Quant al Green-Score"
 	},
 	"footer": {
@@ -14,18 +13,13 @@
 		"tagline_break": "d'arreu del món.",
 		"decorative_alt": "Un gràfic decoratiu",
 		"social": {
-			"x": "X (abans Twitter)",
-			"instagram": "Instagram",
-			"github": "GitHub",
-			"facebook": "Facebook",
-			"slack": "Slack"
+			"x": "X (abans Twitter)"
 		},
 		"links": {
 			"newsletter": "Butlletí de notícies",
 			"forum": "Fòrum",
 			"producers": "Plataforma de productors",
 			"translate": "Traduir",
-			"github": "GitHub",
 			"data_api_sdks": "Dades, API, SDK",
 			"wiki": "Viqui",
 			"legal": "Avís legal",
@@ -34,7 +28,6 @@
 		},
 		"discover": {
 			"who_we_are": "Qui som",
-			"blog": "Blog",
 			"code_of_conduct": "Codi de conducta",
 			"vision_mission_values_and_programs": "Visió, Missió, Valors i Programes",
 			"partners": "Col·laboradors",
@@ -48,9 +41,6 @@
 		"ingredient_name": "Nom de l'ingredient",
 		"ingredient_name_placeholder": "ex. Tomàquet",
 		"weight": "Pes (g)",
-		"quantity": "Quantity",
-		"unit": "Unit",
-		"grams": "Grams",
 		"codified_ingredient": "Codificat",
 		"labels": "Segells i etiquetes",
 		"seasonality": "De temporada",
@@ -63,7 +53,6 @@
 		"action": "Acció",
 		"summary": "Resum",
 		"ingredients_count": "ingredient(s) afegit(s)",
-		"green_score": "Green-Score",
 		"computing": "Calculant puntuació...",
 		"numeric_score": "Puntuació",
 		"ignored_ingredients": "ingredient(s) ignorat(s)",
@@ -75,14 +64,9 @@
 		"country_load_error": "No s'han pogut carregar els països",
 		"ingredient_not_accounted": "No comptabilitzat",
 		"ingredient_not_accounted_tooltip": "No hem trobat correspondència a la nostra base de dades d'impacte per a aquest ingredient",
-		"ingredient_zero_quantity": "Zero quantity",
-		"ingredient_zero_quantity_tooltip": "This ingredient's quantity is 0g, so it cannot be taken into account in the calculation.",
-		"ingredient_conversion_error": "Conversion error",
-		"ingredient_conversion_error_tooltip": "The quantity could not be converted to grams for this unit. Try a different unit or quantity.",
 		"ingredient_scorable": "Aquest ingredient es pot comptabilitzar al Green-Score"
 	},
 	"homepage": {
-		"title": "Score My Recipe - Open Food Facts",
 		"badge": "L'eina de codi obert per a l'avaluació ambiental de receptes",
 		"hero_title": "Calcula l'impacte ambiental de les teves receptes",
 		"hero_title_highlight": "en temps real.",
@@ -108,57 +92,9 @@
 		"score_button": "Puntuar la recepta",
 		"loading": "Calculant...",
 		"result_title": "Ingredients detectats",
-		"table_ingredient": "Ingredient",
 		"table_taxonomy": "A la taxonomia",
 		"table_quantity": "Quantitat (g)",
-		"yes": "Sí",
-		"no": "No",
-		"tabs": {
-			"label": "Recipe input mode",
-			"text": "Text",
-			"spreadsheet": "Spreadsheet"
-		},
-		"spreadsheet": {
-			"intro": "Paste a table copied from your spreadsheet. The separator, header row and column roles are detected automatically.",
-			"label": "Pasted table",
-			"placeholder": "Paste your table here...\n\nExample:\nIngredient\tQuantity\tUnit\tOrigin\tLabels\nApple\t150\tg\tFrance\tOrganic",
-			"parse_button": "Parse spreadsheet",
-			"parsing": "Parsing...",
-			"error_title": "Could not parse the spreadsheet",
-			"detection_title": "Detected table",
-			"details_show": "See table detection details",
-			"details_hide": "Hide table detection details",
-			"separator": "Separator",
-			"separator_tab": "Tab",
-			"separator_comma": "Comma",
-			"separator_semicolon": "Semicolon",
-			"separator_pipe": "Pipe",
-			"header": "Header row",
-			"row_count": "Data rows",
-			"sample_size": "Rows sampled",
-			"columns_title": "Columns",
-			"column_index": "Column",
-			"column_header": "Header",
-			"column_role": "Detected role",
-			"column_confidence": "Confidence",
-			"role_ingredient": "Ingredient",
-			"role_quantity": "Quantity",
-			"role_unit": "Unit",
-			"role_origin": "Origin",
-			"role_labels": "Labels",
-			"role_unknown": "Unassigned",
-			"warnings_title": "Warnings",
-			"preview_title": "Ingredients to score",
-			"preview_ingredient": "Ingredient",
-			"preview_quantity": "Quantity",
-			"preview_unit": "Unit",
-			"preview_grams": "Grams",
-			"preview_origin": "Origin",
-			"preview_labels": "Labels",
-			"continue_button": "Continue to score",
-			"no_value": "—",
-			"error_generic": "An unexpected error occurred."
-		}
+		"yes": "Sí"
 	},
 	"onboarding": {
 		"title": "Com puntuar la teva recepta",
@@ -177,7 +113,6 @@
 		"recipe_text": "Introdueix cada ingredient en una línia nova amb la seva quantitat (ex. 200g de farina, 3 ous, 100g de sucre).",
 		"codified_ingredient": "Ingredient estandarditzat de la base de dades Open Food Facts / Agribalyse.",
 		"weight": "Quantitat neta de l'ingredient en grams.",
-		"grams": "Quantity in grams, used for the green-score computation(computed)",
 		"labels": "Certificacions oficials (ex. Ecològic, Label Rouge, Comerç Just) que atorguen bonificacions al Green-Score.",
 		"seasonality": "Marca si les fruites i verdures són de temporada per obtenir una bonificació ambiental.",
 		"origin": "Origen geogràfic de l'ingredient, utilitzat per avaluar l'impacte del transport.",
@@ -188,7 +123,6 @@
 	},
 	"recipes": {
 		"quiche": {
-			"name": "Quiche Lorraine",
 			"content": "200g de massa brisa\n200g de cansalada\n3 ous\n200ml de nata fresca\n150ml de llet\n100g d'emmental ratllat"
 		},
 		"apple_pie": {

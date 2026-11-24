@@ -3,7 +3,6 @@
 		"for_the_recipes": "Für Rezepte",
 		"score_recipe": "Rezept bewerten",
 		"join_community": "Der Community beitreten",
-		"open_food_facts": "Open Food Facts",
 		"methodology": "Über den Green-Score"
 	},
 	"footer": {
@@ -14,31 +13,21 @@
 		"tagline_break": "aus aller Welt.",
 		"decorative_alt": "Eine dekorative Grafik",
 		"social": {
-			"x": "X (ehemals Twitter)",
-			"instagram": "Instagram",
-			"github": "GitHub",
-			"facebook": "Facebook",
-			"slack": "Slack"
+			"x": "X (ehemals Twitter)"
 		},
 		"links": {
-			"newsletter": "Newsletter",
-			"forum": "Forum",
 			"producers": "Produzenten-Plattform",
 			"translate": "Übersetzen",
-			"github": "GitHub",
 			"data_api_sdks": "Daten, API, SDKs",
-			"wiki": "Wiki",
 			"legal": "Impressum",
 			"privacy": "Datenschutz",
 			"terms_of_use": "Nutzungsbedingungen"
 		},
 		"discover": {
 			"who_we_are": "Wer wir sind",
-			"blog": "Blog",
 			"code_of_conduct": "Verhaltenskodex",
 			"vision_mission_values_and_programs": "Vision, Mission, Werte und Programme",
 			"partners": "Partner",
-			"faq": "FAQ",
 			"press": "Presse"
 		}
 	},
@@ -48,9 +37,6 @@
 		"ingredient_name": "Zutatenname",
 		"ingredient_name_placeholder": "z. B. Tomate",
 		"weight": "Gewicht (g)",
-		"quantity": "Quantity",
-		"unit": "Unit",
-		"grams": "Grams",
 		"codified_ingredient": "Standardisiert",
 		"labels": "Siegel & Labels",
 		"seasonality": "Saisonalität",
@@ -63,9 +49,7 @@
 		"action": "Aktion",
 		"summary": "Zusammenfassung",
 		"ingredients_count": "Zutat(en) hinzugefügt",
-		"green_score": "Green-Score",
 		"computing": "Score wird berechnet...",
-		"numeric_score": "Score",
 		"ignored_ingredients": "Zutat(en) ignoriert",
 		"ignored_weight": "des Gesamtgewichts",
 		"no_score": "Kein Score verfügbar. Füge Zutaten mit Gewichtsangabe hinzu, um den Score zu berechnen.",
@@ -75,14 +59,9 @@
 		"country_load_error": "Länder konnten nicht geladen werden",
 		"ingredient_not_accounted": "Nicht erfasst",
 		"ingredient_not_accounted_tooltip": "Wir konnten für diese Zutat keine Übereinstimmung in unserer Datenbank finden",
-		"ingredient_zero_quantity": "Zero quantity",
-		"ingredient_zero_quantity_tooltip": "This ingredient's quantity is 0g, so it cannot be taken into account in the calculation.",
-		"ingredient_conversion_error": "Conversion error",
-		"ingredient_conversion_error_tooltip": "The quantity could not be converted to grams for this unit. Try a different unit or quantity.",
 		"ingredient_scorable": "Diese Zutat kann für den Green-Score berücksichtigt werden"
 	},
 	"homepage": {
-		"title": "Score My Recipe - Open Food Facts",
 		"badge": "Das Open-Source-Tool zur Umweltbewertung von Rezepten",
 		"hero_title": "Berechne die Umweltauswirkungen deiner Rezepte",
 		"hero_title_highlight": "in Echtzeit.",
@@ -112,53 +91,7 @@
 		"table_taxonomy": "In Taxonomie",
 		"table_quantity": "Menge (g)",
 		"yes": "Ja",
-		"no": "Nein",
-		"tabs": {
-			"label": "Recipe input mode",
-			"text": "Text",
-			"spreadsheet": "Spreadsheet"
-		},
-		"spreadsheet": {
-			"intro": "Paste a table copied from your spreadsheet. The separator, header row and column roles are detected automatically.",
-			"label": "Pasted table",
-			"placeholder": "Paste your table here...\n\nExample:\nIngredient\tQuantity\tUnit\tOrigin\tLabels\nApple\t150\tg\tFrance\tOrganic",
-			"parse_button": "Parse spreadsheet",
-			"parsing": "Parsing...",
-			"error_title": "Could not parse the spreadsheet",
-			"detection_title": "Detected table",
-			"details_show": "See table detection details",
-			"details_hide": "Hide table detection details",
-			"separator": "Separator",
-			"separator_tab": "Tab",
-			"separator_comma": "Comma",
-			"separator_semicolon": "Semicolon",
-			"separator_pipe": "Pipe",
-			"header": "Header row",
-			"row_count": "Data rows",
-			"sample_size": "Rows sampled",
-			"columns_title": "Columns",
-			"column_index": "Column",
-			"column_header": "Header",
-			"column_role": "Detected role",
-			"column_confidence": "Confidence",
-			"role_ingredient": "Ingredient",
-			"role_quantity": "Quantity",
-			"role_unit": "Unit",
-			"role_origin": "Origin",
-			"role_labels": "Labels",
-			"role_unknown": "Unassigned",
-			"warnings_title": "Warnings",
-			"preview_title": "Ingredients to score",
-			"preview_ingredient": "Ingredient",
-			"preview_quantity": "Quantity",
-			"preview_unit": "Unit",
-			"preview_grams": "Grams",
-			"preview_origin": "Origin",
-			"preview_labels": "Labels",
-			"continue_button": "Continue to score",
-			"no_value": "—",
-			"error_generic": "An unexpected error occurred."
-		}
+		"no": "Nein"
 	},
 	"onboarding": {
 		"title": "So bewertest du dein Rezept",
@@ -177,7 +110,6 @@
 		"recipe_text": "Gib jede Zutat in einer neuen Zeile mit Mengenangabe ein (z. B. 200g Mehl, 3 Eier, 100g Zucker).",
 		"codified_ingredient": "Standardisierte Zutat aus der Datenbank von Open Food Facts / Agribalyse.",
 		"weight": "Nettogewicht der Zutat in Gramm.",
-		"grams": "Quantity in grams, used for the green-score computation(computed)",
 		"labels": "Offizielle Siegel (z. B. Bio, Fair Trade), die Boni für den Green-Score einbringen.",
 		"seasonality": "Gib an, ob Obst und Gemüse saisonal angebaut wurden, um einen Umweltbonus zu erhalten.",
 		"origin": "Geografische Herkunft der Zutat zur Bewertung der Transportauswirkungen.",
@@ -188,7 +120,6 @@
 	},
 	"recipes": {
 		"quiche": {
-			"name": "Quiche Lorraine",
 			"content": "200g Mürbeteig\n200g Speckwürfel\n3 Eier\n200ml Crème fraîche\n150ml Milch\n100g geriebener Emmentaler"
 		},
 		"apple_pie": {
@@ -196,7 +127,6 @@
 			"content": "1 Blätterteig\n4 Äpfel\n50g Zucker\n30g Butter"
 		},
 		"ratatouille": {
-			"name": "Ratatouille",
 			"content": "500g Tomaten\n300g Zucchini\n300g Auberginen\n200g Paprika\n100g Zwiebeln\n30ml Olivenöl"
 		}
 	}

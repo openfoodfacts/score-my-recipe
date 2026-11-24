@@ -3,7 +3,6 @@
 		"for_the_recipes": "pour les recettes",
 		"score_recipe": "Notez une recette",
 		"join_community": "Rejoignez la communauté",
-		"open_food_facts": "Open Food Facts",
 		"methodology": "À propos du Green-Score"
 	},
 	"footer": {
@@ -14,31 +13,21 @@
 		"tagline_break": "du monde entier.",
 		"decorative_alt": "Un graphique décoratif",
 		"social": {
-			"x": "X (anciennement Twitter)",
-			"instagram": "Instagram",
-			"github": "GitHub",
-			"facebook": "Facebook",
-			"slack": "Slack"
+			"x": "X (anciennement Twitter)"
 		},
 		"links": {
-			"newsletter": "Newsletter",
-			"forum": "Forum",
 			"producers": "Plateforme des producteurs",
 			"translate": "Traduire",
-			"github": "GitHub",
 			"data_api_sdks": "Données, API, SDKs",
-			"wiki": "Wiki",
 			"legal": "Mentions légales",
 			"privacy": "Confidentialité",
 			"terms_of_use": "Conditions d'utilisation"
 		},
 		"discover": {
 			"who_we_are": "Qui sommes-nous",
-			"blog": "Blog",
 			"code_of_conduct": "Code de conduite",
 			"vision_mission_values_and_programs": "Vision, Mission, Valeurs et Programmes",
 			"partners": "Partenaires",
-			"faq": "FAQ",
 			"press": "Presse"
 		}
 	},
@@ -48,11 +37,7 @@
 		"ingredient_name": "Nom de l'ingrédient",
 		"ingredient_name_placeholder": "ex. Tomate",
 		"weight": "Poids (g)",
-		"quantity": "Quantity",
-		"unit": "Unit",
-		"grams": "Grams",
 		"codified_ingredient": "Codifié",
-		"labels": "Labels",
 		"seasonality": "Saisonnalité",
 		"fresh_plant": "Fruit/légume frais",
 		"off_season": "Hors saison",
@@ -60,12 +45,9 @@
 		"origin": "Origine",
 		"unknown": "Inconnu",
 		"delete_ingredient": "Supprimer l'ingrédient",
-		"action": "Action",
 		"summary": "Résumé",
 		"ingredients_count": "ingrédient(s) ajouté(s)",
-		"green_score": "Green-Score",
 		"computing": "Calcul du score...",
-		"numeric_score": "Score",
 		"ignored_ingredients": "ingrédient(s) ignoré(s)",
 		"ignored_weight": "du poids total",
 		"no_score": "Aucun score disponible. Ajoutez des ingrédients avec un poids pour calculer le score.",
@@ -75,14 +57,9 @@
 		"country_load_error": "Impossible de charger les pays",
 		"ingredient_not_accounted": "Non comptabilisé",
 		"ingredient_not_accounted_tooltip": "Nous n'avons pas trouvé de correspondance dans notre base de données d'impact pour cet ingrédient",
-		"ingredient_zero_quantity": "Zero quantity",
-		"ingredient_zero_quantity_tooltip": "This ingredient's quantity is 0g, so it cannot be taken into account in the calculation.",
-		"ingredient_conversion_error": "Conversion error",
-		"ingredient_conversion_error_tooltip": "The quantity could not be converted to grams for this unit. Try a different unit or quantity.",
 		"ingredient_scorable": "Cet ingrédient peut être comptabilisé dans le green-score"
 	},
 	"homepage": {
-		"title": "Score My Recipe - Open Food Facts",
 		"badge": "L'outil open-source d'évaluation environnementale des recettes",
 		"hero_title": "Calculez l'impact environnemental de vos recettes",
 		"hero_title_highlight": "en temps réel.",
@@ -113,51 +90,9 @@
 		"table_quantity": "Quantité (g)",
 		"yes": "Oui",
 		"no": "Non",
-		"tabs": {
-			"label": "Recipe input mode",
-			"text": "Text",
-			"spreadsheet": "Spreadsheet"
-		},
 		"spreadsheet": {
-			"intro": "Paste a table copied from your spreadsheet. The separator, header row and column roles are detected automatically.",
-			"label": "Pasted table",
-			"placeholder": "Paste your table here...\n\nExample:\nIngredient\tQuantity\tUnit\tOrigin\tLabels\nApple\t150\tg\tFrance\tOrganic",
-			"parse_button": "Parse spreadsheet",
-			"parsing": "Parsing...",
-			"error_title": "Could not parse the spreadsheet",
-			"detection_title": "Detected table",
 			"details_show": "Voir les détails de la détection du tableau",
-			"details_hide": "Masquer les détails de la détection du tableau",
-			"separator": "Separator",
-			"separator_tab": "Tab",
-			"separator_comma": "Comma",
-			"separator_semicolon": "Semicolon",
-			"separator_pipe": "Pipe",
-			"header": "Header row",
-			"row_count": "Data rows",
-			"sample_size": "Rows sampled",
-			"columns_title": "Columns",
-			"column_index": "Column",
-			"column_header": "Header",
-			"column_role": "Detected role",
-			"column_confidence": "Confidence",
-			"role_ingredient": "Ingredient",
-			"role_quantity": "Quantity",
-			"role_unit": "Unit",
-			"role_origin": "Origin",
-			"role_labels": "Labels",
-			"role_unknown": "Unassigned",
-			"warnings_title": "Warnings",
-			"preview_title": "Ingredients to score",
-			"preview_ingredient": "Ingredient",
-			"preview_quantity": "Quantity",
-			"preview_unit": "Unit",
-			"preview_grams": "Grams",
-			"preview_origin": "Origin",
-			"preview_labels": "Labels",
-			"continue_button": "Continue to score",
-			"no_value": "—",
-			"error_generic": "An unexpected error occurred."
+			"details_hide": "Masquer les détails de la détection du tableau"
 		}
 	},
 	"onboarding": {
@@ -177,7 +112,6 @@
 		"recipe_text": "Entrez chaque ingrédient sur une nouvelle ligne avec sa quantité (ex. 200g de farine, 3 œufs, 100g de sucre).",
 		"codified_ingredient": "Ingrédient standardisé issu de la base de données Open Food Facts / Agribalyse.",
 		"weight": "Quantité nette de l'ingrédient en grammes.",
-		"grams": "Quantity in grams, used for the green-score computation(computed)",
 		"labels": "Certifications officielles (ex. Bio, Label Rouge, Commerce Équitable) apportant des bonus au Green-Score.",
 		"seasonality": "Cochez si les fruits et légumes sont de saison pour obtenir un bonus environnemental.",
 		"origin": "Origine géographique de l'ingrédient, utilisée pour évaluer l'impact du transport.",
@@ -188,7 +122,6 @@
 	},
 	"recipes": {
 		"quiche": {
-			"name": "Quiche lorraine",
 			"content": "200g de pâte brisée\n200g de lardons\n3 œufs\n200ml de crème fraîche\n150ml de lait\n100g d'emmental râpé"
 		},
 		"apple_pie": {
@@ -196,7 +129,6 @@
 			"content": "1 pâte feuilletée\n4 pommes\n50g de sucre\n30g de beurre"
 		},
 		"ratatouille": {
-			"name": "Ratatouille",
 			"content": "500g de tomates\n300g de courgettes\n300g d'aubergines\n200g de poivrons\n100g d'oignons\n30ml d'huile d'olive"
 		}
 	}

@@ -14,6 +14,29 @@ The frontend translates all user-facing strings with
 - In components: `{$_('navbar.score_recipe', { default: 'Score a recipe' })}`.
   Always keep the `default` fallback (see `frontend/AGENTS.md`).
 
+## Locale files are partial, missing keys fall back to `en-US`
+
+`en-US.json` must contain every key.
+Every other locale file may contain **only the keys that were actually translated**;
+a key absent from a locale file is resolved from `en-US.json` at runtime.
+
+This is provided by svelte-i18n itself:
+`init({ fallbackLocale: 'en-US' })` makes lookups walk the current locale and its fallback,
+and the fallback dictionary is loaded together with the requested one,
+so `waitLocale` covers it before the page renders.
+Adding a label therefore only touches `en-US.json` in the repository;
+translations for other languages land later through Crowdin.
+
+Consequences to keep in mind:
+
+- Never copy an English value into another locale file to "complete" it.
+  That hides the fact that the string is untranslated and shadows future `en-US` fixes.
+  `pnpm i18nsync` removes such leftovers.
+- A locale file that is identical to `en-US` is useless: delete it and let the fallback apply.
+- Code that reads `$dictionary` directly must merge `en-US` under the requested locale
+  instead of picking one dictionary (see `getRecipeExamples` in
+  [`frontend/src/lib/ui/recipeExamples.ts`](../frontend/src/lib/ui/recipeExamples.ts)).
+
 ## Formatting messages with parameters
 
 Messages are formatted with **ICU MessageFormat**, not `printf`-style `%s`/`%d`.
@@ -44,9 +67,15 @@ Full syntax reference (plurals, select, number/date skeletons, escaping…):
 
 ## Keeping locale files in sync
 
-`pnpm i18nsync` (in `frontend/`) adds missing keys to every locale from `en-US.json`;
-`pnpm i18ncheck` reports missing/extra keys and placeholder mismatches.
-See [`frontend/scripts/i18n-sync.ts`](../frontend/scripts/i18n-sync.ts).
+`pnpm i18ncheck` (in `frontend/`) fails on keys that no longer exist in `en-US.json`
+and on placeholder mismatches, and prints the translation coverage of each locale.
+Missing keys are **not** an error: they fall back to `en-US`, see above.
+
+`pnpm i18nsync` prunes the keys removed from `en-US.json`,
+and drops the leaves that are identical to `en-US` (untranslated leftovers).
+It never copies English into another locale.
+
+Both live in [`frontend/scripts/i18n-sync.ts`](../frontend/scripts/i18n-sync.ts).
 
 ## Server side: notes returned by the API
 
@@ -102,6 +131,10 @@ That mapping is duplicated as `LOCALE_MAPPING` in `server/api/i18n.py`, and a te
 
 Sync is done by the Crowdin GitHub Action (using `@crowdin/cli` and the `CROWDIN_PROJECT_ID` / `CROWDIN_PERSONAL_TOKEN` secrets), which opens a PR titled `l10n: New Crowdin translations to review and merge`.
 To fix a bad translation, correct it in Crowdin first, so it is not re-applied on the next sync.
+
+Only translated strings are pulled into the locale files (`skip_untranslated_strings: true`
+and `json.preserve_keys_with_empty_values: false`), which keeps the files partial:
+untranslated keys simply stay absent and fall back to `en-US`.
 
 See the Crowdin GitHub Action documentation:
 <https://github.com/crowdin/github-action>
