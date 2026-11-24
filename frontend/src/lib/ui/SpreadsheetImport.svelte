@@ -115,7 +115,7 @@
 <div class="space-y-6">
 	<form onsubmit={handleSubmit} class="space-y-4">
 		<!-- Optional recipe metadata, carried to the edit view -->
-		<RecipeDetailsFields bind:title bind:description idPrefix="spreadsheet-"/>
+		<RecipeDetailsFields bind:title bind:description idPrefix="spreadsheet-" />
 
 		<div class="form-control w-full space-y-2">
 			<label class="label justify-start p-0" for="spreadsheet-text">
