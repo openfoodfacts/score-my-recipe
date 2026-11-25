@@ -163,7 +163,6 @@
 				{/if}
 			</button>
 		</form>
-		>>>>>>> main
 
 		<!-- Error Display -->
 		{#if error}
