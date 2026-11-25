@@ -1,0 +1,117 @@
+frontend:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'frontend/**'
+
+backend:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'server/**'
+
+'🐳 Docker':
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'docker/**'
+          - 'docker-compose.yml'
+          - '**/Dockerfile'
+          - '**/.dockerignore'
+
+'👩‍💻 DevOps':
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/**'
+          - 'justfile'
+          - '**/justfile'
+          - 'scripts/**'
+
+'📚 Documentation':
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.md'
+          - 'docs/**'
+
+'🧪 Tests':
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'e2e/**'
+          - 'server/tests/**'
+          - 'frontend/**/*.test.ts'
+
+'📈 Matomo':
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'frontend/src/lib/matomo/**'
+
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'frontend/package.json'
+          - 'frontend/pnpm-lock.yaml'
+          - 'e2e/package.json'
+          - 'e2e/pnpm-lock.yaml'
+          - 'server/pyproject.toml'
+          - 'server/uv.lock'
+          - '.github/dependabot.yml'
+
+javascript:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.js'
+          - '**/*.mjs'
+          - '**/*.ts'
+          - '**/*.svelte'
+
+'python:uv':
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.py'
+          - 'server/pyproject.toml'
+          - 'server/uv.lock'
+
+'score computation':
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'server/api/score*.py'
+          - 'server/api/agribalyse.py'
+          - 'server/data/**'
+          - 'server/tests/test_*score*.py'
+          - 'server/tests/test_agribalyse.py'
+          - 'server/tests/test_epi_modifiers.py'
+          - 'server/tests/test_distance_modifiers.py'
+          - 'server/tests/test_labels_bonus.py'
+          - 'server/tests/test_seasonality_modifier.py'
+          - 'frontend/src/lib/ui/GreenScore.svelte'
+          - 'frontend/src/lib/ui/ScoreDisplay.svelte'
+          - 'frontend/src/routes/score/**'
+
+seasonality:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'server/tests/test_seasonality_modifier.py'
+
+quantities:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'server/api/units.py'
+          - 'server/tests/test_convert_to_g.py'
+          - 'server/tests/test_get_units.py'
+          - 'frontend/src/lib/ui/quantityConvert.svelte.ts'
+          - 'frontend/src/lib/api/units*.ts'
+
+'🧬 Taxonomies':
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'server/tests/data/taxonomies/**'
+          - 'frontend/src/lib/api/taxonomy*.ts'
+          - 'frontend/src/lib/utils/taxonomyMatch*.ts'
+
+'🤗 Onboarding':
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'frontend/src/lib/ui/OnboardingBanner.svelte'
+
+'🌿 Eco-Score':
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'frontend/src/lib/assets/green-score/**'
+          - 'frontend/src/lib/ui/GreenScore.svelte'
