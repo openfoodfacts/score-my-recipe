@@ -1,6 +1,7 @@
 {
 	"navbar": {
 		"for_the_recipes": "Voor de recepten",
+		"my_recipes": "My recipes",
 		"score_recipe": "Beoordeel een recept",
 		"join_community": "Word lid van de community",
 		"methodology": "Over de Green-Score"
@@ -34,6 +35,10 @@
 	"recipe": {
 		"title": "Recepteneditor",
 		"description": "Voeg ingrediënten toe aan je recept",
+		"title_label": "Recipe title",
+		"title_placeholder": "e.g. Quiche Lorraine",
+		"description_label": "Description",
+		"description_placeholder": "Optional short description",
 		"ingredient_name": "Naam ingrediënt",
 		"ingredient_name_placeholder": "bijv. Tomaat",
 		"weight": "Gewicht (g)",
@@ -74,6 +79,7 @@
 		"feature2_description": "Een transparante rekenmethode, gebaseerd op de nauwkeurigheid van de publieke PEF/Agribalyse-database van ADEME.",
 		"feature3_title": "Breed erkende score",
 		"feature3_description": "Vertrouw op een gevalideerde indicator die al door miljoenen consumenten wordt herkend op Open Food Facts en Yuka.",
+		"community_description": "Score My Recipe is built with the vibrant Open Food Facts community: volunteers, researchers and food lovers who share their time and knowledge to make food information more transparent for everyone.",
 		"footer_text": "Een open-source project onder leiding van Open Food Facts, ontworpen om de impact van thuiskoken, horeca en catering te verkleinen.",
 		"footer_badge": "Samenwerkingsproject mogelijk gemaakt dankzij de steun van de Call for Commons van ADEME",
 		"footer_github_link": "Ontdek het project op GitHub"

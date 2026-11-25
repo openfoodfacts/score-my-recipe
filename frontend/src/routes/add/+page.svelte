@@ -5,7 +5,12 @@
 	import OnboardingBanner from '$lib/ui/OnboardingBanner.svelte';
 	import HelperTooltip from '$lib/ui/HelperTooltip.svelte';
 	import RecipeExamples from '$lib/ui/RecipeExamples.svelte';
+	import RecipeDetailsFields from '$lib/ui/RecipeDetailsFields.svelte';
+	import type { RecipeDraft } from '$lib/types/recipe';
 	import SpreadsheetImport from '$lib/ui/SpreadsheetImport.svelte';
+
+	let title = $state('');
+	let description = $state('');
 
 	let activeTab = $state<'text' | 'spreadsheet'>('text');
 	let recipeText = $state('');
@@ -26,7 +31,8 @@
 			const lang = getLocale().split('-')[0];
 			const result = await parseRecipeText(recipeText, lang);
 			const ingredients = apiIngredientsToIngredients(result.ingredients);
-			await goto('/score', { state: { ingredients } });
+			const state: RecipeDraft = { title, description, ingredients };
+			await goto('/score', { state });
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Une erreur est survenue';
 			isLoading = false;
@@ -113,6 +119,9 @@
 	<div id="panel-text" role="tabpanel" aria-labelledby="tab-text" hidden={activeTab !== 'text'}>
 		<!-- Recipe Form -->
 		<form onsubmit={handleSubmit} class="space-y-6">
+			<!-- Optional recipe metadata, carried to the edit view -->
+			<RecipeDetailsFields bind:title bind:description />
+
 			<div class="form-control w-full space-y-2">
 				<!-- Field label -->
 				<div class="flex items-center justify-between">
@@ -154,6 +163,7 @@
 				{/if}
 			</button>
 		</form>
+		>>>>>>> main
 
 		<!-- Error Display -->
 		{#if error}

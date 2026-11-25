@@ -19,6 +19,11 @@
 		type RecipeParseCsvResponse
 	} from '$lib/api/recipe';
 	import type { Ingredient } from '$lib/types/ingredient';
+	import RecipeDetailsFields from '$lib/ui/RecipeDetailsFields.svelte';
+	import type { RecipeDraft } from '$lib/types/recipe';
+
+	let title = $state('');
+	let description = $state('');
 
 	let spreadsheetText = $state('');
 	let isLoading = $state(false);
@@ -97,7 +102,8 @@
 		// https://svelte.dev/docs/svelte/$state#$state.snapshot
 		const plainResult = $state.snapshot(result);
 		const ingredients = apiIngredientsToIngredients(plainResult.ingredients);
-		await goto('/score', { state: { ingredients } });
+		const state: RecipeDraft = { title, description, ingredients };
+		await goto('/score', { state });
 	}
 
 	// Abort an in-flight parse when the component is destroyed.
@@ -108,6 +114,9 @@
 
 <div class="space-y-6">
 	<form onsubmit={handleSubmit} class="space-y-4">
+		<!-- Optional recipe metadata, carried to the edit view -->
+		<RecipeDetailsFields bind:title bind:description idPrefix="spreadsheet-" />
+
 		<div class="form-control w-full space-y-2">
 			<label class="label justify-start p-0" for="spreadsheet-text">
 				<span class="text-sm font-medium sm:text-base">

@@ -1,6 +1,7 @@
 {
 	"navbar": {
 		"for_the_recipes": "Per le ricette",
+		"my_recipes": "My recipes",
 		"score_recipe": "Valuta una ricetta",
 		"join_community": "Unisciti alla comunità",
 		"methodology": "Informazioni sul Green-Score"
@@ -34,6 +35,10 @@
 	"recipe": {
 		"title": "Editor di ricette",
 		"description": "Aggiungi ingredienti alla tua ricetta",
+		"title_label": "Recipe title",
+		"title_placeholder": "e.g. Quiche Lorraine",
+		"description_label": "Description",
+		"description_placeholder": "Optional short description",
 		"ingredient_name": "Nome dell'ingrediente",
 		"ingredient_name_placeholder": "es. Pomodoro",
 		"weight": "Peso (g)",
@@ -76,6 +81,7 @@
 		"feature2_description": "Una metodologia di calcolo trasparente, basata sul rigore del database pubblico PEF/Agribalyse promosso da ADEME.",
 		"feature3_title": "Punteggio ampiamente riconosciuto",
 		"feature3_description": "Affidati a un indicatore validato e già identificato da milioni di consumatori su Open Food Facts e Yuka.",
+		"community_description": "Score My Recipe is built with the vibrant Open Food Facts community: volunteers, researchers and food lovers who share their time and knowledge to make food information more transparent for everyone.",
 		"footer_text": "Un progetto open-source promosso da Open Food Facts, ideato per aiutarci a ridurre l'impatto della cucina casalinga, della ristorazione e delle mense.",
 		"footer_badge": "Progetto realizzato in modo collaborativo grazie al sostegno del Call for Commons di ADEME",
 		"footer_github_link": "Scopri il progetto su GitHub"

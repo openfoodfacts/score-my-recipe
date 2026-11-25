@@ -3,8 +3,11 @@
 	import { getRecipeExamples, type RecipeExample } from './recipeExamples';
 
 	type Props = {
-		/** Called with the example's full recipe text when the user picks one. */
-		onselect?: (text: string) => void;
+		/**
+		 * Called with the example's full recipe text and display name when the
+		 * user picks one. The caller decides whether to use the name as title.
+		 */
+		onselect?: (text: string, name: string) => void;
 	};
 
 	let { onselect }: Props = $props();
@@ -15,7 +18,7 @@
 	let currentExamples = $derived(getRecipeExamples($locale ?? getLocale(), $dictionary));
 
 	function loadExample(example: RecipeExample) {
-		onselect?.(example.text);
+		onselect?.(example.text, example.name);
 	}
 </script>
 

@@ -1,6 +1,7 @@
 {
 	"navbar": {
 		"for_the_recipes": "For the recipes",
+		"my_recipes": "My recipes",
 		"score_recipe": "Score a recipe",
 		"join_community": "Join the community",
 		"open_food_facts": "Open Food Facts",
@@ -45,6 +46,10 @@
 	"recipe": {
 		"title": "Recipe Editor",
 		"description": "Add ingredients to your recipe",
+		"title_label": "Recipe title",
+		"title_placeholder": "e.g. Quiche Lorraine",
+		"description_label": "Description",
+		"description_placeholder": "Optional short description",
 		"ingredient_name": "Ingredient Name",
 		"ingredient_name_placeholder": "e.g., Tomato",
 		"weight": "Weight (g)",
@@ -79,7 +84,41 @@
 		"ingredient_zero_quantity_tooltip": "This ingredient's quantity is 0g, so it cannot be taken into account in the calculation.",
 		"ingredient_conversion_error": "Conversion error",
 		"ingredient_conversion_error_tooltip": "The quantity could not be converted to grams for this unit. Try a different unit or quantity.",
-		"ingredient_scorable": "This ingredient can be counted in the green score"
+		"ingredient_scorable": "This ingredient can be counted in the green score",
+		"save_recipe": "Save recipe",
+		"saved_not_found": "This saved recipe could not be found. It may have been deleted."
+	},
+	"save_recipe": {
+		"title": "Save recipe",
+		"description": "Choose a title for this recipe.",
+		"duplicate_title": "A saved recipe already uses this title.",
+		"save": "Save",
+		"save_as_new": "Save as new",
+		"save_as_new_hint": "Creates another recipe with this title.",
+		"cancel": "Cancel",
+		"saved": "Recipe saved.",
+		"saved_as_new": "Saved as a new recipe.",
+		"saved_without_score": "Recipe saved, but the score could not be computed.",
+		"save_error": "Could not save the recipe on this device."
+	},
+	"my_recipes": {
+		"title": "My recipes",
+		"description": "Your saved recipes are stored in this browser.",
+		"new_recipe": "Score a new recipe",
+		"sort_label": "Sort by",
+		"sort_updated": "Last updated",
+		"sort_title": "Title",
+		"ingredients": "ingredient(s)",
+		"updated": "Updated",
+		"not_scored": "Not scored",
+		"delete_recipe": "Delete recipe",
+		"delete_title": "Delete this recipe?",
+		"delete_message": "This recipe will be removed from this browser. This cannot be undone.",
+		"delete_confirm": "Delete",
+		"delete_cancel": "Cancel",
+		"delete_error": "Could not delete the recipe on this device.",
+		"empty_title": "No saved recipes yet",
+		"empty_description": "Save a recipe from the score view and it will appear here."
 	},
 	"homepage": {
 		"title": "Score My Recipe - Open Food Facts",
@@ -96,6 +135,7 @@
 		"feature2_description": "A transparent calculation methodology, based on the rigor of the public PEF/Agribalyse database carried by ADEME.",
 		"feature3_title": "Highly-recognized score",
 		"feature3_description": "Rely on a validated indicator already identified by millions of consumers on Open Food Facts and Yuka.",
+		"community_description": "Score My Recipe is built with the vibrant Open Food Facts community: volunteers, researchers and food lovers who share their time and knowledge to make food information more transparent for everyone.",
 		"footer_text": "An open-source project led by Open Food Facts, designed to help us reduce the impact of at-home cooking, out of home dining and catering.",
 		"footer_badge": "Project carried out collaboratively thanks to the support of ADEME's Call for Commons",
 		"footer_github_link": "Discover the project on GitHub"

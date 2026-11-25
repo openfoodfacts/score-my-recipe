@@ -9,6 +9,10 @@ const RECIPE_TEXT = `1 pâte brisée (150g)
 50g de sucre
 30g de beurre origine France`;
 
+/** Optional recipe metadata entered on the add view. */
+const RECIPE_TITLE = 'Tarte aux pommes';
+const RECIPE_DESCRIPTION = 'Une tarte aux pommes simple pour tester le titre et la description.';
+
 /**
  * The pasted spreadsheet exercised by the CSV scenario.
  *
@@ -57,7 +61,9 @@ test.describe('Recipe green-score integration', () => {
 		await page.getByRole('link', { name: 'Notez une recette' }).click();
 		await expect(page).toHaveURL(/\/add$/);
 
-		// 4. Fill the recipe text.
+		// 4. Fill the optional recipe metadata and the recipe text.
+		await page.locator('#recipe-title').fill(RECIPE_TITLE);
+		await page.locator('#recipe-description').fill(RECIPE_DESCRIPTION);
 		await page.locator('#recipe-text').fill(RECIPE_TEXT);
 
 		// 5. Submit the recipe (button label is French after the locale switch).
@@ -66,20 +72,32 @@ test.describe('Recipe green-score integration', () => {
 		// 6. Verify navigation to /score (client-side goto with ingredient state).
 		await expect(page).toHaveURL(/\/score$/);
 
-		// 7. Wait for the green-score logo to render.
+		// 7. Verify the recipe metadata carried over and drives the tab title.
+		await expect(page).toHaveTitle(RECIPE_TITLE);
+		await expect(page.locator('#recipe-title')).toHaveValue(RECIPE_TITLE);
+		await expect(page.locator('#recipe-description')).toHaveValue(RECIPE_DESCRIPTION);
+
+		// 8. Wait for the green-score logo to render.
 		//    The GreenScore component renders an <img> whose alt attribute is the
 		//    letter grade.  The score auto-computes after a 3s inactivity timer,
 		//    so allow extra time for that plus the API round-trip.
 		const scoreLogo = page.locator('img.h-32');
 		await expect(scoreLogo).toBeVisible({ timeout: 15_000 });
 
-		// 8. Assert a valid letter grade is shown and matches the pinned value.
+		// 9. Assert a valid letter grade is shown and matches the pinned value.
 		const letterGrade = await scoreLogo.getAttribute('alt');
 		expect(letterGrade).toMatch(/^(A\+|[A-F])$/);
 		expect(letterGrade).toBe(EXPECTED_LETTER_GRADE);
 
-		// 9. Assert the numeric score is also displayed (format: "XX.X/100").
+		// 10. Assert the numeric score is also displayed (format: "XX.X/100").
 		await expect(page.getByText(/\d+\.\d+\/100/)).toBeVisible();
+
+		// 11. Verify the metadata is still editable on the edit view and that the
+		//     tab title follows the edited value.
+		const editedTitle = `${RECIPE_TITLE} (éditée)`;
+		await page.locator('#recipe-title').fill(editedTitle);
+		await expect(page.locator('#recipe-title')).toHaveValue(editedTitle);
+		await expect(page).toHaveTitle(editedTitle);
 	});
 
 	test('user pastes a spreadsheet, sees the detection preview and scores it', async ({ page }) => {

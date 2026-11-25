@@ -1,6 +1,7 @@
 <script lang="ts">
 	import '../app.css';
 	import '@fontsource-variable/plus-jakarta-sans';
+	import { onMount } from 'svelte';
 	import type { LayoutProps } from './$types';
 	import Navbar from '$lib/ui/Navbar.svelte';
 	import Footer from '$lib/ui/Footer.svelte';
@@ -9,8 +10,16 @@
 	import { _ } from '$lib/i18n';
 	import { Matomo } from '$lib/matomo';
 	import { MATOMO_HOST, MATOMO_SITE_ID } from '$lib/const';
+	import { savedRecipes } from '$lib/stores/savedRecipes.svelte';
 
 	let { children }: LayoutProps = $props();
+
+	// Saved recipes live in localStorage, so the store can only be loaded after
+	// hydration. Doing it in the layout keeps the navbar link reactive across
+	// client-side navigation.
+	onMount(() => {
+		savedRecipes.init();
+	});
 </script>
 
 <Matomo url={MATOMO_HOST} siteId={MATOMO_SITE_ID} doNotTrack disableCookies />
