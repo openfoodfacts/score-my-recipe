@@ -52,7 +52,7 @@ jobs:
           echo "NO PRODUCTION DEPLOYMENT YET" && exit 1
 
       - name: Wait for frontend image container build workflow
-        uses: tomchv/wait-my-workflow@15c168cfa0cf8d5234974e0047908173d3ab39a1 # v1.1.0
+        uses: tomchv/wait-my-workflow@v1.1.0
         id: wait-build-service-frontend-image
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -61,7 +61,7 @@ jobs:
           intervalSeconds: 10
           timeoutSeconds: 600 # 10m
       - name: Wait for server image container build workflow
-        uses: tomchv/wait-my-workflow@15c168cfa0cf8d5234974e0047908173d3ab39a1 # v1.1.0
+        uses: tomchv/wait-my-workflow@v1.1.0
         id: wait-build-service-server-image
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -95,7 +95,7 @@ jobs:
         run: echo Timeout && false # fail if build time out
 
       - name: Checkout git repository
-        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ env.SSH_HOST }}
           username: ${{ env.SSH_USERNAME }}
@@ -115,7 +115,7 @@ jobs:
             git checkout -qf FETCH_HEAD
 
       - name: Set environment variables
-        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ env.SSH_HOST }}
           username: ${{ env.SSH_USERNAME }}
@@ -147,7 +147,7 @@ jobs:
             echo "PUBLIC_RECIPE_API_URL=${{ env.PUBLIC_RECIPE_API_URL }}" >> frontend/.env
 
       - name: do some setups
-        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ env.SSH_HOST }}
           username: ${{ env.SSH_USERNAME }}
@@ -168,7 +168,7 @@ jobs:
             docker compose run --rm recipe_server typer api/cli.py run fetch-agribalyse
 
       - name: Re-start services
-        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ env.SSH_HOST }}
           username: ${{ env.SSH_USERNAME }}
@@ -183,7 +183,7 @@ jobs:
             docker compose up -d --wait
 
       - name: Check services are up
-        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        uses: appleboy/ssh-action@v1.2.5
         if: ${{ always() }}
         with:
           host: ${{ env.SSH_HOST }}
@@ -197,7 +197,7 @@ jobs:
             [[ -z $(docker compose  ps -q --status exited --status dead --status removing --status paused) ]] || exit 1
 
       - name: Cleanup obsolete Docker objects
-        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        uses: appleboy/ssh-action@v1.2.5
         if: ${{ always() }}
         with:
           host: ${{ env.SSH_HOST }}
