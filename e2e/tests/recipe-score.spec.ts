@@ -124,6 +124,74 @@ test.describe('Recipe green-score integration', () => {
 		await expect(page).toHaveTitle(editedTitle);
 	});
 
+	test('a delayed blur cannot save the next edit of a codified ingredient', async ({ page }) => {
+		await page.route('**/*', (route) => {
+			const { hostname } = new URL(route.request().url());
+			return hostname === 'localhost' || hostname === '127.0.0.1'
+				? route.continue()
+				: route.abort();
+		});
+		await page.goto('/');
+		await page.waitForLoadState('networkidle');
+		await page.locator('.locale-selector select').selectOption('fr-FR');
+		await page.getByRole('link', { name: 'Notez une recette' }).click();
+		await page.locator('#recipe-text').fill(RECIPE_TEXT);
+		await page.getByRole('button', { name: 'Noter la recette' }).click();
+		await expect(page).toHaveURL(/\/score$/);
+		await expect(page.locator('img.h-32')).toBeVisible({ timeout: 15_000 });
+
+		// Keep the second edit inside the first one's blur delay without racing the test runner.
+		const clockStart = new Date('2030-01-01T00:00:00Z');
+		await page.clock.install({ time: clockStart });
+		await page.clock.pauseAt(new Date(clockStart.getTime() + 1000));
+
+		// The fixture's sugar row already uses grams, which remain valid when the tag changes.
+		const ingredient = page.locator('[id^="ingredient-codified-"]').nth(2);
+		const ingredientFieldId = await ingredient.evaluate((element) => element.id);
+		const ingredientId = ingredientFieldId.slice('ingredient-codified-'.length);
+		const missingWarning = page
+			.locator(`label[for="${ingredientFieldId}"]`)
+			.getByText('Non comptabilisé', { exact: true });
+		const tag = ingredient.locator('span[title="Double-click to edit"]');
+
+		async function selectIngredient(label: string) {
+			await tag.dispatchEvent('dblclick');
+			const input = ingredient.locator('input:focus');
+			await input.fill(label);
+			await page.clock.runFor(180); // the previous edit's deferred blur save would have fired
+			await expect(input).toBeFocused({ timeout: 1000 });
+			await page.clock.runFor(340); // finish the autocomplete debounce
+			const suggestion = ingredient
+				.locator('.dropdown-content button')
+				.filter({ has: page.getByText(label, { exact: true }) })
+				.first();
+			// The tag widget commits a suggestion on mousedown, before input blur.
+			await suggestion.dispatchEvent('mousedown', undefined, { timeout: 5000 });
+			await page.clock.runFor(130); // finish the outgoing edit's fade
+			await expect(tag).toHaveText(label);
+		}
+
+		async function recompute() {
+			const response = page.waitForResponse(
+				(res) => res.url().endsWith('/v1/green-score') && res.request().method() === 'POST'
+			);
+			await page.getByRole('button', { name: 'Calculer le score' }).dispatchEvent('click');
+			const result = await response;
+			expect(result.ok()).toBe(true);
+			return result;
+		}
+
+		await selectIngredient('crème fraîche');
+		const creamScore = await recompute();
+		expect((await creamScore.json()).missingIngredientIds).toContain(ingredientId);
+		await expect(missingWarning).toBeAttached();
+
+		await selectIngredient('œuf');
+		const eggScore = await recompute();
+		expect((await eggScore.json()).missingIngredientIds).not.toContain(ingredientId);
+		await expect(missingWarning).toHaveCount(0);
+	});
+
 	test('user pastes a spreadsheet, sees the detection preview and scores it', async ({ page }) => {
 		// 1. Switch the UI to French, like the text scenario.
 		await page.goto('/');

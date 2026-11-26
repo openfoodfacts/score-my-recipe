@@ -103,6 +103,8 @@
 	let newValue = $state('');
 	let editingIndex = $state(-1);
 	let editingValue = $state('');
+	let editingInput = $state<HTMLInputElement>();
+	let editSession = 0;
 
 	// Track active search value (newValue for additions, editingValue for inline edits)
 	let activeSearchValue = $derived(editingIndex === -1 ? newValue : editingValue);
@@ -317,6 +319,7 @@
 	 * @param tag
 	 */
 	function startEditing(index: number, tag: TaxonomyItem) {
+		editSession += 1;
 		editingIndex = index;
 		editingValue = tag.label;
 		autoCompleteIndex = -1;
@@ -511,10 +514,22 @@
 						type="text"
 						class="input w-full min-w-0 border bg-transparent outline-none"
 						bind:value={editingValue}
+						bind:this={editingInput}
 						onkeydown={(e) => handleEditKeydown(e, index)}
-						onblur={() => {
+						onblur={(event) => {
+							// An outgoing input can blur after a suggestion has closed its editor.
+							const input = event.currentTarget;
+							if (editingIndex !== index || editingInput !== input) return;
+							const session = editSession;
 							setTimeout(() => {
-								saveEdit(index);
+								if (
+									editingIndex === index &&
+									editSession === session &&
+									editingInput === input &&
+									tags[index] === tag
+								) {
+									saveEdit(index);
+								}
 							}, 150);
 						}}
 						use:focus
